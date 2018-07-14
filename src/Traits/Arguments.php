@@ -2,7 +2,7 @@
 
 namespace ArtisanSdk\CQRS\Traits;
 
-use Illuminate\Contracts\Http\Request;
+use Illuminate\Http\Request;
 
 trait Arguments
 {
@@ -18,7 +18,7 @@ trait Arguments
      *
      * @todo allow request to be passed as an argument and have command abstract the needed arguments
      *
-     * @param array|null|\Illuminate\Contracts\Http\Request $arguments
+     * @param array|null|\Illuminate\Http\Request $arguments
      *
      * @return self|array
      */
