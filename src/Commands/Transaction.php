@@ -8,7 +8,7 @@ use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Traits\Handle;
 use Exception;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\ConnectionInterface as Database;
 
 class Transaction implements Contract
 {
@@ -22,14 +22,23 @@ class Transaction implements Contract
     protected $runnable;
 
     /**
+     * The database connection.
+     *
+     * @var \Illuminate\Database\ConnectionInterface
+     */
+    protected $database;
+
+    /**
      * Inject the underlying command that this class proxies to.
      *
-     * @param \ArtisanSdk\Contract\Runnable $runnable
-     * @param \ArtisanSdk\CQRS\Dispatcher   $dispatcher
+     * @param \ArtisanSdk\Contract\Runnable            $runnable
+     * @param \ArtisanSdk\CQRS\Dispatcher              $dispatcher
+     * @param \Illuminate\Database\ConnectionInterface $database
      */
-    public function __construct(Runnable $runnable, Dispatcher $dispatcher = null)
+    public function __construct(Runnable $runnable, Dispatcher $dispatcher = null, Database $database = null)
     {
         $this->runnable = $runnable instanceof Eventable ? new Evented($runnable, $dispatcher) : $runnable;
+        $this->database = $database;
     }
 
     /**
@@ -39,22 +48,22 @@ class Transaction implements Contract
      */
     public function run()
     {
-        DB::beginTransaction();
+        $this->database->beginTransaction();
 
         try {
             $response = $this->runnable->run();
         } catch (Exception $exception) {
-            DB::rollback();
+            $this->database->rollback();
             throw $exception;
         }
 
         if ( ! method_exists($this->runnable, 'aborted') || ! $this->runnable->aborted()) {
-            DB::rollback();
+            $this->database->rollback();
 
             return $response;
         }
 
-        DB::commit();
+        $this->database->commit();
 
         return $response;
     }

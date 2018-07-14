@@ -6,7 +6,9 @@ use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\Contract\Transactional as Contract;
 use ArtisanSdk\CQRS\Commands\Transaction;
+use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Transactional;
+use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
 use ArtisanSdk\CQRS\Tests\TestCase;
 
 class TransactionTest extends TestCase
@@ -17,7 +19,7 @@ class TransactionTest extends TestCase
     public function testTransactionIsInvokable()
     {
         $command = new Transactional();
-        $transaction = new Transaction($command);
+        $transaction = new Transaction($command, new Dispatcher(), new Connection());
 
         $this->assertInstanceOf(Contract::class, $command, 'A command that should be run in a transaction must implement the '.Contract::class.' interface.');
 
@@ -34,7 +36,7 @@ class TransactionTest extends TestCase
     public function testResponseIsProxied()
     {
         $command = new Transactional();
-        $transaction = new Transaction($command);
+        $transaction = new Transaction($command, new Dispatcher(), new Connection());
 
         $this->assertEmpty($transaction->arguments(), 'When the proxied method return something other than the command the proxy should return the response.');
         $this->assertSame($transaction, $transaction->arguments(['foo' => 'bar']), 'When a proxied method is for a fluent method then the proxy should be returned instead.');

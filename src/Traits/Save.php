@@ -20,7 +20,7 @@ trait Save
         if ( ! $model->save()) {
             $errors = [] + implode(PHP_EOL.'- ', (array) $model->getErrors()->all());
             $message = sprintf('The %s model could not be saved because the attributes were invalid: %s', get_class($model), $errors);
-            $model->throwValidationException(app()->runningInConsole() ? $message : null);
+            $model->throwValidationException(app()->runningInConsole() ? $message : null); // @todo remove dep on app()
         }
 
         return $model;

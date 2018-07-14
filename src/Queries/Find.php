@@ -2,8 +2,8 @@
 
 namespace ArtisanSdk\CQRS\Queries;
 
-use ArtisanSdk\Value\UUID;
-use Illuminate\Database\Eloquent\Model;
+use ArtisanSdk\Value\UUID; // @todo
+use Illuminate\Database\Eloquent\Model; // @todo switch to \ArtisanSdk\Model\Model
 use InvalidArgumentException;
 
 /**

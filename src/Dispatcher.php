@@ -7,10 +7,13 @@ use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\Contract\Query;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\Contract\Transactional;
+use Illuminate\Database\ConnectionInterface;
 use InvalidArgumentException;
 
 class Dispatcher
 {
+    // @todo inject events and ConnectionInterface
+
     /**
      * Make an instance of the dispatcher.
      *
@@ -18,7 +21,7 @@ class Dispatcher
      */
     public static function make()
     {
-        return app(static::class);
+        return app(static::class); // @todo remove dep on app()
     }
 
     /**
@@ -67,7 +70,7 @@ class Dispatcher
      */
     public function dispatch($class)
     {
-        $runnable = is_string($class) ? app($class) : $class;
+        $runnable = is_string($class) ? app($class) : $class; // @todo remove dep on app()
 
         if ($runnable instanceof Command) {
             return $this->command($runnable);
@@ -95,14 +98,14 @@ class Dispatcher
      */
     public function command($class)
     {
-        $command = is_string($class) ? app($class) : $class;
+        $command = is_string($class) ? app($class) : $class; // @todo remove dep on app()
 
         if ($command instanceof Transactional) {
-            return $this->argumented(new Transaction($command));
+            return $this->argumented(new Transaction($command, $this, app(ConnectionInterface::class))); // @todo remove dep on app()
         }
 
         if ($command instanceof Eventable) {
-            return $this->argumented(new Evented($command));
+            return $this->argumented(new Evented($command, $this));
         }
 
         if ($command instanceof Command) {
@@ -123,10 +126,10 @@ class Dispatcher
      */
     public function query($class)
     {
-        $query = is_string($class) ? app($class) : $class;
+        $query = is_string($class) ? app($class) : $class; // @todo remove dep on app()
 
         if ($query instanceof Eventable) {
-            return $this->argumented(new Evented($query));
+            return $this->argumented(new Evented($query, $this));
         }
 
         if ($query instanceof Query) {
@@ -144,7 +147,7 @@ class Dispatcher
      */
     public function event($event, $payload = [])
     {
-        app('events')->fire($event, $payload);
+        $this->events->fire($event, $payload); // @todo inject events
     }
 
     /**
@@ -155,7 +158,7 @@ class Dispatcher
      */
     public function until($event, $payload = [])
     {
-        app('events')->until($event, $payload);
+        $this->events->until($event, $payload); // @todo inject events
     }
 
     /**

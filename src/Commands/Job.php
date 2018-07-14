@@ -6,10 +6,10 @@ use ArtisanSdk\Contract\Event;
 use ArtisanSdk\Contract\Handler;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Traits\Queues;
-use ArtisanSdk\Model\Exceptions\InvalidModel;
+use ArtisanSdk\Model\Exceptions\InvalidModel; // @todo
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log; // @todo inject
 use RuntimeException;
 
 class Job implements ShouldQueue
@@ -94,7 +94,7 @@ class Job implements ShouldQueue
      */
     public function call($class, $handler, Event $event)
     {
-        return app($class)->$handler($this->event);
+        return app($class)->$handler($this->event); // @todo remove dep on app()
     }
 
     /**
@@ -104,7 +104,7 @@ class Job implements ShouldQueue
      */
     public function failed(Exception $exception)
     {
-        Log::error($this->getHandlerSignature($this->handler).': '.$exception->getMessage());
+        Log::error($this->getHandlerSignature($this->handler).': '.$exception->getMessage()); // @todo use injected logger if logging enabled
 
         if ($exception instanceof RuntimeException || $exception instanceof InvalidModel) {
             return $this->delete();

@@ -31,7 +31,7 @@ abstract class Query implements Contract
      */
     public function builder()
     {
-        return app(Builder::class);
+        return app(Builder::class); // @todo remove dependency on app()
     }
 
     /**

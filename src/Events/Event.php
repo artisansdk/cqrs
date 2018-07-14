@@ -2,6 +2,7 @@
 
 namespace ArtisanSdk\CQRS\Events;
 
+use ArtisanSdk\Contract\Event as Contract;
 use Illuminate\Queue\SerializesModels;
 use ReflectionClass;
 
