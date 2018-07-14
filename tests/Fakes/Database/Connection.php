@@ -4,6 +4,8 @@ namespace ArtisanSdk\CQRS\Tests\Fakes\Database;
 
 use Closure;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\Query\Grammars\Grammar;
+use Illuminate\Database\Query\Processors\Processor;
 
 class Connection implements ConnectionInterface
 {
@@ -13,6 +15,26 @@ class Connection implements ConnectionInterface
      * @var int
      */
     protected $transactions = 0;
+
+    /**
+     * Get the query grammar used by the connection.
+     *
+     * @return \Illuminate\Database\Query\Grammars\Grammar
+     */
+    public function getQueryGrammar()
+    {
+        return new Grammar();
+    }
+
+    /**
+     * Get the query post processor used by the connection.
+     *
+     * @return \Illuminate\Database\Query\Processors\Processor
+     */
+    public function getPostProcessor()
+    {
+        return new Processor();
+    }
 
     /**
      * Begin a fluent query against a database table.

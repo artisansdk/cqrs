@@ -25,6 +25,16 @@ abstract class Query implements Contract
     }
 
     /**
+     * Invoke the query.
+     *
+     * @return mixed
+     */
+    public function __invoke()
+    {
+        return $this->run();
+    }
+
+    /**
      * Get the query builder.
      *
      * @return \Illuminate\Database\Eloquent\Builder
@@ -65,25 +75,17 @@ abstract class Query implements Contract
     }
 
     /**
-     * Get the query result as paginated.
+     * Paginate the given query into a simple paginator.
      *
-     * @param int $max  results
-     * @param int $page of results
+     * @param int      $max     per page
+     * @param array    $columns to fetch
+     * @param string   $name    of page request param
+     * @param int|null $page    number
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($max = 25, $page = null)
+    public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
-        return $this->builder()->paginate($max, $page);
-    }
-
-    /**
-     * Invoke the query.
-     *
-     * @return mixed
-     */
-    public function __invoke()
-    {
-        return $this->run();
+        return $this->builder()->paginate($max, $columns, $name, $page);
     }
 }

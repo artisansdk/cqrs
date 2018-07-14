@@ -13,20 +13,20 @@ class Builder implements Runnable
     use Arguments, Silencer;
 
     /**
-     * The underlying command this class proxies to.
+     * The underlying runnable this class proxies to.
      *
      * @var \ArtisanSdk\Contract\Runnable
      */
-    protected $command;
+    protected $runnable;
 
     /**
      * Inject the underlying command that this class proxies to.
      *
-     * @param \ArtisanSdk\Contract\Runnable $command
+     * @param \ArtisanSdk\Contract\Runnable $runnable
      */
-    public function __construct(Runnable $command)
+    public function __construct(Runnable $runnable)
     {
-        $this->command = $command;
+        $this->runnable = $runnable;
     }
 
     /**
@@ -54,9 +54,9 @@ class Builder implements Runnable
      */
     public function __invoke()
     {
-        $command = $this->toBase();
+        $runnable = $this->toBase();
 
-        return $comand();
+        return $runnable();
     }
 
     /**
@@ -80,16 +80,18 @@ class Builder implements Runnable
     }
 
     /**
-     * Get the query result as paginated.
+     * Paginate the given query into a simple paginator.
      *
-     * @param int $max  results
-     * @param int $page of results
+     * @param int      $max     per page
+     * @param array    $columns to fetch
+     * @param string   $name    of page request param
+     * @param int|null $page    number
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($max = 25, $page = null)
+    public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
-        return $this->forwardToQuery(__FUNCTION__, [$max, $page]);
+        return $this->forwardToQuery(__FUNCTION__, $max, $columns, $name, $page);
     }
 
     /**
@@ -120,10 +122,10 @@ class Builder implements Runnable
     public function toBase()
     {
         if ($this->silenced()) {
-            $this->command->silence();
+            $this->runnable->silence();
         }
 
-        return $this->command->arguments($this->arguments());
+        return $this->runnable->arguments($this->arguments());
     }
 
     /**
@@ -137,9 +139,9 @@ class Builder implements Runnable
      *
      * @return mixed
      */
-    protected function forward($method, $class, $arguments = null)
+    protected function forward($method, $class, ...$arguments)
     {
-        if ($this->command instanceof $class) {
+        if ($this->runnable instanceof $class) {
             return $this->toBase()->$method(...$arguments);
         }
 
@@ -154,8 +156,8 @@ class Builder implements Runnable
      *
      * @return mixed
      */
-    protected function forwardToQuery($method, $arguments = null)
+    protected function forwardToQuery($method, ...$arguments)
     {
-        return $this->forward($method, Query::class, $arguments);
+        return $this->forward($method, Query::class, ...$arguments);
     }
 }

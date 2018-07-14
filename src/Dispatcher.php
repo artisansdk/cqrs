@@ -2,17 +2,27 @@
 
 namespace ArtisanSdk\CQRS;
 
+use ArtisanSdk\Contract\Command;
 use ArtisanSdk\Contract\Event;
 use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\Contract\Query;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\Contract\Transactional;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\ConnectionInterface;
 use InvalidArgumentException;
 
 class Dispatcher
 {
-    // @todo inject events and ConnectionInterface
+    /**
+     * Inject the application container into the dispatcher to resolve global services.
+     *
+     * @param \Illuminate\Contracts\Container\Container $container
+     */
+    public function __construct(Container $container)
+    {
+        $this->container = $container;
+    }
 
     /**
      * Make an instance of the dispatcher.
@@ -21,7 +31,7 @@ class Dispatcher
      */
     public static function make()
     {
-        return app(static::class); // @todo remove dep on app()
+        return app(static::class);
     }
 
     /**
@@ -70,7 +80,7 @@ class Dispatcher
      */
     public function dispatch($class)
     {
-        $runnable = is_string($class) ? app($class) : $class; // @todo remove dep on app()
+        $runnable = $this->resolveClass($class);
 
         if ($runnable instanceof Command) {
             return $this->command($runnable);
@@ -92,24 +102,24 @@ class Dispatcher
      *
      * @param string|\ArtisanSdk\Contract\Runnable $class
      *
-     * @throws \InvalidArugmentException if class argument is not an instance of \ArtisanSdk\Command\Command
+     * @throws \InvalidArugmentException if class argument is not an instance of \ArtisanSdk\Contract\Command
      *
-     * @return \ArtisanSdk\Contract\Runnable
+     * @return \ArtisanSdk\Contract\Command
      */
     public function command($class)
     {
-        $command = is_string($class) ? app($class) : $class; // @todo remove dep on app()
+        $runnable = $this->resolveClass($class);
 
         if ($command instanceof Transactional) {
-            return $this->argumented(new Transaction($command, $this, app(ConnectionInterface::class))); // @todo remove dep on app()
+            return $this->newBuilder(new Transaction($command, $this, $this->makeFromContainer(ConnectionInterface::class)));
         }
 
         if ($command instanceof Eventable) {
-            return $this->argumented(new Evented($command, $this));
+            return $this->newBuilder(new Evented($command, $this));
         }
 
         if ($command instanceof Command) {
-            return $this->argumented($command);
+            return $this->newBuilder($command);
         }
 
         throw new InvalidArgumentException(get_class($command).' must be an instance of '.Command::class);
@@ -126,14 +136,14 @@ class Dispatcher
      */
     public function query($class)
     {
-        $query = is_string($class) ? app($class) : $class; // @todo remove dep on app()
+        $runnable = $this->resolveClass($class);
 
         if ($query instanceof Eventable) {
-            return $this->argumented(new Evented($query, $this));
+            return $this->newBuilder(new Evented($query, $this));
         }
 
         if ($query instanceof Query) {
-            return $this->argumented($query);
+            return $this->newBuilder($query);
         }
 
         throw new InvalidArgumentException(get_class($query).' must be an instance of '.Query::class);
@@ -142,23 +152,67 @@ class Dispatcher
     /**
      * Fire an event.
      *
-     * @param $event
-     * @param array $payload
+     * @param string|\ArtisanSdk\Contract\Event $event
+     * @param array                             $payload
      */
     public function event($event, $payload = [])
     {
-        $this->events->fire($event, $payload); // @todo inject events
+        $this->makeEvents()->fire($event, $payload);
     }
 
     /**
      * Fire an event until it is halted.
      *
-     * @param $event
+     * @param string|\ArtisanSdk\Contract\Event
      * @param array $payload
      */
     public function until($event, $payload = [])
     {
-        $this->events->until($event, $payload); // @todo inject events
+        $this->makeEvents()->until($event, $payload);
+    }
+
+    /**
+     * Wrap the class with an argument builder.
+     *
+     * @return \ArtisanSdk\CQRS\Builder
+     */
+    protected function newBuilder($class)
+    {
+        return new Builder($class);
+    }
+
+    /**
+     * Make the events service.
+     *
+     * @return \Illuminate\Events\Dispatcher
+     */
+    protected function makeEvents()
+    {
+        return $this->container->make('events');
+    }
+
+    /**
+     * Make a class from the container.
+     *
+     * @param string $class
+     *
+     * @return \ArtisanSdk\Contract\Runnable
+     */
+    protected function makeFromContainer($class)
+    {
+        return $this->container->make($class);
+    }
+
+    /**
+     * Resolve a runnable class.
+     *
+     * @param string|\ArtisanSdk\Contract\Runnable $class
+     *
+     * @return \ArtisanSdk\Contract\Runnable
+     */
+    protected function resolveClass($class)
+    {
+        return is_string($class) ? $this->makeFromContainer($class) : $class;
     }
 
     /**
@@ -208,15 +262,5 @@ class Dispatcher
         $event = str_replace(['\\Models\\', '\\Commands\\', '\\Queries\\'], '\\Events\\', $normalized).'\\'.$action;
 
         return str_replace(class_basename($class).'\\', '', $event);
-    }
-
-    /**
-     * Wrap the class with an argument builder.
-     *
-     * @return \ArtisanSdk\CQRS\Builder
-     */
-    protected function argumented($class)
-    {
-        return new Builder($class);
     }
 }
