@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Unit\Commands;
+namespace ArtisanSdk\CQRS\Tests\Unit;
 
 use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
