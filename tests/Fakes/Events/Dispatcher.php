@@ -11,7 +11,7 @@ class Dispatcher implements DispatcherInterface
      *
      * @var array
      */
-    protected $events = [];
+    public $events = [];
 
     /**
      * Register an event listener with the dispatcher.

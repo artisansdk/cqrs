@@ -1,18 +1,20 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Commands;
+namespace ArtisanSdk\CQRS\Jobs;
 
 use ArtisanSdk\Contract\Event;
 use ArtisanSdk\Contract\Handler;
 use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Traits\Queues;
 use ArtisanSdk\Model\Exceptions\InvalidModel; // @todo
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\Facades\Log; // @todo inject
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-class Job implements ShouldQueue
+class Job implements ShouldQueue, LoggerAwareInterface
 {
     use Queues;
 
@@ -31,17 +33,28 @@ class Job implements ShouldQueue
     protected $handler;
 
     /**
+     * The logger interface.
+     *
+     * @var \Psr\Log\LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * Construct the job arguments.
      *
      * @param \ArtisanSdk\Contract\Event                $event
      * @param string|array|\ArtisanSdk\Contract\Handler $handler
+     * @param \Psr\Log\LoggerInterface                  $logger
      */
-    public function __construct(Event $event, $handler)
+    public function __construct(Event $event, $handler, LoggerInterface $logger = null)
     {
         $this->event = $event;
         $this->handler = $this->resolveHandler($handler);
-        if (is_object($this->handler)) {
+        if (is_object($handler)) {
             $this->copyQueueSettingsFromHandler($handler);
+        }
+        if ( ! is_null($logger)) {
+            $this->setLogger($logger);
         }
     }
 
@@ -54,7 +67,7 @@ class Job implements ShouldQueue
     {
         try {
             if ($this->isRunnable($this->handler)) {
-                return $this->run($this->handler, $this->event);
+                return $this->run(is_array($this->handler) ? head($this->handler) : $this->handler, $this->event);
             }
 
             if (is_array($this->handler)) {
@@ -77,9 +90,11 @@ class Job implements ShouldQueue
      */
     public function run($handler, Event $event)
     {
+        $properties = $event->properties();
+
         return Dispatcher::make()
             ->command($handler)
-            ->arguments($event->properties())
+            ->arguments($properties['payload'])
             ->run();
     }
 
@@ -94,7 +109,9 @@ class Job implements ShouldQueue
      */
     public function call($class, $handler, Event $event)
     {
-        return app($class)->$handler($this->event); // @todo remove dep on app()
+        $class = is_string($class) ? app($class) : $class; // @todo remove dep on app()
+
+        return $class->$handler($this->event);
     }
 
     /**
@@ -104,7 +121,7 @@ class Job implements ShouldQueue
      */
     public function failed(Exception $exception)
     {
-        Log::error($this->getHandlerSignature($this->handler).': '.$exception->getMessage()); // @todo use injected logger if logging enabled
+        $this->log($exception);
 
         if ($exception instanceof RuntimeException || $exception instanceof InvalidModel) {
             return $this->delete();
@@ -131,7 +148,7 @@ class Job implements ShouldQueue
      *
      * @param string|array|\ArtisanSdk\Contract\Handler $handler
      *
-     * @return string
+     * @return array|object
      */
     protected function resolveHandler($handler)
     {
@@ -143,7 +160,7 @@ class Job implements ShouldQueue
             return $handler;
         }
 
-        if (str_contains($handler, '@')) {
+        if (is_string($handler) && str_contains($handler, '@')) {
             return explode('@', $handler);
         }
 
@@ -182,5 +199,45 @@ class Job implements ShouldQueue
         }
 
         return $handler;
+    }
+
+    /**
+     * Log the exception as an error if the logger is present.
+     *
+     * @param \Exception $exception
+     */
+    protected function log(Exception $exception)
+    {
+        if ($logger = $this->logger()) {
+            $logger = $logger->error(sprintf('%s: %s', $this->getHandlerSignature($this->handler), $exception->getMessage()));
+        }
+    }
+
+    /**
+     * Get or set the logger.
+     *
+     * @param \Psr\Log\LoggerInterface $logger
+     *
+     * @return \Psr\Log\LoggerInterface
+     */
+    public function logger(LoggerInterface $logger = null)
+    {
+        if ( ! is_null($logger)) {
+            $this->setLogger($logger);
+
+            return $this;
+        }
+
+        return $this->logger;
+    }
+
+    /**
+     * Set a logger instance on the object.
+     *
+     * @param \Psr\Log\LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
     }
 }

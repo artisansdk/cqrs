@@ -2,7 +2,7 @@
 
 namespace ArtisanSdk\CQRS\Traits;
 
-use Illuminate\Http\Request;
+use Illuminate\Contracts\Support\Arrayable;
 
 trait Arguments
 {
@@ -18,14 +18,14 @@ trait Arguments
      *
      * @todo allow request to be passed as an argument and have command abstract the needed arguments
      *
-     * @param array|null|\Illuminate\Http\Request $arguments
+     * @param array|null|\Illuminate\Contracts\Support\Arrayable $arguments
      *
      * @return self|array
      */
     public function arguments($arguments = null)
     {
         if ( ! is_null($arguments)) {
-            $this->arguments = $arguments instanceof Request ? $arguments->all() : (array) $arguments;
+            $this->arguments = $arguments instanceof Arrayable ? $arguments->toArray() : (array) $arguments;
 
             return $this;
         }

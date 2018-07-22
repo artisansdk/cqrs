@@ -4,7 +4,7 @@ namespace ArtisanSdk\CQRS\Traits;
 
 use ArtisanSdk\Contract\Event;
 use ArtisanSdk\Contract\Queueable;
-use ArtisanSdk\CQRS\Commands\Job;
+use ArtisanSdk\CQRS\Jobs\Job;
 
 trait Handle
 {
@@ -21,8 +21,10 @@ trait Handle
             return $this->queue($event);
         }
 
-        return $this->command(get_class($this))
-            ->arguments($event->properties())
+        $properties = $event->properties();
+
+        return $this->command($this)
+            ->arguments($properties['payload'])
             ->run();
     }
 

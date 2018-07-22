@@ -1,5 +1,6 @@
 <?php
 
+use ArtisanSdk\CQRS\Jobs\Pending;
 use Illuminate\Container\Container;
 
 if ( ! function_exists('app')) {
@@ -18,5 +19,19 @@ if ( ! function_exists('app')) {
         }
 
         return Container::getInstance()->make($abstract, $parameters);
+    }
+}
+
+if ( ! function_exists('dispatch')) {
+    /**
+     * Dispatch a job to its appropriate handler.
+     *
+     * @param mixed $job
+     *
+     * @return \ArtisanSdk\CQRS\Jobs\Pending
+     */
+    function dispatch($job)
+    {
+        return new Pending($job);
     }
 }

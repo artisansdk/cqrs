@@ -38,6 +38,16 @@ class Evented implements Contract
     }
 
     /**
+     * Run the command silently.
+     *
+     * @return mixed
+     */
+    public function silently()
+    {
+        return $this->silence()->__invoke();
+    }
+
+    /**
      * Run the eventable and emit before and after events.
      *
      * @return mixed
@@ -60,7 +70,7 @@ class Evented implements Contract
      */
     protected function before()
     {
-        if ($this->eventable->silenced()) {
+        if ($this->shouldBeSilenced()) {
             return;
         }
 
@@ -84,7 +94,7 @@ class Evented implements Contract
      */
     protected function after($response)
     {
-        if ($this->eventable->silenced()) {
+        if ($this->shouldBeSilenced()) {
             return;
         }
 
@@ -102,13 +112,24 @@ class Evented implements Contract
     }
 
     /**
+     * Should the eventable command be silenced?
+     *
+     * @return bool
+     */
+    protected function shouldBeSilenced()
+    {
+        return method_exists($this->eventable, 'silenced')
+            && $this->eventable->silenced();
+    }
+
+    /**
      * Resolve the progressive tense variation.
      *
-     * @param string $class in present tense
+     * @param string $command in present tense
      *
      * @return string
      */
-    public function resolveProgressiveTense($class)
+    public function resolveProgressiveTense($command)
     {
         $tenses = [
             'ate'                => 'ating',
@@ -124,8 +145,8 @@ class Evented implements Contract
             'e(ct|r|d|l)'        => 'e$1ing',
         ];
         foreach ($tenses as $present => $tense) {
-            if (preg_match('/'.$present.'$/i', $class)) {
-                return camel_case(preg_replace('/'.$present.'$/i', $tense, $class));
+            if (preg_match('/'.$present.'$/i', $command)) {
+                return camel_case(preg_replace('/'.$present.'$/i', $tense, $command));
             }
         }
 
@@ -135,11 +156,11 @@ class Evented implements Contract
     /**
      * Resolve the past tense variation.
      *
-     * @param string $class in present tense
+     * @param string $command in present tense
      *
      * @return string
      */
-    public function resolvePastTense($class)
+    public function resolvePastTense($command)
     {
         $tenses = [
             'ect'         => 'ected',
@@ -154,8 +175,8 @@ class Evented implements Contract
             'e(ct|r|d|l)' => 'e$1ed',
         ];
         foreach ($tenses as $present => $tense) {
-            if (preg_match('/'.$present.'$/i', $class)) {
-                return camel_case(preg_replace('/'.$present.'$/i', $tense, $class));
+            if (preg_match('/'.$present.'$/i', $command)) {
+                return camel_case(preg_replace('/'.$present.'$/i', $tense, $command));
             }
         }
 

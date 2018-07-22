@@ -17,6 +17,20 @@ class Connection implements ConnectionInterface
     protected $transactions = 0;
 
     /**
+     * The number of commits.
+     *
+     * @var int
+     */
+    public $commits = 0;
+
+    /**
+     * The number of rollbacks.
+     *
+     * @var int
+     */
+    public $rollbacks = 0;
+
+    /**
      * Get the query grammar used by the connection.
      *
      * @return \Illuminate\Database\Query\Grammars\Grammar
@@ -193,6 +207,7 @@ class Connection implements ConnectionInterface
     public function commit()
     {
         --$this->transactions;
+        ++$this->commits;
     }
 
     /**
@@ -201,6 +216,7 @@ class Connection implements ConnectionInterface
     public function rollBack()
     {
         --$this->transactions;
+        ++$this->rollbacks;
     }
 
     /**
@@ -210,7 +226,7 @@ class Connection implements ConnectionInterface
      */
     public function transactionLevel()
     {
-        $this->transactions;
+        return $this->transactions;
     }
 
     /**

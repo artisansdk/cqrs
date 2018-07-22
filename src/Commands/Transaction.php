@@ -42,6 +42,16 @@ class Transaction implements Contract
     }
 
     /**
+     * Run the command silently.
+     *
+     * @return mixed
+     */
+    public function silently()
+    {
+        return $this->silence()->__invoke();
+    }
+
+    /**
      * Run the command in a transaction.
      *
      * @return mixed
@@ -57,7 +67,7 @@ class Transaction implements Contract
             throw $exception;
         }
 
-        if ( ! method_exists($this->runnable, 'aborted') || ! $this->runnable->aborted()) {
+        if (method_exists($this->runnable, 'aborted') && $this->runnable->aborted()) {
             $this->database->rollback();
 
             return $response;

@@ -3,6 +3,7 @@
 namespace ArtisanSdk\CQRS\Commands;
 
 use ArtisanSdk\Contract\Command as Contract;
+use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Traits\Arguments;
 use ArtisanSdk\CQRS\Traits\CQRS;
 use ArtisanSdk\CQRS\Traits\Handle;

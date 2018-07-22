@@ -17,6 +17,16 @@ The package installs into a PHP application like any other PHP package:
 composer require artisansdk/cqrs
 ```
 
+TODO: These indirect dependencies need further explanation:
+
+- app()
+- dispatch()
+- illuminate/container (for IoC resolution)
+- illuminate/bus (for job dispatching)
+- illuminate/events (for event dispatching)
+- illuminate/database (for transactional commands and queries)
+- illuminate/queue (serializesmodels for jobs and events, interactswithqueues for jobs)
+
 ## Usage Guide
 
 The common use cases for this package should be documented including any troubleshooting.
@@ -30,11 +40,16 @@ are some Composer scripts which can assist with Code Styling and coverage report
 
 ```bash
 composer test
+composer watch
 composer fix
 composer report
 ```
 
 See the `composer.json` for more details on their execution and reporting output.
+Note that `composer watch` relies upon [`watchman-make`](https://facebook.github.io/watchman/docs/install.html).
+Additionally `composer report` assumes a Unix system to run line coverage reporting.
+Configure the command setting the value for `min = 80` to set your minimum line
+coverage requirements.
 
 ## Licensing
 

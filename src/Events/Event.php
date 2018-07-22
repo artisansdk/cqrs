@@ -29,9 +29,9 @@ class Event implements Contract
      *
      * @param mixed $payload
      */
-    public function __construct(...$payload)
+    public function __construct()
     {
-        $this->payload = $payload;
+        $this->payload = func_num_args() ? func_get_arg(0) : [];
     }
 
     /**

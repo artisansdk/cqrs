@@ -229,7 +229,7 @@ class DispatcherTest extends TestCase
         $this->assertSame(Event::class, $events[0]['name'], 'The default event should have fired.');
         $this->assertInstanceOf(Event::class, $events[0]['class'], 'The event fired should be an instance of '.Event::class.'.');
         $this->assertSame('ArtisanSdk\CQRS\Tests\Fakes\Events\Foo\Creating', $events[0]['class']->event(), 'The event should be named based on the method called.');
-        $this->assertSame([$class], $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
+        $this->assertSame($class, $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
         $this->assertTrue($events[0]['halt'], 'The event should halt if event name is progressive tense.');
     }
 
@@ -244,7 +244,7 @@ class DispatcherTest extends TestCase
         $this->assertSame(Event::class, $events[0]['name'], 'The default event should have fired.');
         $this->assertInstanceOf(Event::class, $events[0]['class'], 'The event fired should be an instance of '.Event::class.'.');
         $this->assertSame('ArtisanSdk\CQRS\Tests\Fakes\Events\Foo\Created', $events[0]['class']->event(), 'The event should be named based on the method called.');
-        $this->assertSame([$class], $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
+        $this->assertSame($class, $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
         $this->assertFalse($events[0]['halt'], 'The event should not halt if event name is past tense.');
     }
 
@@ -259,7 +259,7 @@ class DispatcherTest extends TestCase
         $this->assertSame(Bar::class, $events[0]['name'], 'The bar event should have fired.');
         $this->assertInstanceOf(Bar::class, $events[0]['class'], 'The event fired should be an instance of '.Bar::class.'.');
         $this->assertSame(Bar::class, $events[0]['class']->event(), 'The event should be named based on the method called.');
-        $this->assertSame([$class], $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
+        $this->assertSame($class, $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
         $this->assertFalse($events[0]['halt'], 'The event should not halt if event name is past tense.');
     }
 
@@ -274,7 +274,7 @@ class DispatcherTest extends TestCase
         $this->assertSame(Baz::class, $events[0]['name'], 'The baz event should have fired.');
         $this->assertInstanceOf(Baz::class, $events[0]['class'], 'The event fired should be an instance of '.Baz::class.'.');
         $this->assertSame('ArtisanSdk\CQRS\Tests\Fakes\Events\Foo\Baz', $events[0]['class']->event(), 'The event should be named based on the method called.');
-        $this->assertSame([$class], $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
+        $this->assertSame($class, $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
         $this->assertFalse($events[0]['halt'], 'The event should not halt if event name is past tense.');
     }
 
@@ -289,7 +289,7 @@ class DispatcherTest extends TestCase
         $this->assertSame(Fizzing::class, $events[0]['name'], 'The fizzing event should have fired.');
         $this->assertInstanceOf(Fizzing::class, $events[0]['class'], 'The event fired should be an instance of '.Fizzing::class.'.');
         $this->assertSame('ArtisanSdk\CQRS\Tests\Fakes\Events\Foo\Fizz\Fizzing', $events[0]['class']->event(), 'The event should be named based on the method called.');
-        $this->assertSame([$class], $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
+        $this->assertSame($class, $events[0]['class']->properties()['payload'], 'The event should be passed the class as the payload.');
         $this->assertTrue($events[0]['halt'], 'The event should halt if event name is progressive tense.');
     }
 }
