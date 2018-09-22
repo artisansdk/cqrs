@@ -23,7 +23,7 @@ trait CQRS
      *
      * @return \ArtisanSdk\Contract\Runnable
      */
-    protected function dispatch($class)
+    protected function call($class)
     {
         return $this->dispatcher()->dispatch($class);
     }

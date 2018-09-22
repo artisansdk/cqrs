@@ -6,7 +6,9 @@ use ArtisanSdk\Contract\Command as CommandInterface;
 use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Builder;
+use ArtisanSdk\CQRS\Jobs\Chain;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable;
 use ArtisanSdk\CQRS\Tests\TestCase;
 
 class CommandTest extends TestCase
@@ -21,6 +23,11 @@ class CommandTest extends TestCase
         $this->assertInstanceOf(Builder::class, $command, 'When a command is made it should run through the dispatcher and return as a builder.');
         $this->assertInstanceOf(CommandInterface::class, $command->toBase(), 'A command must implement the '.CommandInterface::class.' interface.');
         $this->assertInstanceOf(Command::class, $command->toBase(), 'When a command is made it should return a factory instance of itself.');
+        $this->assertEmpty($command->arguments(), 'When a command is made without arguments then the arguments should be an empty array.');
+
+        $arguments = ['foo' => 'bar'];
+        $command = Command::make($arguments);
+        $this->assertSame($arguments, $command->arguments(), 'When a command is made with arguments then the arguments should be assigned to the returned command.');
     }
 
     /**
@@ -69,5 +76,30 @@ class CommandTest extends TestCase
         $this->assertFalse($command->aborted(), 'The command should not be aborted by default.');
         $this->assertSame($command, $command->abort(), 'When a command is aborted it should return itself.');
         $this->assertTrue($command->aborted(), 'An aborted command should report that it is aborted.');
+    }
+
+    /**
+     * Test that a queuable command can be dispatched now.
+     */
+    public function testDispatchNow()
+    {
+        $command = new Queueable();
+        list($job, $handler) = $command->dispatchNow();
+
+        $this->assertEquals($command, $job, 'The command queued should be the job dispatched now.');
+        $this->assertSame('run', $handler, 'The handler for the queued command should be the run method.');
+    }
+
+    /**
+     * Test that a queuable command can be dispatched now.
+     */
+    public function testWithChain()
+    {
+        $command = new Queueable();
+        $chain = $command->withChain([
+            Queueable::class,
+        ]);
+
+        $this->assertInstanceOf(Chain::class, $chain, 'The command should allow chaining of queued jobs.');
     }
 }

@@ -7,10 +7,24 @@ A foundational package for Command Query Responsibility Segregation (CQRS).
 - [Installation](#installation)
 - [Usage Guide](#usage-guide)
     - [Commands](#commands)
-        - [How to Create a Custom Command](#how-to-create-a-command)
+        - [How to Create a Command](#how-to-create-a-command)
         - [How to Run a Command](#how-to-run-a-command)
         - [How to Create an Evented Command](#how-to-create-an-evented-command)
         - [How to Run a Command in a Transaction](#how-to-run-a-command-in-a-transaction)
+        - [How to Use a Command as an Event Handler](#how-to-use-a-command-as-an-event-handler)
+        - [How to Queue a Command](#how-to-queue-a-command)
+    - [Queries](#queries)
+        - [How to Create a Query](#how-to-create-a-query)
+        - [How to Get Query Results](#how-to-get-query-results)
+        - [How to Create an Evented Query](#how-to-create-an-evented-query)
+    - [Events](#events)
+        - [How Auto-resolution of Events Work](#how-auto-resolution-of-events-work)
+        - [How to Customize the Before and After Events](#how-to-customize-the-before-and-after-events)
+        - [Recommended Conventions for Command and Event Naming](#recommended-conventions-for-command-event-naming)
+    - [Traits](#traits)
+        - [Using CQRS in Your Classes](#using-cqrs-in-your-classes)
+        - [Saving Models Within Commands](#saving-models-within-commands)
+        - [Using the Silencer](#using-the-silencer)
 - [Running the Tests](#running-the-tests)
 - [Licensing](#licensing)
 
@@ -196,8 +210,19 @@ before and another after the command is ran. The before event will be given the
 arguments passed to the command while the after event will be given the results
 of the command itself. The event fired is an instance of `ArtisanSdk\CQRS\Events\Event`.
 
-@todo: describe the auto-resolution behavior for event names
-@todo: describe how to overwrite the command's default class names using `beforeEvent` and `afterEvent` methods on the command
+##### Silencing an Evented Command
+
+While firing events before and after a command is executed can be useful, sometimes
+you want to run an evented command silently so listeners are not fired. Evented
+commands have helper methods on the command and also the command builder to make
+this use case easier. You can call `silence()` to silence the command, `silenced()`
+to check if a command is silenced, and `silently()` to run silently.
+
+```
+$user = App\Commands\SaveUser::make()
+    ->email('johndoe@example.com')
+    ->silently();
+```
 
 #### How to Run a Command in a Transaction
 
@@ -307,9 +332,190 @@ a command pool based on when one command in the pool is aborted. You can also us
 the `aborted()` method to check if a command has been aborted to better determine
 what to do with the command's result.
 
+#### How to Use a Command as an Event Handler
+
+When the application fires events, event subscribers can broadcast the event to
+all bound event listeners. Each listener provides a `handle()` method which receives
+the event as argument and then executes some arbitrary logic. This handler is
+essentially the same as a command and therefore commands can be used as command
+handlers. The default behavior of `handle()` is to extract the `payload` property
+from the event object and pass that as arguments to a command builder and then
+self-execute by invoking the command's `run()` method.
+
+First you'll need to create a custom event that should fire. These events need
+to extend `ArtisanSdk\CQRS\Events\Event` which provides the payload of arguments
+that will be passed to the command. In our example event we accept a type hinted
+`App\User` model as the only argument to the constructor to ensure that the event
+is created with the right kind of payload. We then assign this model to the `user`
+key in an array that is passed to the parent constructor. This parent will correctly
+assign to this argument to the payload property.
+
+```
+namespace App\Events;
+
+use ArtisanSdk\CQRS\Events\Event;
+use App\User;
+
+class UserSaved extends Event
+{
+    public function __construct(User $user)
+    {
+        parent::__construct(compact('user'));
+    }
+}
+```
+
+Next, we'll need to create a command that fires this event when it is done running.
+For a non-conventional event name, you'll need to provide the dispatcher with the
+custom event name in the `beforeEvent()` and `afterEvent()` methods of the command.
+In our case we just return the class name as a string which the dispatcher will
+construct and pass the `App\User` returned by `run()` to the event's constructor.
+
+```
+namespace App\Commands;
+
+use ArtisanSdk\Contracts\Commands\Eventable;
+use ArtisanSdk\CQRS\Commands\Command;
+use App\Events\UserSaved;
+
+class SaveUser extends Command implements Eventable
+{
+    protected $model;
+
+    public function __construct(User $model)
+    {
+        $this->model = $model;
+    }
+
+    public function afterEvent()
+    {
+        return UserSaved::class;
+    }
+
+    public function run()
+    {
+        $user = $this->model;
+        $user->email = $this->argument('email');
+        $user->save();
+
+        return $user;
+    }
+}
+```
+
+While the dispatcher handles all the indirection automatically, it can be summarized
+as having accomplished the same as manually constructing and calling the following:
+
+```
+$command = (new App\Commands\SaveUser(new App\User));
+$user = $command->email('johndoe@example.com')->run();
+$event = new App\Events\UserSaved($user);
+```
+
+Next we'll need create another command which we will bind as the event handler
+for any `App\Events\UserSaved` events that are fired:
+
+```
+namespace App\Commands;
+
+use ArtisanSdk\CQRS\Commands\Command;
+
+class SendUserWelcomeEmail extends Command
+{
+    public function run()
+    {
+        $user = $this->argument('user');
+
+        // ... the $user is an instance of `App\User` and can be used in a Mailable
+    }
+}
+```
+
+The actual logic of sending the email has been omitted but as you can see it is
+possible to get the `App\User` model from the arguments that will be automatically
+passed to the command when the `handle()` method is called. This is accomplished
+by simply wiring up a listener. It's recommended that you follow Laravel's documentation
+on wiring up listeners within the `App\Providers\EventServiceProvider` class using
+the `$listen` property but the following demonstrates manually subscribing a event
+handler to an event as an event listener:
+
+```
+event()->listen(App\Events\UserSaved::class, App\Commands\SendUserWelcomeEmail::class);
+```
+
+Now whenever the `App\Events\UserSaved` event is fired the `App\Commands\SendUserWelcomeEmail`
+command's `handle()` method will be called with the event passed as argument. This
+in turn will unwrap the event and provide the event's payload as arguments to the
+command and then self-execute. Firing the event is the equivalent of manually calling:
+
+```
+$command = (new App\Commands\SaveUser(new App\User));
+$user = $command->email('johndoe@example.com')->run();
+$event = new App\Events\UserSaved($user);
+$handler = (new App\Commands\SendUserWelcomeEmail);
+$result = $handler->handle($event);
+```
+
+#### How to Queue a Command
+
+In the case above, we're sending an email and this is often considered a background
+process that is not critical to response success. Usually a queued job would be
+used in this case. If you think about it though, a job is really just the definition
+of an event and it's handler which is queued for later execution rather than
+immediate execution. Since commands can be these self-executing event handlers,
+the handler can also be queued as a job instead. This package makes it trivial to
+queue the handler by simply implementing the `ArtisanSdk\Contract\Queueable` interface
+and adding the `ArtisanSdk\CQRS\Traits\Queues` trait on the command you want to
+be queued and support queue interactions:
+
+```
+namespace App\Commands;
+
+use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Triats\Queue;
+use ArtisanSdk\Contracts\Queuable;
+
+class SendUserWelcomeEmail extends Command implements Queueable
+{
+    use Queues;
+
+    // ... same as before but it'll now be queued
+}
+```
+
+Now whenever the `App\Events\UserSaved` event is fired, the `App\Commands\SendUserWelcomeEmail`
+command will be queued and then executed by a queue worker. All the same methods
+and properties like `$connection`, `$queue`, and `$delay` are supported on the
+command now and you can therefore configure your commands with defined defaults
+or let the caller decide via `onConnection()`, `onQueue()`, etc.
+
+### Queries
+
+#### How to Create a Query
+
+#### How to Get Query Results
+
+#### How to Create an Evented Query
+
+### Events
+
+#### How Auto-resolution of Events Work
+
+#### How to Customize the Before and After Events
+
+#### Recommended Conventions for Command and Event Naming
+
+### Traits
+
+#### Using CQRS in Your Classes
+
+#### Saving Models Within Commands
+
+#### Using the Silencer
+
 ## Running the Tests
 
-The package is unit tested with 100% line coverage and path coverage. You can
+The package is unit tested with 91% line coverage and path coverage. You can
 run the tests by simply cloning the source, installing the dependencies, and then
 running `./vendor/bin/phpunit`. Additionally included in the developer dependencies
 are some Composer scripts which can assist with Code Styling and coverage reporting:

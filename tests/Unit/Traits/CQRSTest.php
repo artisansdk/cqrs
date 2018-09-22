@@ -25,12 +25,12 @@ class CQRSTest extends TestCase
     /**
      * Test that a call to dispatch dispatches the class.
      */
-    public function testDispatch()
+    public function testCall()
     {
-        $response = (new Command())->testDispatch(Transactional::class);
+        $response = (new Command())->testCall(Transactional::class);
 
-        $this->assertInstanceOf(Builder::class, $response, 'A call to dispatch() should dispatch an instance of the command and return a builder.');
-        $this->assertInstanceOf(Transaction::class, $response->toBase(), 'The builder should wrap the command passed to dispatch().');
+        $this->assertInstanceOf(Builder::class, $response, 'A call to call() should dispatch an instance of the command and return a builder.');
+        $this->assertInstanceOf(Transaction::class, $response->toBase(), 'The builder should wrap the command passed to call().');
     }
 
     /**

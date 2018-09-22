@@ -27,6 +27,7 @@ class Dispatcher implements QueueingDispatcher
      */
     public function dispatchNow($command, $handler = null)
     {
+        return [$command, $handler ?? 'run'];
     }
 
     /**

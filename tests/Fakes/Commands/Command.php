@@ -7,10 +7,6 @@ use BadMethodCallException;
 
 class Command extends Base
 {
-    public $queue = 'default';
-    public $connection = 'default';
-    public $delay = 10;
-
     public function run()
     {
         return true;

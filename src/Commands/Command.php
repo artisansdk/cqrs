@@ -24,11 +24,13 @@ abstract class Command implements Contract
     /**
      * Create new instance of command.
      *
+     * @param array $arguments
+     *
      * @return \ArtisanSdk\Contract\Command
      */
-    public static function make()
+    public static function make(array $arguments = [])
     {
-        return Dispatcher::make()->command(static::class);
+        return Dispatcher::make()->command(static::class)->arguments($arguments);
     }
 
     /**

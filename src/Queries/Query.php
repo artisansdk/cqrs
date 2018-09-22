@@ -7,7 +7,7 @@ use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Traits\Arguments;
 use ArtisanSdk\CQRS\Traits\CQRS;
 use ArtisanSdk\CQRS\Traits\Silencer;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder;
 
 // @todo docblock
 abstract class Query implements Contract
@@ -17,11 +17,13 @@ abstract class Query implements Contract
     /**
      * Create new instance of query.
      *
+     * @param array $arguments
+     *
      * @return \ArtisanSdk\Contract\Query
      */
-    public static function make()
+    public static function make(array $arguments = [])
     {
-        return Dispatcher::make()->query(static::class);
+        return Dispatcher::make()->query(static::class)->arguments($arguments);
     }
 
     /**
@@ -37,12 +39,9 @@ abstract class Query implements Contract
     /**
      * Get the query builder.
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return \Illuminate\Database\Query\Builder
      */
-    public function builder()
-    {
-        return app(Builder::class); // @todo remove dependency on app()
-    }
+    abstract public function builder();
 
     /**
      * Convert the query builder to a SQL statement.
