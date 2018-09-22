@@ -56,7 +56,7 @@ some sort of "write" operation or complete a unit of work and return its results
 An asynchronous command would return a promise while a synchronous command would
 return the result itself or nothing at all.
 
-#### How to Create a Custom Command
+#### How to Create a Command
 
 A basic example of using a command is to create a class that extends the
 `ArtisanSdk\CQRS\Commands\Command` class and implementing the `run()` method
@@ -66,7 +66,7 @@ required and the caller must satisfy the requirements or else the developer must
 throw an exception to ensure all required arguments are passed and validated
 prior to execution of critical command logic.
 
-```
+```php
 namespace App\Commands\SaveUser;
 
 use App\User;
@@ -103,7 +103,7 @@ on the builder passing an array of arguments.
 
 ##### Run a Command Using the Dispatcher
 
-```
+```php
 $user = ArtisanSdk\CQRS\Dispatcher::make()
     ->command(App\Commands\SaveUser::class)
     ->email('johndoe@example.com')
@@ -115,7 +115,7 @@ $user = ArtisanSdk\CQRS\Dispatcher::make()
 Alternatively you could just make the command statically which will also create
 an instance of the command builder:
 
-```
+```php
 $user = App\Commands\SaveUser::make()
     ->email('johndoe@example.com')
     ->run();
@@ -130,7 +130,7 @@ return an instance of the command builder. The base `ArtisanSdk\CQRS\Commands\Co
 uses this trait and therefore subcommands can be executed within a command in
 the same way:
 
-```
+```php
 namespace App\Http\Controllers;
 
 use App\Commands\SaveUser;
@@ -161,9 +161,11 @@ also manually execute a command by simply constructing it either using auto-reso
 from the container or manually and then calling the `run()` method on the command
 or directly invoking the class:
 
-```
+```php
 $user = (new App\Commands\SaveUser(new App\User))
-    ->email('johndoe@example.com')
+    ->arguments([
+        'email' => 'johndoe@example.com',
+    ])
     ->run();
 ```
 
@@ -178,7 +180,7 @@ the command based on the result of the command. Using the dispatcher this is
 trivially done by simply implementing the `ArtisanSdk\Contracts\Commands\Eventable`
 interface on any command that should be invented:
 
-```
+```php
 namespace App\Commands;
 
 use ArtisanSdk\Contracts\Commands\Eventable;
@@ -218,7 +220,7 @@ commands have helper methods on the command and also the command builder to make
 this use case easier. You can call `silence()` to silence the command, `silenced()`
 to check if a command is silenced, and `silently()` to run silently.
 
-```
+```php
 $user = App\Commands\SaveUser::make()
     ->email('johndoe@example.com')
     ->silently();
@@ -235,7 +237,7 @@ write into each command so this package provides a trivial way to do this by
 implementing the `ArtisanSdk\Contracts\Commands\Transactional` interface on any
 command that should be transactional:
 
-```
+```php
 namespace App\Commands;
 
 use ArtisanSdk\Contracts\Commands\Transactional;
@@ -274,7 +276,7 @@ yet still return a result that satisfies your caller's response expectations. Fo
 such cases the command should call `abort()` and then return the result. The
 transactional wrapper will still rollback but will not bubble any exception:
 
-```
+```php
 namespace App\Commands;
 
 use ArtisanSdk\Contracts\Commands\Transactional;
@@ -309,7 +311,7 @@ class ChangePassword extends Command implements Transactional
 The above example changes the password of the user that matches the email address.
 If the email does not match any known user, rather than throwing an exception, we
 just abort and return `false` instead. Had we performed any other write queries
-then those would have been rolledback.
+then those would have been rolled back.
 
 ##### Silencing After Events With Abort
 
@@ -350,7 +352,7 @@ is created with the right kind of payload. We then assign this model to the `use
 key in an array that is passed to the parent constructor. This parent will correctly
 assign to this argument to the payload property.
 
-```
+```php
 namespace App\Events;
 
 use ArtisanSdk\CQRS\Events\Event;
@@ -371,7 +373,7 @@ custom event name in the `beforeEvent()` and `afterEvent()` methods of the comma
 In our case we just return the class name as a string which the dispatcher will
 construct and pass the `App\User` returned by `run()` to the event's constructor.
 
-```
+```php
 namespace App\Commands;
 
 use ArtisanSdk\Contracts\Commands\Eventable;
@@ -406,16 +408,17 @@ class SaveUser extends Command implements Eventable
 While the dispatcher handles all the indirection automatically, it can be summarized
 as having accomplished the same as manually constructing and calling the following:
 
-```
-$command = (new App\Commands\SaveUser(new App\User));
-$user = $command->email('johndoe@example.com')->run();
+```php
+$command = (new App\Commands\SaveUser(new App\User()));
+$builder = new ArtisanSdk\CQRS\Builder($command);
+$user = $builder->email('johndoe@example.com')->run();
 $event = new App\Events\UserSaved($user);
 ```
 
 Next we'll need create another command which we will bind as the event handler
 for any `App\Events\UserSaved` events that are fired:
 
-```
+```php
 namespace App\Commands;
 
 use ArtisanSdk\CQRS\Commands\Command;
@@ -439,7 +442,7 @@ on wiring up listeners within the `App\Providers\EventServiceProvider` class usi
 the `$listen` property but the following demonstrates manually subscribing a event
 handler to an event as an event listener:
 
-```
+```php
 event()->listen(App\Events\UserSaved::class, App\Commands\SendUserWelcomeEmail::class);
 ```
 
@@ -448,11 +451,12 @@ command's `handle()` method will be called with the event passed as argument. Th
 in turn will unwrap the event and provide the event's payload as arguments to the
 command and then self-execute. Firing the event is the equivalent of manually calling:
 
-```
-$command = (new App\Commands\SaveUser(new App\User));
-$user = $command->email('johndoe@example.com')->run();
+```php
+$command = (new App\Commands\SaveUser(new App\User()));
+$builder = new ArtisanSdk\CQRS\Builder($command);
+$user = $builder->email('johndoe@example.com')->run();
 $event = new App\Events\UserSaved($user);
-$handler = (new App\Commands\SendUserWelcomeEmail);
+$handler = (new App\Commands\SendUserWelcomeEmail());
 $result = $handler->handle($event);
 ```
 
@@ -468,7 +472,7 @@ queue the handler by simply implementing the `ArtisanSdk\Contract\Queueable` int
 and adding the `ArtisanSdk\CQRS\Traits\Queues` trait on the command you want to
 be queued and support queue interactions:
 
-```
+```php
 namespace App\Commands;
 
 use ArtisanSdk\CQRS\Commands\Command;
@@ -515,7 +519,7 @@ or let the caller decide via `onConnection()`, `onQueue()`, etc.
 
 ## Running the Tests
 
-The package is unit tested with 91% line coverage and path coverage. You can
+The package is unit tested with 94% line coverage and path coverage. You can
 run the tests by simply cloning the source, installing the dependencies, and then
 running `./vendor/bin/phpunit`. Additionally included in the developer dependencies
 are some Composer scripts which can assist with Code Styling and coverage reporting:
