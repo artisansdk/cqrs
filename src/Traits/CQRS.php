@@ -20,12 +20,13 @@ trait CQRS
      * Dispatch a runnable command or query.
      *
      * @param string|\ArtisanSdk\Contract\Runnable $class
+     * @param array $arguments
      *
      * @return \ArtisanSdk\Contract\Runnable
      */
-    protected function call($class)
+     public function call($command, array $arguments = [])
     {
-        return $this->dispatcher()->dispatch($class);
+        return $this->dispatcher()->dispatch($class)->arguments($arguments);
     }
 
     /**
