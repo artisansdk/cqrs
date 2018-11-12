@@ -19,14 +19,14 @@ trait CQRS
     /**
      * Dispatch a runnable command or query.
      *
-     * @param string|\ArtisanSdk\Contract\Runnable $command
+     * @param string|\ArtisanSdk\Contract\Runnable $class
      * @param array $arguments
      *
      * @return \ArtisanSdk\Contract\Runnable
      */
-     public function call($command, array $arguments = [])
+    public function call($class, array $arguments = [])
     {
-        return $this->dispatcher()->dispatch($command)->arguments($arguments);
+        return $this->dispatcher()->dispatch($class)->arguments($arguments);
     }
 
     /**
