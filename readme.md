@@ -46,6 +46,11 @@ TODO: These indirect dependencies need further explanation:
 - illuminate/database (for transactional commands and queries)
 - illuminate/queue (serializesmodels for jobs and events, interactswithqueues for jobs)
 
+TODO: These features need to be added to initial release:
+
+- `Traits\Arguments::argument(string key, default = null)` should be `argument(string key, callable validator = null)` and throw `InvalidArgument` exception if argument is not set or optional validator fails
+- `Traits\Arguments::option(string key, default = null)` and `hasOption(string key)` should be added to compensate for change in `argument()` signature
+
 ## Usage Guide
 
 ### Commands
