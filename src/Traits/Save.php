@@ -20,10 +20,10 @@ trait Save
         if ( ! $model->save()) {
             if ('cli' === php_sapi_name() || 'phpdbg' === php_sapi_name()) {
                 $errors = implode(PHP_EOL.'- ', (array) $model->getErrors()->all());
-                $message = sprintf('The %s model could not be saved because the attributes were invalid: %s', get_class($model), $errors);
+                $message = sprintf('The %s model could not be saved because the attributes were invalid:%s%s', get_class($model), PHP_EOL, $errors);
             }
 
-            return $model->throwValidationException($message);
+            return $model->throwValidationException($message ?? null);
         }
 
         return $model;
