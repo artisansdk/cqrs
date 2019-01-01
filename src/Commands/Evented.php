@@ -29,6 +29,43 @@ class Evented implements Contract
     protected $dispatcher;
 
     /**
+     * Map of present tense to progressive tense conjugations.
+     *
+     * @var array
+     */
+    protected $progressiveMap = [
+        'ate'                => 'ating',
+        'ect'                => 'ecting',
+        'ish'                => 'ishing',
+        'it'                 => 'itting',
+        'ive'                => 'iving',
+        'n'                  => 'nning',
+        'ost'                => 'osting',
+        '([aeiou])d'         => '$1ding',
+        '([aeiou][^aeiou])e' => '$1ing',
+        '(n|dr)d'            => '$1ding',
+        'e(ct|r|d|l)'        => 'e$1ing',
+    ];
+
+    /**
+     * Map of present tense to past tense conjugations.
+     *
+     * @var array
+     */
+    protected $pastMap = [
+        'ect'         => 'ected',
+        'ind'         => 'ound',
+        'ish'         => 'ished',
+        'it'          => 'itted',
+        'n'           => 'nned',
+        'ost'         => 'osted',
+        '([^aeiou])e' => '$1ed',
+        '([aeiou])d'  => '$1ded',
+        '(n|d|r)d'    => '$1ded',
+        'e(ct|r|d|l)' => 'e$1ed',
+    ];
+
+    /**
      * Inject the underlying Eventable that this class proxies to.
      *
      * @param \ArtisanSdk\Contract\Eventable $eventable
@@ -78,8 +115,11 @@ class Evented implements Contract
         }
 
         if (method_exists($this->eventable, 'beforeEvent')) {
-            $name = $this->eventable->beforeEvent();
-            $event = (new $name($this->arguments()))->event($name);
+            $name = $this->eventable->beforeEvent($this->arguments());
+            $event = is_string($name)
+                ? $event = (new $name($this->arguments()))->event($name)
+                : $name;
+
             $this->dispatcher->until($event);
 
             return;
@@ -102,8 +142,11 @@ class Evented implements Contract
         }
 
         if (method_exists($this->eventable, 'afterEvent')) {
-            $name = $this->eventable->afterEvent();
-            $event = (new $name($response))->event($name);
+            $name = $this->eventable->afterEvent($response);
+            $event = is_string($name)
+                ? (new $name($response))->event($name)
+                : $name;
+
             $this->dispatcher->event($event);
 
             return;
@@ -134,20 +177,7 @@ class Evented implements Contract
      */
     public function resolveProgressiveTense($command)
     {
-        $tenses = [
-            'ate'                => 'ating',
-            'ect'                => 'ecting',
-            'ish'                => 'ishing',
-            'it'                 => 'itting',
-            'ive'                => 'iving',
-            'n'                  => 'nning',
-            'ost'                => 'osting',
-            '([aeiou])d'         => '$1ding',
-            '([aeiou][^aeiou])e' => '$1ing',
-            '(n|dr)d'            => '$1ding',
-            'e(ct|r|d|l)'        => 'e$1ing',
-        ];
-        foreach ($tenses as $present => $tense) {
+        foreach ($this->progressiveMap as $present => $tense) {
             if (preg_match('/'.$present.'$/i', $command)) {
                 return camel_case(preg_replace('/'.$present.'$/i', $tense, $command));
             }
@@ -165,19 +195,7 @@ class Evented implements Contract
      */
     public function resolvePastTense($command)
     {
-        $tenses = [
-            'ect'         => 'ected',
-            'ind'         => 'ound',
-            'ish'         => 'ished',
-            'it'          => 'itted',
-            'n'           => 'nned',
-            'ost'         => 'osted',
-            '([^aeiou])e' => '$1ed',
-            '([aeiou])d'  => '$1ded',
-            '(n|d|r)d'    => '$1ded',
-            'e(ct|r|d|l)' => 'e$1ed',
-        ];
-        foreach ($tenses as $present => $tense) {
+        foreach ($this->pastMap as $present => $tense) {
             if (preg_match('/'.$present.'$/i', $command)) {
                 return camel_case(preg_replace('/'.$present.'$/i', $tense, $command));
             }
