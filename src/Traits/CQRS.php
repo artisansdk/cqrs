@@ -20,7 +20,7 @@ trait CQRS
      * Dispatch a runnable command or query.
      *
      * @param string|\ArtisanSdk\Contract\Runnable $class
-     * @param array $arguments
+     * @param array                                $arguments
      *
      * @return \ArtisanSdk\Contract\Runnable
      */

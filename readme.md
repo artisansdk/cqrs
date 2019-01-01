@@ -5,6 +5,8 @@ A foundational package for Command Query Responsibility Segregation (CQRS).
 ## Table of Contents
 
 - [Installation](#installation)
+    - [Peer Dependencies](#peer-dependencies)
+    - [Framework Helpers Functions](#framework-helpers-functions)
 - [Usage Guide](#usage-guide)
     - [Commands](#commands)
         - [How to Create a Command](#how-to-create-a-command)
@@ -23,6 +25,8 @@ A foundational package for Command Query Responsibility Segregation (CQRS).
         - [Recommended Conventions for Command and Event Naming](#recommended-conventions-for-command-event-naming)
     - [Traits](#traits)
         - [Using CQRS in Your Classes](#using-cqrs-in-your-classes)
+        - [Using Argument Validators](#using-argument-validators)
+        - [Using Option Defaults](#using-option-defaults)
         - [Saving Models Within Commands](#saving-models-within-commands)
         - [Using the Silencer](#using-the-silencer)
 - [Running the Tests](#running-the-tests)
@@ -36,20 +40,67 @@ The package installs into a PHP application like any other PHP package:
 composer require artisansdk/cqrs
 ```
 
-TODO: These indirect dependencies need further explanation:
+### Peer Dependencies
 
-- app()
-- dispatch()
-- illuminate/container (for IoC resolution)
-- illuminate/bus (for job dispatching)
-- illuminate/events (for event dispatching)
-- illuminate/database (for transactional commands and queries)
-- illuminate/queue (serializesmodels for jobs and events, interactswithqueues for jobs)
+This package has some peer dependencies on Laravel packages. Rather than depending
+on the entire framework, it is up to the developer to meet the peer dependencies
+if the dependent features are going to be used. While Laravel does provide out the
+box packages for these dependencies, if you install outside of Laravel then you
+may need to configure your application to implement the dependent interfaces.
 
-TODO: These features need to be added to initial release:
+The following explains which packages you should additionally install should you
+need the corresponding features outside of Laravel:
 
-- `Traits\Arguments::argument(string key, default = null)` should be `argument(string key, callable validator = null)` and throw `InvalidArgument` exception if argument is not set or optional validator fails
-- `Traits\Arguments::option(string key, default = null)` and `hasOption(string key)` should be added to compensate for change in `argument()` signature
+- `illuminate/container`: An IoC container must be provided by the framework and
+injected into the `ArtisanSdk\CQRS\Dispatcher`. Laravel will do this automatically
+via a typehinted interface in the constructor, but the `Dispatcher` technically
+relies directly on `Illuminate\Container\Container` if you use `Dispatcher::make()`
+manually or rely on `Command::make()` or similar static functions.
+
+- `illuminate/bus`: Queueable jobs that get chained rely upon a command bus within
+  Laravel. While not strictly needed, if you intend to do sophisticated queueing then
+  you will need this peer dependency for the actual job dispatching. See also
+  [Framework Helper Functions](#framework-helper-functions).
+
+- `illuminate/events`: Using the `ArtisanSdk\CQRS\Commands\Evented` command wrapper
+  will require this package which ships with Laravel. Essentially the dependency
+  relies on the ability for the framework to dispatch the events to the framework
+  layers and back down to the CQRS package level.
+
+- `illuminate/database`: Using the `ArtisanSdk\CQRS\Commands\Transaction` or
+  `ArtisanSdk\CQRS\Queries\Query` classes will require this database package to
+  provide database transactions and querying statements.
+
+- `illuminate/pagination`: Using `ArtisanSdk\CQRS\Queries\Query::paginate()` method
+  will require the use of this package to return the paginated results.
+
+- `illuminate/queue`: Using any queueing functions of the Laravel framework will
+  require this package. This would include any serialization of the models for jobs
+  and events or for interacting with queues from jobs and commands.
+
+- `illuminate/validation`: You only need to install this peer-dependency if you
+  wish to have arguments passed to queries and command automatically validated
+  against an array of validation rules or against a custom passed validator. The
+  CQRS package provides support for this Laravel validation package but it is
+  not strictly required.
+
+### Framework Helper Functions
+
+Laravel includes several `helpers.php` files which expose global functions that
+technically any framework could implement. This further decouples this package
+from Laravel. If this package is therefore use outside of Laravel you will need
+to implement these helpers (much like this package did for testing purposes):
+
+- `app()` is used to resolve dependencies to make static calls like `Command::make()`
+  able to auto-resolve commands out of an IoC container. When passed a string that
+  references a class name bound in the container, the function should return a
+  built instance of that class.
+
+- `dispatch()` is used primarily used by chainable, queued commands via the
+  `ArtisanSdk\CQRS\Traits\Queueable` trait helper `dispatchNextJobInChain()`.
+  The function should accept a class and pass it along the framework's command
+  bus. For Laravel-based applications this can be met by installing `illuminate\bus`
+  which provides `Illuminate\Bus\Dispatcher` as the command bus.
 
 ## Usage Guide
 
@@ -183,14 +234,14 @@ Sometimes you want the rest of your code to be made aware of the processing of a
 particular command. You may want to execute some code before the command or after
 the command based on the result of the command. Using the dispatcher this is
 trivially done by simply implementing the `ArtisanSdk\Contracts\Commands\Eventable`
-interface on any command that should be invented:
+interface on any command that should be evented:
 
 ```php
 namespace App\Commands;
 
+use App\User;
 use ArtisanSdk\Contracts\Commands\Eventable;
 use ArtisanSdk\CQRS\Commands\Command;
-use App\User;
 
 class SaveUser extends Command implements Eventable
 {
@@ -284,6 +335,7 @@ transactional wrapper will still rollback but will not bubble any exception:
 ```php
 namespace App\Commands;
 
+use App\User;
 use ArtisanSdk\Contracts\Commands\Transactional;
 use ArtisanSdk\CQRS\Commands\Command;
 
@@ -298,10 +350,9 @@ class ChangePassword extends Command implements Transactional
 
     public function run()
     {
-        $email = $this->argument('email');
-        $user = $this->model->where('email', $email)->first();
-        if( ! $user ) {
+        if( ! $user = $this->user($email) ) {
             $this->abort();
+
             return false;
         }
 
@@ -309,6 +360,13 @@ class ChangePassword extends Command implements Transactional
         $user->save();
 
         return $user;
+    }
+
+    protected function user() : User
+    {
+        return $this->model
+            ->where('email', $this->argument('email'))
+            ->first();
     }
 }
 ```
@@ -360,8 +418,8 @@ assign to this argument to the payload property.
 ```php
 namespace App\Events;
 
-use ArtisanSdk\CQRS\Events\Event;
 use App\User;
+use ArtisanSdk\CQRS\Events\Event;
 
 class UserSaved extends Event
 {
@@ -381,9 +439,9 @@ construct and pass the `App\User` returned by `run()` to the event's constructor
 ```php
 namespace App\Commands;
 
+use App\Events\UserSaved;
 use ArtisanSdk\Contracts\Commands\Eventable;
 use ArtisanSdk\CQRS\Commands\Command;
-use App\Events\UserSaved;
 
 class SaveUser extends Command implements Eventable
 {
@@ -517,6 +575,160 @@ or let the caller decide via `onConnection()`, `onQueue()`, etc.
 ### Traits
 
 #### Using CQRS in Your Classes
+
+#### Using Argument Validators
+
+Commands and queries that require arguments often have a lot of boilerplate code
+that handles validating the values of the arguments passed. To abstract this away,
+the package includes a simple way to inline common validators and pass more
+domain-specific validators using callables. You can use a simple closure that
+returns a boolean value, a class or interface name to check the argument matches,
+an array of Laravel validation rules for the argument, or a pre-built Laravel
+validator instance.
+
+```php
+namespace App\Commands;
+
+use App\Invoice;
+use App\Coupon;
+use ArtisanSdk\CQRS\Commands\Command;
+use Illuminate\Validation\Factory as Validator;
+
+class CalculateInvoice extends Command
+{
+    public function run()
+    {
+        // Validate the argument is simply set with a non empty value
+        $number = $this->argument('number');
+
+        // Validate the argument matches the Invoice class
+        $invoice = $this->argument('invoice', Invoice::class);
+
+        // Validate the argument against a rule of validation rules...
+        $subtotal = $this->argument('subtotal', ['integer', 'min:0'])
+
+        // ...or construct it manually yourself for something more complicated
+        $subtotal = $this->argument('subtotal', Validator::make($this->arguments(), [
+            'subtotal' => ['integer', 'min:0', 'lte:total'],
+        ]));
+
+        // Validate the argument against a custom callable...
+        $coupon = $this->argument('coupon', function(string $code, string $argument) {
+            return $this->couponExists($code, $argument);
+        });
+
+        // ... or just reference a method on a callable class
+        $coupon = $this->argument('coupon', [$this, 'couponExists']);
+    }
+
+    public function couponExists(string $code, string $argument)
+    {
+        return Coupon::where('code', $code)->exists();
+    }
+}
+```
+
+#### Using Option Defaults
+
+The following code demonstrates the use of an option instead of an argument. Based
+on the presence of the option alone (a flag essentially) you could perform some
+guarded code or based on explicit check of the option's value if present. In the
+following example, the default behavior if the option is not set is that the
+invoice is not saved:
+
+```php
+namespace App\Commands;
+
+use App\Invoice;
+use ArtisanSdk\CQRS\Commands\Command;
+
+class CalculateInvoice extends Command
+{
+    public function run()
+    {
+        $invoice = $this->argument('invoice', Invoice::class);
+
+        if( $this->hasOption('save') && true === $this->option('save')) {
+            $invoice->save();
+        }
+
+        return $invoice;
+    }
+}
+```
+
+The default value for an option is `null` by default. You can also set an explicit
+default value for an option that is not present in the list of arguments. This
+is demonstrated below using the same example as above. The result is that the
+invoice is always saved unless explicitly set to false.
+
+```php
+namespace App\Commands;
+
+use App\Invoice;
+use ArtisanSdk\CQRS\Commands\Command;
+
+class CalculateInvoice extends Command
+{
+    public function run()
+    {
+        $invoice = $this->argument('invoice', Invoice::class);
+
+        if( $this->option('save', true) ) {
+            $invoice->save();
+        }
+
+        return $invoice;
+    }
+}
+```
+
+Occasionally you will want to perform some logical work that is more expensive
+when an option is not set and the default value needs to be resolved. For example
+you may want to default to the authenticated user when no user is passed to a
+command or query as an option. In Laravel this incurs a hit agains the database
+which is considered expensive and unnecessary if the default option is not actually
+used. Therefore it's preferred to defer this expensive work. This
+package supports a resolver callable for the default option which ensures that
+the work is lazily deferred until indeed the default is needed.
+
+```php
+namespace App\Commands;
+
+use App\Invoice;
+use App\User;
+use ArtisanSdk\CQRS\Commands\Command;
+
+class CalculateInvoice extends Command
+{
+    public function run()
+    {
+        $invoice = $this->argument('invoice', Invoice::class);
+
+        // This is wasteful since you have to resolve the user even when not used
+        // $editor = $this->option('editor', auth()->user());
+
+        // Resolve the authenticated user as the default using a closure...
+        $editor = $this->option('editor', function(string $option) {
+            return auth()->user();
+        });
+
+        // ... or just reference a method on a callable class
+        $editor = $this->option('editor', [$this, 'resolveUser']);
+
+        $invoice->editor()->associate($user);
+
+        $invoice->save();
+
+        return $invoice;
+    }
+
+    public function resolveUser(string $option) : User
+    {
+        return auth()->user();
+    }
+}
+```
 
 #### Saving Models Within Commands
 

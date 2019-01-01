@@ -109,7 +109,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
      */
     public function call($class, $handler, Event $event)
     {
-        $class = is_string($class) ? app($class) : $class; // @todo remove dep on app()
+        $class = is_string($class) ? app($class) : $class;
 
         return $class->$handler($this->event);
     }

@@ -23,6 +23,7 @@
         "illuminate/pagination": "~5.0",
         "illuminate/queue": "~5.0",
         "illuminate/support": "~5.0",
+        "illuminate/validation": "~5.0",
         "psr/log": "^1.0"
     },
     "require-dev": {
