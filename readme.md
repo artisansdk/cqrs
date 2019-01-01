@@ -32,7 +32,7 @@ A foundational package for Command Query Responsibility Segregation (CQRS).
 - [Running the Tests](#running-the-tests)
 - [Licensing](#licensing)
 
-## Installation
+# Installation
 
 The package installs into a PHP application like any other PHP package:
 
@@ -40,7 +40,7 @@ The package installs into a PHP application like any other PHP package:
 composer require artisansdk/cqrs
 ```
 
-### Peer Dependencies
+## Peer Dependencies
 
 This package has some peer dependencies on Laravel packages. Rather than depending
 on the entire framework, it is up to the developer to meet the peer dependencies
@@ -84,7 +84,7 @@ manually or rely on `Command::make()` or similar static functions.
   CQRS package provides support for this Laravel validation package but it is
   not strictly required.
 
-### Framework Helper Functions
+## Framework Helper Functions
 
 Laravel includes several `helpers.php` files which expose global functions that
 technically any framework could implement. This further decouples this package
@@ -102,9 +102,9 @@ to implement these helpers (much like this package did for testing purposes):
   bus. For Laravel-based applications this can be met by installing `illuminate\bus`
   which provides `Illuminate\Bus\Dispatcher` as the command bus.
 
-## Usage Guide
+# Usage Guide
 
-### Commands
+## Commands
 
 A command implements the `ArtisanSdk\Contracts\Commands\Runnable` interface which
 makes it both invokable and runnable. The intended use of a command is to perform
@@ -112,7 +112,7 @@ some sort of "write" operation or complete a unit of work and return its results
 An asynchronous command would return a promise while a synchronous command would
 return the result itself or nothing at all.
 
-#### How to Create a Command
+### How to Create a Command
 
 A basic example of using a command is to create a class that extends the
 `ArtisanSdk\CQRS\Commands\Command` class and implementing the `run()` method
@@ -148,7 +148,7 @@ class SaveUser extends Command
 }
 ```
 
-#### How to Run a Command
+### How to Run a Command
 
 There are multiple ways to dispatch a command. The first way is to simply create
 an instance of the `ArtisanSdk\CQRS\Dispatcher` and then call `command()` on it
@@ -157,7 +157,7 @@ builder class. You can then chain any arbitrary arguments onto the command befor
 calling `run()` or invoking the builder directly. You could also call `arguments()`
 on the builder passing an array of arguments.
 
-##### Run a Command Using the Dispatcher
+#### Run a Command Using the Dispatcher
 
 ```php
 $user = ArtisanSdk\CQRS\Dispatcher::make()
@@ -166,7 +166,7 @@ $user = ArtisanSdk\CQRS\Dispatcher::make()
     ->run();
 ```
 
-##### Run a Command Statically
+#### Run a Command Statically
 
 Alternatively you could just make the command statically which will also create
 an instance of the command builder:
@@ -177,7 +177,7 @@ $user = App\Commands\SaveUser::make()
     ->run();
 ```
 
-##### Run a Command From Anywhere
+#### Run a Command From Anywhere
 
 Using `ArtisanSdk\CQRS\Traits\CQRS` helper trait on any class (e.g.: a controller)
 allows you to dispatch commands directly by simply calling `$this->dispatch()`
@@ -207,7 +207,7 @@ class UserController extends Controller
 }
 ```
 
-##### Run a Command Manually (Without the Command Bus)
+#### Run a Command Manually (Without the Command Bus)
 
 Commands executed like the above examples all end up routing the command through
 the dispatcher which implements a basic command bus for a few support scenarios
@@ -228,7 +228,7 @@ $user = (new App\Commands\SaveUser(new App\User))
 This will bi-pass the command bus setup by the dispatcher and therefore skip any
 added wrapper functionality the dispatcher offers.
 
-#### How to Create an Evented Command
+### How to Create an Evented Command
 
 Sometimes you want the rest of your code to be made aware of the processing of a
 particular command. You may want to execute some code before the command or after
@@ -268,7 +268,7 @@ before and another after the command is ran. The before event will be given the
 arguments passed to the command while the after event will be given the results
 of the command itself. The event fired is an instance of `ArtisanSdk\CQRS\Events\Event`.
 
-##### Silencing an Evented Command
+#### Silencing an Evented Command
 
 While firing events before and after a command is executed can be useful, sometimes
 you want to run an evented command silently so listeners are not fired. Evented
@@ -282,7 +282,7 @@ $user = App\Commands\SaveUser::make()
     ->silently();
 ```
 
-#### How to Run a Command in a Transaction
+### How to Run a Command in a Transaction
 
 Often you'll create a command that performs multiple database writes to different
 tables or multiple records. Alternatively you may have a command that executes
@@ -325,7 +325,7 @@ the transactions are committed like normal. The benefit of this approach is that
 makes it easy to bypass the transactional model for testing purposes by simply
 invoking the commands manually which bypasses the transactional wrapper.
 
-##### Aborting a Transactional Command
+#### Aborting a Transactional Command
 
 Sometimes you want to rollback your transaction without throwing an exception and
 yet still return a result that satisfies your caller's response expectations. For
@@ -376,7 +376,7 @@ If the email does not match any known user, rather than throwing an exception, w
 just abort and return `false` instead. Had we performed any other write queries
 then those would have been rolled back.
 
-##### Silencing After Events With Abort
+#### Silencing After Events With Abort
 
 The main benefit of aborting a command however is that the after events are not
 fired if the command is aborted. This is handy when a command is actually queued
@@ -389,7 +389,7 @@ then when the command is being executed as a queued job to send the email out,
 a pre-check could be performed to determine if the command should still be ran
 and if not, the command could be aborted.
 
-##### Checking If a Command Was Aborted
+#### Checking If a Command Was Aborted
 
 The `abort()` and `aborted()` methods are public methods of the command and can
 also be used in circumstances where you might want to abort multiple commands in
@@ -397,7 +397,7 @@ a command pool based on when one command in the pool is aborted. You can also us
 the `aborted()` method to check if a command has been aborted to better determine
 what to do with the command's result.
 
-#### How to Use a Command as an Event Handler
+### How to Use a Command as an Event Handler
 
 When the application fires events, event subscribers can broadcast the event to
 all bound event listeners. Each listener provides a `handle()` method which receives
@@ -525,7 +525,7 @@ $handler = (new App\Commands\SendUserWelcomeEmail());
 $result = $handler->handle($event);
 ```
 
-#### How to Queue a Command
+### How to Queue a Command
 
 In the case above, we're sending an email and this is often considered a background
 process that is not critical to response success. Usually a queued job would be
@@ -558,17 +558,17 @@ and properties like `$connection`, `$queue`, and `$delay` are supported on the
 command now and you can therefore configure your commands with defined defaults
 or let the caller decide via `onConnection()`, `onQueue()`, etc.
 
-### Queries
+## Queries
 
-#### How to Create a Query
+### How to Create a Query
 
-#### How to Get Query Results
+### How to Get Query Results
 
-#### How to Create an Evented Query
+### How to Create an Evented Query
 
-### Events
+## Events
 
-#### How Auto-resolution of Events Work
+### How Auto-resolution of Events Work
 
 Event naming follows a convention of conjugating the present imperative tense
 of the command name into a progressive future tense before event and a past tense
@@ -586,7 +586,7 @@ submit an issue or pull request with recommended changes for your use case.
 The auto-resolution logic is not perfect, so you'll still need to customize
 your event names from time to time and this package provides that functionality.
 
-#### How to Customize the Before and After Events
+### How to Customize the Before and After Events
 
 Sometimes you'll use a command name that is non-conventional or is simply hard
 to conjugate event names for because of the weirdness of the English language.
@@ -638,7 +638,7 @@ it would be recommended instead to follow a simpler naming convention such that
 the command would be `App\Commands\Password\Change` and the events would be
 `App\Events\Password\Changing` and `App\Events\Password\Changed` instead.
 
-#### Recommended Conventions for Command and Event Naming
+### Recommended Conventions for Command and Event Naming
 
 While you are free to use the `beforeEvent()` and `afterEvent()` methods to customize
 the dispatching of any event to suit a namespace or naming convention of your choice,
@@ -783,14 +783,14 @@ This package doesn't care how you organize things but you might find that organi
 into service boundaries will help reduce naming and organizing decisions and give
 you clean separation for later service packaging.
 
-### Traits
+## Traits
 
 The package's primary functionality is exposed as a set of base classes but these
 classes are composed from a set of base traits. You can use these traits directly
 in your application code even where CQRS may not be fully needed but the traits
 prove to be a useful and consistent API for your application.
 
-#### Using CQRS in Your Classes
+### Using CQRS in Your Classes
 
 `ArtisanSdk\CQRS\Traits\Arguments` is a trait that provides arguments and options
 to a class including all the relevant validation logic and default resolvers.
@@ -849,7 +849,7 @@ when a command or query is ran. The public methods of the trait are:
 - `Silence::silently()`: a shorthand method for `$command->silence()->run()` such
   that you can silently run a command with just `$command->silently()`.
 
-#### Using Argument Validators
+### Using Argument Validators
 
 Commands and queries that require arguments often have a lot of boilerplate code
 that handles validating the values of the arguments passed. To abstract this away,
@@ -901,7 +901,7 @@ class CalculateInvoice extends Command
 }
 ```
 
-#### Using Option Defaults
+### Using Option Defaults
 
 The following code demonstrates the use of an option instead of an argument. Based
 on the presence of the option alone (a flag essentially) you could perform some
@@ -1003,7 +1003,7 @@ class CalculateInvoice extends Command
 }
 ```
 
-#### Saving Models Within Commands
+### Saving Models Within Commands
 
 If you use the `ArtisanSdk\CQRS\Traits\Save` trait or the `ArtisanSdk\CQRS\Commands\Command`
 which includes this trait, then you can quickly save Eloquent models including
@@ -1034,7 +1034,7 @@ class CalculateInvoice extends Command
 In addition to simply saving the models, the trait also formats the errors for
 CLI applications like Artisan commands and PHPUnit so they are more readable.
 
-#### Using the Silencer
+### Using the Silencer
 
 Sometimes you just don't want your evented commands to fire events. As an example,
 say that you were sending out an email using `SendPasswordResetEmail` command which
@@ -1084,7 +1084,7 @@ class RegisterUser extends Command
 }
 ```
 
-## Running the Tests
+# Running the Tests
 
 The package is unit tested with 100% line coverage and path coverage. You can
 run the tests by simply cloning the source, installing the dependencies, and then
@@ -1104,7 +1104,7 @@ Additionally `composer report` assumes a Unix system to run line coverage report
 Configure the command setting the value for `min = 80` to set your minimum line
 coverage requirements.
 
-## Licensing
+# Licensing
 
 Copyright (c) 2018-2019 [Artisans Collaborative](https://artisanscollaborative.com)
 
