@@ -454,11 +454,6 @@ class SaveUser extends Command implements Eventable
         $this->model = $model;
     }
 
-    public function afterEvent()
-    {
-        return UserSaved::class;
-    }
-
     public function run()
     {
         $user = $this->model;
@@ -466,6 +461,11 @@ class SaveUser extends Command implements Eventable
         $user->save();
 
         return $user;
+    }
+
+    public function afterEvent()
+    {
+        return UserSaved::class;
     }
 }
 ```
@@ -533,7 +533,7 @@ used in this case. If you think about it though, a job is really just the defini
 of an event and it's handler which is queued for later execution rather than
 immediate execution. Since commands can be these self-executing event handlers,
 the handler can also be queued as a job instead. This package makes it trivial to
-queue the handler by simply implementing the `ArtisanSdk\Contract\Queueable` interface
+queue the handler by simply implementing the `ArtisanSdk\Contract\CQRS\Queueable` interface
 and adding the `ArtisanSdk\CQRS\Traits\Queues` trait on the command you want to
 be queued and support queue interactions:
 
@@ -542,7 +542,7 @@ namespace App\Commands;
 
 use ArtisanSdk\CQRS\Commands\Command;
 use ArtisanSdk\CQRS\Triats\Queue;
-use ArtisanSdk\Contracts\Queuable;
+use ArtisanSdk\Contracts\CQRS\Queuable;
 
 class SendUserWelcomeEmail extends Command implements Queueable
 {
@@ -648,7 +648,7 @@ and before and after events using namespacing to delineate the classes:
 
 - Commands should be one word action verbs written in present imperative tense
 - Queries can be worded like commands or as a noun that defines the result set
-- Events should be progressive tense (for before events) and past tense (for after
+- Events should be progressive tense (before events) and past tense (after
   events) conjugates of the command name
 - Namespaces should be used for uniqueness when multiple classes otherwise have
   the same name.
@@ -811,7 +811,7 @@ command builder and dispatcher. The usable methods (most are protected) of the t
   This is typically used like `$this->dispatcher()->dispatch($class)->run()` to compose
   the runnable class then run it. It can also be used to dynamically forward events
   like `$this->dispatcher()->creating($user)` which will fire a `Creating` event
-  with the user model as argument.
+  with the user as argument.
 - `CQRS::call($class, $arguments)` directly composes then runs the class with the
   passed arguments.
 - `CQRS::command($class)` to compose a command using the dispatcher but not run it (use `call()` instead).
@@ -820,7 +820,7 @@ command builder and dispatcher. The usable methods (most are protected) of the t
 - `CQRS::until($event, $payload)` to compose a before event with the payload and fire it using the dispatcher.
 
 `ArtisanSdk\CQRS\Traits\Handle` is a trait that can be used by commands to implement
-the `ArtisanSdk\Contracts\Handler` interface such that an event object may be passed
+the `ArtisanSdk\Contracts\CQRS\Handler` interface such that an event object may be passed
 to the `handle()` method of a command and the command be ran through the command
 dispatcher using the properties of the event as the arguments. Additionally if the
 command is queueable then the execution of the command will be deferred as a queued
@@ -1054,20 +1054,17 @@ namespace App\Commands;
 use App\User;
 use App\Commands\ResetUserPassword;
 use App\Events\UserPasswordReset;
+use App\Events\UserRegistered;
 use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\Contracts\Commands\Eventable;
 
-class RegisterUser extends Command
+class RegisterUser extends Command implements Eventable
 {
     protected $user;
 
     public function __construct(User $user)
     {
         $this->user = $user;
-    }
-
-    public function afterEvent()
-    {
-        return UserPasswordReset::class;
     }
 
     public function run()
@@ -1078,8 +1075,28 @@ class RegisterUser extends Command
 
         return $this->command(ResetUserPassword::class)
             ->user($user)
-            ->silence()
-            ->run();
+            ->silently();
+    }
+
+    public function afterEvent()
+    {
+        return UserRegistered::class;
+    }
+}
+
+class ResetUserPassword extends Command implements Eventable
+{
+    public function run()
+    {
+        $user = $this->argument('user');
+        $user->password = null;
+
+        return $this->save($user);
+    }
+
+    public function afterEvent()
+    {
+        return ResetUserPassword::class;
     }
 }
 ```
