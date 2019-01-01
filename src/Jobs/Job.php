@@ -14,6 +14,16 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
+/**
+ * Queueable Command Wrapper.
+ *
+ * This class is used to wrap a fired event to a corresponding command handler as
+ * a queueable job. Firing jobs directly is unnecessary as your code should just
+ * fire an event that a queuable command is the handler for. If you must you can
+ * call `$command->queue(new Event)` on a command to dispatch a job directly to
+ * that command with the event as payload which resolves the properties are arguments
+ * to the command when it is invoked as the job handler.
+ */
 class Job implements ShouldQueue, LoggerAwareInterface
 {
     use Queues;

@@ -69,17 +69,22 @@ trait Arguments
      *
      * @param string $name
      * @param mixed  $default
+     * @param mixed  $validator
      *
      * @return mixed
      */
-    public function option(string $name, $default = null)
+    public function option(string $name, $default = null, $validator = null)
     {
         $value = $this->hasOption($name)
             ? array_get($this->arguments, $name)
             : $this->resolveDefault($name, $default);
 
         if (is_string($value) && '' === $value) {
-            return $this->resolveDefault($name, $default);
+            $value = $this->resolveDefault($name, $default);
+        }
+
+        if ($validator) {
+            return $this->validateValue($name, $value, $validator);
         }
 
         return $value;

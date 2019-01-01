@@ -1,6 +1,6 @@
 {
     "name": "artisansdk/cqrs",
-    "description": "A foundational package for Command Query Responsibility Segregation (CQRS).",
+    "description": "A foundational package for Command Query Responsibility Segregation (CQRS) compatible with Laravel.",
     "type": "library",
     "license": "MIT",
     "authors": [

@@ -22,11 +22,14 @@ trait CQRS
      * @param string|\ArtisanSdk\Contract\Runnable $class
      * @param array                                $arguments
      *
-     * @return \ArtisanSdk\Contract\Runnable
+     * @return mixed
      */
     public function call($class, array $arguments = [])
     {
-        return $this->dispatcher()->dispatch($class)->arguments($arguments);
+        return $this->dispatcher()
+            ->dispatch($class)
+            ->arguments($arguments)
+            ->run();
     }
 
     /**

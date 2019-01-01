@@ -176,6 +176,32 @@ class ArgumentsTest extends TestCase
     }
 
     /**
+     * Test that an option can be validated.
+     */
+    public function testOptionCanBeValidated()
+    {
+        $command = new Command();
+
+        $value = $command->option('foo', 'bar', function ($value, string $name) {
+            return 'bar' === $value;
+        });
+
+        $this->assertSame('bar', $value, 'The callable validator should have returned true and therefore resolved the value as "bar".');
+
+        try {
+            $value = $command->option('foo', null, function ($value, string $name) {
+                return false;
+            });
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(
+                'The value for the "foo" argument could not be validated using the callable.',
+                $exception->getMessage(),
+                'An option that fails the validator callable check should throw an '.InvalidArgumentException::class.'.'
+            );
+        }
+    }
+
+    /**
      * Test that the default option value is returned when no value is set.
      */
     public function testDefaultOption()

@@ -10,6 +10,13 @@ use ArtisanSdk\CQRS\Traits\Handle;
 use ArtisanSdk\CQRS\Traits\Save;
 use ArtisanSdk\CQRS\Traits\Silencer;
 
+/**
+ * Command Base Class.
+ *
+ * @example $result = Command::make($arguments)->run()
+ *          $result = Command::make()->foo('bar')->run()
+ *          $result = Command::make()->silently()
+ */
 abstract class Command implements Contract
 {
     use Arguments, CQRS, Handle, Save, Silencer;

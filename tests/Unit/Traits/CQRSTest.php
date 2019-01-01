@@ -3,7 +3,6 @@
 namespace ArtisanSdk\CQRS\Tests\Unit\Traits;
 
 use ArtisanSdk\CQRS\Builder;
-use ArtisanSdk\CQRS\Commands\Transaction;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Events\Event;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
@@ -29,8 +28,7 @@ class CQRSTest extends TestCase
     {
         $response = (new Command())->testCall(Transactional::class);
 
-        $this->assertInstanceOf(Builder::class, $response, 'A call to call() should dispatch an instance of the command and return a builder.');
-        $this->assertInstanceOf(Transaction::class, $response->toBase(), 'The builder should wrap the command passed to call().');
+        $this->assertTrue($response, 'A call to call() should dispatch an instance of the command and return the response.');
     }
 
     /**

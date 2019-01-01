@@ -16,6 +16,14 @@ use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Database\ConnectionInterface;
 use InvalidArgumentException;
 
+/**
+ * Runnable Class Dispatcher (aka Command Bus).
+ *
+ * @example  $builder = Dispatcher::make()->command(Command::class)
+ *           $builder = Dispatcher::make()->query(Command::class)
+ *          $runnable = Dispatcher::make()->dispatch(Runnable::class)
+ *                      Dispatcher::make()->creating(new User())
+ */
 class Dispatcher
 {
     /**

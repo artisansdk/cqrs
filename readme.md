@@ -22,7 +22,7 @@ A foundational package for Command Query Responsibility Segregation (CQRS).
     - [Events](#events)
         - [How Auto-resolution of Events Work](#how-auto-resolution-of-events-work)
         - [How to Customize the Before and After Events](#how-to-customize-the-before-and-after-events)
-        - [Recommended Conventions for Command and Event Naming](#recommended-conventions-for-command-event-naming)
+        - [Recommended Conventions for Command and Event Naming](#recommended-conventions-for-command-and-event-naming)
     - [Traits](#traits)
         - [Using CQRS in Your Classes](#using-cqrs-in-your-classes)
         - [Using Argument Validators](#using-argument-validators)
@@ -574,7 +574,69 @@ or let the caller decide via `onConnection()`, `onQueue()`, etc.
 
 ### Traits
 
+The package's primary functionality is exposed as a set of base classes but these
+classes are composed from a set of base traits. You can use these traits directly
+in your application code even where CQRS may not be fully needed but the traits
+prove to be a useful and consistent API for your application.
+
 #### Using CQRS in Your Classes
+
+`ArtisanSdk\CQRS\Traits\Arguments` is a trait that provides arguments and options
+to a class including all the relevant validation logic and default resolvers.
+The public methods of the trait are:
+
+- `Arguments::arguments($arguments)` to get or set the arguments fluently
+- `Arguments::argument($name, $validator)` to get an argument and validate it
+- `Arguments::option($name, $default, $validator)` to get an optional argument and provide a default
+- `Arguments::hasOption($name)` to check if the optional argument is present
+
+`ArtisanSdk\CQRS\Traits\CQRS` is the trait that provides the main interactive
+API for the CQRS pattern. This is the trait that is typically included on a controller,
+console command, or other class in order to directly dispatch commands using the
+command builder and dispatcher. The usable methods (most are protected) of the trait are:
+
+- `CQRS::dispatcher()` gets an instance of the `Dispatcher`. Instances are not singletons
+  so every command that is dispatched is ran through an unique dispatcher (command bus).
+  This is typically used like `$this->dispatcher()->dispatch($class)->run()` to compose
+  the runnable class then run it. It can also be used to dynamically forward events
+  like `$this->dispatcher()->creating($user)` which will fire a `Creating` event
+  with the user model as argument.
+- `CQRS::call($class, $arguments)` directly composes then runs the class with the
+  passed arguments.
+- `CQRS::command($class)` to compose a command using the dispatcher but not run it (use `call()` instead).
+- `CQRS::query($class)` to compose a query using the dispatcher but not run it (use `call()` instead).
+- `CQRS::event($event, $payload)` to compose an after event with the payload and fire it using the dispatcher.
+- `CQRS::until($event, $payload)` to compose a before event with the payload and fire it using the dispatcher.
+
+`ArtisanSdk\CQRS\Traits\Handle` is a trait that can be used by commands to implement
+the `ArtisanSdk\Contracts\Handler` interface such that an event object may be passed
+to the `handle()` method of a command and the command be ran through the command
+dispatcher using the properties of the event as the arguments. Additionally if the
+command is queueable then the execution of the command will be deferred as a queued
+job instead. When the job is resolved out of the queue, the command will be directly
+invoked, bypassing the handler yet still using the event properties as arguments.
+
+`ArtisanSdk\CQRS\Traits\Queues` is a wrapper trait for Laravel compatibility of
+making an event or command behave like a queued job. It also lets the command interact
+with the command much like a queued job can. The intended use for this trait is
+to make the class it is used on a queuable job. See Laravel's documentation on
+how to customize properties such as `$connection`, `$queue`, and `$delay` or
+to perform chaining of commands as queued jobs.
+
+`ArtisanSdk\CQRS\Traits\Save` is a trait that helps with saving of Eloquent models,
+especially self-validating models like [`artisansdk\model`](http://github.com/artisansdk/model) provides. It simply provides
+a `save($model)` public method which ensures that the model is saved or throws an
+exception and if saved will return the saved model. See also [Saving Models Within Commands](#saving-models-within-commands).
+
+`ArtisanSdk\CQRS\Traits\Silencer` is a trait that the prevents the firing of events
+when a command or query is ran. The public methods of the trait are:
+
+- `Silencer::silence()`: set the silence flag on the command so that events are
+  not fired.
+- `Silence::silenced()`: a boolean check to see if the command is silenced. This
+  is used by the evented command wrapper to determine if events should be fired.
+- `Silence::silently()`: a shorthand method for `$command->silence()->run()` such
+  that you can silently run a command with just `$command->silently()`.
 
 #### Using Argument Validators
 
@@ -732,11 +794,88 @@ class CalculateInvoice extends Command
 
 #### Saving Models Within Commands
 
+If you use the `ArtisanSdk\CQRS\Traits\Save` trait or the `ArtisanSdk\CQRS\Commands\Command`
+which includes this trait, then you can quickly save Eloquent models including
+self-validating models like those provided by [`artisansdk\model`](http://github.com/artisansdk/model).
+Simply call `save()` from within the command or controller and pass in the model
+that should be saved. If the model does not save because it cannot be validated,
+then an exception will be raised. If the model can be saved then the saved instance
+is returned. The use of this helper trait can streamline commands considerably
+and ensure that saves are being performed consistently.
+
+```php
+namespace App\Commands;
+
+use ArtisanSdk\CQRS\Commands\Command;
+
+class CalculateInvoice extends Command
+{
+    public function run()
+    {
+        $invoice = $this->argument('invoice');
+        $invoice->total = 100;
+
+        return $this->save($invoice);
+    }
+}
+```
+
+In addition to simply saving the models, the trait also formats the errors for
+CLI applications like Artisan commands and PHPUnit so they are more readable.
+
 #### Using the Silencer
+
+Sometimes you just don't want your evented commands to fire events. As an example,
+say that you were sending out an email using `SendPasswordResetEmail` command which
+is normally triggered by the `UserPasswordReset` event. Let's say however that during
+user registration, the `ResetUserPassword` command is called and yet you do not
+want to send out the normal email for password resets. Instead you wish to trigger
+the logic of resetting a password for an account and instead use `SendAccountActivationEmail`
+command to send an account activation in response to `UserRegistered` event. This
+is all possible using the `ArtisanSdk\CQRS\Traits\Silencer` trait which is already
+used by the base `ArtisanSdk\CQRS\Commands\Command` class.
+
+In order to accomplish the above example you might write the following:
+
+```php
+namespace App\Commands;
+
+use App\User;
+use App\Commands\ResetUserPassword;
+use App\Events\UserPasswordReset;
+use ArtisanSdk\CQRS\Commands\Command;
+
+class RegisterUser extends Command
+{
+    protected $user;
+
+    public function __construct(User $user)
+    {
+        $this->user = $user;
+    }
+
+    public function afterEvent()
+    {
+        return UserPasswordReset::class;
+    }
+
+    public function run()
+    {
+        $user = new User();
+        $user->email = $this->argument('email');
+        $this->save($user);
+
+        return $this->command(ResetUserPassword::class)
+            ->user($user)
+            ->silence()
+            ->run();
+    }
+}
+```
 
 ## Running the Tests
 
-The package is unit tested with 94% line coverage and path coverage. You can
+The package is unit tested with 100% line coverage and path coverage. You can
 run the tests by simply cloning the source, installing the dependencies, and then
 running `./vendor/bin/phpunit`. Additionally included in the developer dependencies
 are some Composer scripts which can assist with Code Styling and coverage reporting:
@@ -756,7 +895,7 @@ coverage requirements.
 
 ## Licensing
 
-Copyright (c) 2018 [Artisans Collaborative](https://artisanscollaborative.com)
+Copyright (c) 2018-2019 [Artisans Collaborative](https://artisanscollaborative.com)
 
 This package is released under the MIT license. Please see the LICENSE file
 distributed with every copy of the code for commercial licensing terms.

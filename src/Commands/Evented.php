@@ -7,6 +7,9 @@ use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Traits\Handle;
 
+/**
+ * Evented Runnable Wrapper.
+ */
 class Evented implements Contract
 {
     use Handle;

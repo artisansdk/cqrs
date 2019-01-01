@@ -8,6 +8,14 @@ use ArtisanSdk\CQRS\Traits\Arguments;
 use ArtisanSdk\CQRS\Traits\Silencer;
 use BadMethodCallException;
 
+/**
+ * Runnable Class Builder.
+ *
+ * @example $command = (new Builder(new Command))->foo('bar')->toBase()
+ *            $query = (new Builder(new Query))->foo('bar')->toBase()
+ *           $result = (new Builder(new Command))->foo('bar')->run()
+ *           $result = (new Builder(new Query))->foo('bar')->get()
+ */
 class Builder implements Runnable
 {
     use Arguments, Silencer;

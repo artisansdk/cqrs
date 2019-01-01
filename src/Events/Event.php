@@ -6,6 +6,12 @@ use ArtisanSdk\Contract\Event as Contract;
 use Illuminate\Queue\SerializesModels;
 use ReflectionClass;
 
+/**
+ * Event Base Class.
+ *
+ * @example $event = new Event(new User)
+ *          $event->toArray() // ['event' => 'Event', 'payload' => $user]
+ */
 class Event implements Contract
 {
     use SerializesModels;

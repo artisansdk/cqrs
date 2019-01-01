@@ -10,6 +10,9 @@ use ArtisanSdk\CQRS\Traits\Handle;
 use Exception;
 use Illuminate\Database\ConnectionInterface as Database;
 
+/**
+ * Transactional Wrapper.
+ */
 class Transaction implements Contract
 {
     use Handle;

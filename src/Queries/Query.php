@@ -9,7 +9,14 @@ use ArtisanSdk\CQRS\Traits\CQRS;
 use ArtisanSdk\CQRS\Traits\Silencer;
 use Illuminate\Database\Query\Builder;
 
-// @todo docblock
+/**
+ * Query Base Class.
+ *
+ * @example  $statement = Query::make($arguments)->toSql()
+ *          $collection = Query::make($arguments)->builder()->where('foo', 'bar')->get()
+ *          $collection = Query::make($arguments)->get()
+ *          $collection = Query::make($arguments)->paginate(25)
+ */
 abstract class Query implements Contract
 {
     use Arguments, CQRS, Silencer;
