@@ -176,6 +176,31 @@ class ArgumentsTest extends TestCase
     }
 
     /**
+     * Test that an argument can be validated against type check.
+     */
+    public function testArgumentValidatesAgainstTypeCheck()
+    {
+        $command = new Command();
+        $command->arguments([
+            'foo' => 'bar',
+        ]);
+
+        $value = $command->argument('foo', 'is_string');
+
+        $this->assertIsString($value, 'The value for the "foo" argument must be a string.');
+
+        try {
+            $value = $command->argument('foo', 'is_int');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(
+                'The value for the "foo" argument could not be validated using is_int().',
+                $exception->getMessage(),
+                'An unsupported validator should throw an '.InvalidArgumentException::class.'.'
+            );
+        }
+    }
+
+    /**
      * Test that an option can be validated.
      */
     public function testOptionCanBeValidated()

@@ -116,6 +116,20 @@ trait Arguments
      */
     protected function validateValue(string $name, $value, $validator)
     {
+        if (is_string($validator)
+            && function_exists($validator)
+        ) {
+            if ( ! $validator($value)) {
+                throw new InvalidArgumentException(sprintf(
+                    'The value for the "%s" argument could not be validated using %s().',
+                    $name,
+                    $validator
+                ));
+            }
+
+            return $value;
+        }
+
         if (is_callable($validator)) {
             if ( ! $validator($value, $name)) {
                 throw new InvalidArgumentException(sprintf(
