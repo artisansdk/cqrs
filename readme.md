@@ -1,6 +1,6 @@
 # CQRS
 
-A foundational package for Command Query Responsibility Segregation (CQRS).
+A foundational package for Command Query Responsibility Segregation (CQRS) compatible with Laravel.
 
 ## Table of Contents
 
