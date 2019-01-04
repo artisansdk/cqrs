@@ -50,7 +50,7 @@ class Builder implements Runnable
      */
     public function __call($method, $arguments = [])
     {
-        array_set($this->arguments, $method, head($arguments));
+        array_set($this->arguments, snake_case($method), head($arguments));
 
         return $this;
     }
