@@ -85,7 +85,7 @@ class ArgumentsTest extends TestCase
             $value = $command->argument('foo', -1);
         } catch (InvalidArgumentException $exception) {
             $this->assertSame(
-                'The validator must be a class or interface name, a callable, or an instance of '.Validator::class.'.',
+                'The "foo" argument validator must be a class or interface name, a callable, or an instance of '.Validator::class.'.',
                 $exception->getMessage(),
                 'An unsupported validator should throw an '.InvalidArgumentException::class.'.'
             );
@@ -168,7 +168,7 @@ class ArgumentsTest extends TestCase
             $value = $command->argument('foo', stdClass::class);
         } catch (InvalidArgumentException $exception) {
             $this->assertSame(
-                'The validator must be a class or interface name, a callable, or an instance of '.Validator::class.'.',
+                'The "foo" argument validator must be a class or interface name, a callable, or an instance of '.Validator::class.'.',
                 $exception->getMessage(),
                 'An unsupported validator should throw an '.InvalidArgumentException::class.'.'
             );

@@ -83,7 +83,7 @@ trait Arguments
             $value = $this->resolveDefault($name, $default);
         }
 
-        if ($validator) {
+        if ( ! is_null($value) && $validator) {
             return $this->validateValue($name, $value, $validator);
         }
 
@@ -163,7 +163,8 @@ trait Arguments
         }
 
         throw new InvalidArgumentException(sprintf(
-            'The validator must be a class or interface name, a callable, or an instance of %s.',
+            'The "%s" argument validator must be a class or interface name, a callable, or an instance of %s.',
+            $name,
             Validator::class
         ));
     }
