@@ -52,15 +52,15 @@
             "vendor/bin/php-cs-fixer fix -v"
         ],
         "test": [
-            "vendor/bin/phpunit --colors=always --no-coverage",
+            "vendor/bin/phpunit --colors=always --order-by=defects --stop-on-defect --no-coverage",
             "vendor/bin/php-cs-fixer fix -v --diff --dry-run"
         ],
         "watch": [
-            "watchman-make -p 'src/**/*.php' 'tests/**/*.php' --run=\"clear && printf '\\e[3J' && vendor/bin/phpunit --colors=always --no-coverage\""
+            "watchman-make -p 'src/**/*.php' 'tests/**/*.php' --run=\"clear && printf '\\e[3J' && vendor/bin/phpunit --colors=always --order-by=defects --stop-on-defect --no-coverage\""
         ],
         "report": [
             "[ -d reports ] || mkdir reports",
-            "vendor/bin/phpunit --colors=always",
+            "vendor/bin/phpunit --order-by=defects --stop-on-defect --colors=always",
             "coverage=`cat reports/coverage.txt | grep -m 1 \"Lines:\" | grep -E -o \"([0-9]{1,3})\" | head -1`; min=80; if [ $coverage -lt $min ]; then exit 2; fi",
             "vendor/bin/php-cs-fixer fix -v --diff --dry-run",
             "vendor/bin/phpmd \"src/\" html codesize,cleancode,unusedcode,naming --reportfile reports/messes.html --ignore-violations-on-exit",
