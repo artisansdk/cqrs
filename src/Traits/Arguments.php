@@ -18,7 +18,7 @@ trait Arguments
     /**
      * Get or set the arguments and options for the command.
      *
-     * @param array|null|\Illuminate\Contracts\Support\Arrayable $arguments
+     * @param array|\Illuminate\Contracts\Support\Arrayable|null $arguments
      *
      * @return self|array
      */
