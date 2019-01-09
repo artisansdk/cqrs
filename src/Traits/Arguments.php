@@ -99,8 +99,7 @@ trait Arguments
      */
     protected function hasOption(string $name): bool
     {
-        return array_has($this->arguments, $name)
-            && ! is_null(array_get($this->arguments, $name));
+        return ! is_null(array_get($this->arguments, $name));
     }
 
     /**
