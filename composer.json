@@ -20,19 +20,23 @@
         "artisansdk/contract": "dev-master",
         "illuminate/container": "~5.0",
         "illuminate/database": "~5.0",
-        "illuminate/pagination": "~5.0",
         "illuminate/queue": "~5.0",
         "illuminate/support": "~5.0",
-        "illuminate/validation": "~5.0",
         "psr/log": "^1.0"
     },
     "require-dev": {
+        "illuminate/pagination": "~5.0",
+        "illuminate/validation": "~5.0",
         "phpunit/phpunit": "~7.2",
         "friendsofphp/php-cs-fixer": "~2.10",
         "pdepend/pdepend": "~2.5.0",
         "phploc/phploc": "~4.0.0",
         "phpmd/phpmd": "~2.6.0",
         "sebastian/phpcpd": "~4.0.0"
+    },
+    "suggest": {
+        "illuminate/pagination": "CQRS supports integration of LengthAwarePaginator by using Query::paginate() method.",
+        "illuminate/validation": "CQRS supports automatic creation of a Validator using rules arrays with argument validation."
     },
     "autoload": {
         "psr-4": {

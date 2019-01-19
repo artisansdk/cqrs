@@ -71,7 +71,7 @@ class Evented implements Contract
      * @param \ArtisanSdk\Contract\Eventable $eventable
      * @param \ArtisanSdk\CQRS\Dispatcher
      */
-    public function __construct(Eventable $eventable, Dispatcher $dispather = null)
+    public function __construct(Eventable $eventable, Dispatcher $dispatcher = null)
     {
         $this->eventable = $eventable;
         $this->dispatcher = $dispatcher ?? Dispatcher::make();

@@ -58,11 +58,9 @@ class Job implements ShouldQueue, LoggerAwareInterface
      */
     public function __construct(Event $event, $handler, LoggerInterface $logger = null)
     {
-        $this->event = $event;
-        $this->handler = $this->resolveHandler($handler);
-        if (is_object($handler)) {
-            $this->copyQueueSettingsFromHandler($handler);
-        }
+        $this->setEvent($event);
+        $this->setHandler($handler);
+
         if ( ! is_null($logger)) {
             $this->setLogger($logger);
         }
@@ -100,11 +98,9 @@ class Job implements ShouldQueue, LoggerAwareInterface
      */
     public function run($handler, Event $event)
     {
-        $properties = $event->properties();
-
         return Dispatcher::make()
             ->command($handler)
-            ->arguments($properties['payload'])
+            ->arguments($event->properties())
             ->run();
     }
 
@@ -119,6 +115,8 @@ class Job implements ShouldQueue, LoggerAwareInterface
      */
     public function call($class, $handler, Event $event)
     {
+        $this->setEvent($event);
+
         $class = is_string($class) ? app($class) : $class;
 
         return $class->$handler($this->event);
@@ -187,9 +185,11 @@ class Job implements ShouldQueue, LoggerAwareInterface
         if (isset($handler->queue)) {
             $this->onQueue($handler->queue);
         }
+
         if (isset($handler->connection)) {
             $this->onConnection($handler->connection);
         }
+
         if (isset($handler->delay)) {
             $this->delay($handler->delay);
         }
@@ -239,6 +239,30 @@ class Job implements ShouldQueue, LoggerAwareInterface
         }
 
         return $this->logger;
+    }
+
+    /**
+     * Set the event on the object.
+     *
+     * @param \ArtisanSdk\Contract\Event $event
+     */
+    public function setEvent(Event $event)
+    {
+        $this->event = $event;
+    }
+
+    /**
+     * Set the event handler on the object.
+     *
+     * @param string|array|\ArtisanSdk\Contract\Handler $handler
+     */
+    public function setHandler($handler)
+    {
+        $this->handler = $this->resolveHandler($handler);
+
+        if (is_object($this->handler)) {
+            $this->copyQueueSettingsFromHandler($this->handler);
+        }
     }
 
     /**

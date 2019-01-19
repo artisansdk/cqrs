@@ -3,11 +3,11 @@
 namespace ArtisanSdk\CQRS\Traits;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Validation\Validator;
-use InvalidArgumentException;
 
 trait Arguments
 {
+    use Validation;
+
     /**
      * The arguments and options for the command.
      *
@@ -41,8 +41,6 @@ trait Arguments
      * @param string $name
      * @param mixed  $validator
      *
-     * @throws \InvalidArgumentException
-     *
      * @return mixed
      */
     public function argument($name, $validator = null)
@@ -50,11 +48,11 @@ trait Arguments
         $value = $this->option($name);
 
         if (is_null($value)) {
-            throw new InvalidArgumentException(sprintf(
+            $this->invalidArgument(
                 'Argument "%s" is required by %s.',
                 $name,
                 get_class($this)
-            ));
+            );
         }
 
         if ($validator) {
@@ -100,73 +98,6 @@ trait Arguments
     protected function hasOption(string $name): bool
     {
         return ! is_null(array_get($this->arguments, $name));
-    }
-
-    /**
-     * Validate the argument value by key name.
-     *
-     * @param string $name      of argument
-     * @param mixed  $value     of argument
-     * @param mixed  $validator
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     * @throws \InvalidArgumentException
-     *
-     * @return mixed
-     */
-    protected function validateValue(string $name, $value, $validator)
-    {
-        if (is_string($validator)
-            && function_exists($validator)
-        ) {
-            if ( ! $validator($value)) {
-                throw new InvalidArgumentException(sprintf(
-                    'The value for the "%s" argument could not be validated using %s().',
-                    $name,
-                    $validator
-                ));
-            }
-
-            return $value;
-        }
-
-        if (is_callable($validator)) {
-            if ( ! $validator($value, $name)) {
-                throw new InvalidArgumentException(sprintf(
-                    'The value for the "%s" argument could not be validated using the callable.',
-                    $name,
-                    $validator
-                ));
-            }
-
-            return $value;
-        }
-
-        if (is_array($validator)) {
-            $validator = app('validator')->make(
-                [$name  => $value],
-                [$name => $validator]
-            );
-        }
-
-        if ($validator instanceof Validator) {
-            $validator->validate();
-
-            return $value;
-        }
-
-        if (is_string($validator)
-            && is_object($value)
-            && get_class($value) === $validator
-        ) {
-            return $value;
-        }
-
-        throw new InvalidArgumentException(sprintf(
-            'The "%s" argument validator must be a class or interface name, a callable, or an instance of %s.',
-            $name,
-            Validator::class
-        ));
     }
 
     /**

@@ -5,7 +5,6 @@ namespace ArtisanSdk\CQRS\Tests\Unit\Traits;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\TestCase;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Support\Fluent;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -85,7 +84,7 @@ class ArgumentsTest extends TestCase
             $value = $command->argument('foo', -1);
         } catch (InvalidArgumentException $exception) {
             $this->assertSame(
-                'The "foo" argument validator must be a class or interface name, a callable, or an instance of '.Validator::class.'.',
+                'The "foo" argument validator must be a class or interface name, a callable, or an instance of a Validator.',
                 $exception->getMessage(),
                 'An unsupported validator should throw an '.InvalidArgumentException::class.'.'
             );
@@ -147,6 +146,31 @@ class ArgumentsTest extends TestCase
     }
 
     /**
+     * Test that an argument can be validated using a validator.
+     */
+    public function testArgumentIsValidatedWithValidator()
+    {
+        $command = new Command();
+        $command->arguments([
+            'foo' => 'bar',
+        ]);
+
+        $value = $command->argument('foo', $command->makeValidator('foo', 'bar', ['string', 'size:3']));
+
+        $this->assertSame('bar', $value, 'The rules array validator should have validated and therefore resolved the value as "bar".');
+
+        try {
+            $value = $command->argument('foo', $command->makeValidator('foo', 'bar', ['integer']));
+        } catch (ValidationException $exception) {
+            $this->assertSame(
+                'The given data was invalid.',
+                $exception->getMessage(),
+                'An argument that fails the validator rules passed should throw a '.ValidationException::class.'.'
+            );
+        }
+    }
+
+    /**
      * Test that an argument can be validated against a class or interface name.
      */
     public function testArgumentValidatesAgainstClassName()
@@ -168,7 +192,7 @@ class ArgumentsTest extends TestCase
             $value = $command->argument('foo', stdClass::class);
         } catch (InvalidArgumentException $exception) {
             $this->assertSame(
-                'The "foo" argument validator must be a class or interface name, a callable, or an instance of '.Validator::class.'.',
+                'The "foo" argument validator must be a class or interface name, a callable, or an instance of a Validator.',
                 $exception->getMessage(),
                 'An unsupported validator should throw an '.InvalidArgumentException::class.'.'
             );
