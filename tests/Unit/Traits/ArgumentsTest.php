@@ -274,8 +274,12 @@ class ArgumentsTest extends TestCase
             'foo' => 'bar',
         ]);
 
-        $this->assertSame('bar', $command->option('foo', function () { return 'baz'; }), 'The default callable for the set option "foo" should not have been called.');
-        $this->assertSame('baz', $command->option('bar', function () { return 'baz'; }), 'The default callable for the unset option "bar" should have been called.');
+        $this->assertSame('bar', $command->option('foo', function () {
+            return 'baz';
+        }), 'The default callable for the set option "foo" should not have been called.');
+        $this->assertSame('baz', $command->option('bar', function () {
+            return 'baz';
+        }), 'The default callable for the unset option "bar" should have been called.');
     }
 
     /**
