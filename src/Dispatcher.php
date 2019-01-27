@@ -74,7 +74,6 @@ class Dispatcher
         $position = $this->findOccurence($classname, ['Commands\\', 'Queries\\', 'Models\\']);
         $default = substr_replace($classname, 'Events\\'.studly_case($method), $position);
         $name = $this->resolveEventClass($classname, $default);
-
         $fire = ends_with($method, 'ing') ? 'until' : 'event';
 
         $event = (new $name(...$attributes))->event($this->normalizeEventClass($classname, $default));
@@ -303,9 +302,9 @@ class Dispatcher
      */
     protected function normalizeEventClass($class, $default)
     {
-        $normalized = rtrim(preg_replace('/(Model|Command|Query)$/', '', $class), '\\');
-
         $action = class_basename($default);
+
+        $normalized = rtrim(preg_replace('/(Model|Command|Query|Event|'.$action.')$/', '', $class), '\\');
 
         return str_replace(['\\Models\\', '\\Commands\\', '\\Queries\\'], '\\Events\\', $normalized).'\\'.$action;
     }

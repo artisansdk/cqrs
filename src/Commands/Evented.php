@@ -39,6 +39,7 @@ class Evented implements Contract
         'ish'                => 'ishing',
         'it'                 => 'itting',
         'ive'                => 'iving',
+        'mpt'                => 'mpting',
         'n'                  => 'nning',
         'ost'                => 'osting',
         '([aeiou])d'         => '$1ding',
@@ -57,6 +58,7 @@ class Evented implements Contract
         'ind'         => 'ound',
         'ish'         => 'ished',
         'it'          => 'itted',
+        'mpt'         => 'mpted',
         'n'           => 'nned',
         'ost'         => 'osted',
         '([^aeiou])e' => '$1ed',
@@ -154,7 +156,7 @@ class Evented implements Contract
 
         $method = $this->resolvePastTense(class_basename($this->eventable));
 
-        $this->dispatcher->{$method}($response);
+        $this->dispatcher->{$method}($response ?? $this->eventable);
     }
 
     /**
