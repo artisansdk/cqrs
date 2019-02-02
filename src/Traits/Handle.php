@@ -22,9 +22,10 @@ trait Handle
         }
 
         $properties = $event->properties();
+        $arguments = array_get($properties, 'payload', $properties);
 
         return $this->command($this)
-            ->arguments($properties['payload'])
+            ->arguments($arguments)
             ->run();
     }
 
