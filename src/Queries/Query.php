@@ -92,6 +92,8 @@ abstract class Query implements Contract
      */
     public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
-        return $this->builder()->paginate($max, $columns, $name, $page);
+        return $this->builder()
+            ->paginate($max, $columns, $name, $page)
+            ->appends(array_except($this->arguments(), ['page']));
     }
 }
