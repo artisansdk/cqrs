@@ -19,7 +19,11 @@ use ArtisanSdk\CQRS\Traits\Silencer;
  */
 abstract class Command implements Contract
 {
-    use Arguments, CQRS, Handle, Save, Silencer;
+    use Arguments;
+    use CQRS;
+    use Handle;
+    use Save;
+    use Silencer;
 
     /**
      * The abort status of the command.
@@ -37,7 +41,9 @@ abstract class Command implements Contract
      */
     public static function make(array $arguments = [])
     {
-        return Dispatcher::make()->command(static::class)->arguments($arguments);
+        return Dispatcher::make()
+            ->command(static::class)
+            ->arguments($arguments);
     }
 
     /**

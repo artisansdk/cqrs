@@ -3,7 +3,6 @@
 namespace ArtisanSdk\CQRS\Commands;
 
 use ArtisanSdk\Contract\Command as Contract;
-use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Traits\Handle;
@@ -40,7 +39,7 @@ class Transaction implements Contract
      */
     public function __construct(Runnable $runnable, Dispatcher $dispatcher = null, Database $database = null)
     {
-        $this->runnable = $runnable instanceof Eventable ? new Evented($runnable, $dispatcher) : $runnable;
+        $this->runnable = $runnable;
         $this->database = $database;
     }
 

@@ -7,8 +7,11 @@ use Illuminate\Queue\SerializesModels;
 
 trait Queues
 {
-    use Dispatchable,
-        InteractsWithQueue,
-        Queueable,
+    use Dispatchable;
+    use
+        InteractsWithQueue;
+    use
+        Queueable;
+    use
         SerializesModels;
 }

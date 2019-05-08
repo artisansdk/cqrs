@@ -8,7 +8,8 @@ use ArtisanSdk\CQRS\Traits\Silencer;
 
 class Runnable implements Contract
 {
-    use Arguments, Silencer;
+    use Arguments;
+    use Silencer;
 
     public function run()
     {

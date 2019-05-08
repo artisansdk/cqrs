@@ -4,6 +4,7 @@ namespace ArtisanSdk\CQRS;
 
 use ArtisanSdk\Contract\Query;
 use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\CQRS\Queries\Cached;
 use ArtisanSdk\CQRS\Traits\Arguments;
 use ArtisanSdk\CQRS\Traits\Silencer;
 use BadMethodCallException;
@@ -18,7 +19,8 @@ use BadMethodCallException;
  */
 class Builder implements Runnable
 {
-    use Arguments, Silencer;
+    use Arguments;
+    use Silencer;
 
     /**
      * The underlying runnable this class proxies to.
@@ -62,9 +64,7 @@ class Builder implements Runnable
      */
     public function __invoke()
     {
-        $runnable = $this->toBase();
-
-        return $runnable();
+        return $this->toBase()->__invoke();
     }
 
     /**
@@ -100,6 +100,88 @@ class Builder implements Runnable
     public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
         return $this->forwardToQuery(__FUNCTION__, $max, $columns, $name, $page);
+    }
+
+    /**
+     * Should the query be cached?
+     *
+     * @return bool
+     */
+    public function cached(): bool
+    {
+        return $this->proxyToCached(__FUNCTION__);
+    }
+
+    /**
+     * Do cache the query.
+     *
+     * @return self
+     */
+    public function cache(): self
+    {
+        return $this->proxyToCached(__FUNCTION__);
+    }
+
+    /**
+     * Don't cache the query.
+     *
+     * @return self
+     */
+    public function nocache(): self
+    {
+        return $this->proxyToCached(__FUNCTION__);
+    }
+
+    /**
+     * Get or set the cache TTL.
+     *
+     * @param int|null $ttl in seconds
+     *
+     * @return int|self
+     */
+    public function ttl(int $ttl = null)
+    {
+        return $this->proxyToCached(__FUNCTION__, $ttl);
+    }
+
+    /**
+     * Run the query outside the cache.
+     *
+     * @return mixed
+     */
+    public function fresh()
+    {
+        return $this->forwardToQuery(__FUNCTION__);
+    }
+
+    /**
+     * Run the query after invalidating the cache.
+     *
+     * @return mixed
+     */
+    public function refresh()
+    {
+        return $this->forwardToQuery(__FUNCTION__);
+    }
+
+    /**
+     * Invalidate the cache by tags.
+     *
+     * @return self
+     */
+    public function invalidate(): self
+    {
+        return $this->proxyToCached(__FUNCTION__);
+    }
+
+    /**
+     * Bust the cache key.
+     *
+     * @return self
+     */
+    public function bust(): self
+    {
+        return $this->proxyToCached(__FUNCTION__);
     }
 
     /**
@@ -143,11 +225,11 @@ class Builder implements Runnable
      * @param string $class     to forward to
      * @param array  $arguments to forward to method on class
      *
-     * @throws \BadMethodCallException when command is not an instance of $class
+     * @throws \BadMethodCallException when runnable is not an instance of $class
      *
      * @return mixed
      */
-    protected function forward($method, $class, ...$arguments)
+    protected function forwardToBase($method, $class, ...$arguments)
     {
         if ($this->runnable instanceof $class) {
             return $this->toBase()->$method(...$arguments);
@@ -166,6 +248,31 @@ class Builder implements Runnable
      */
     protected function forwardToQuery($method, ...$arguments)
     {
-        return $this->forward($method, Query::class, ...$arguments);
+        return $this->forwardToBase($method, Query::class, ...$arguments);
+    }
+
+    /**
+     * Proxy calls to the cached builder.
+     *
+     * @param string $method    to foward
+     * @param array  $arguments to forward to method on cached builder
+     *
+     * @throws \BadMethodCallException when runnable is not an instance of $class
+     *
+     * @return mixed
+     */
+    protected function proxyToCached($method, ...$arguments)
+    {
+        if ($this->runnable instanceof Cached) {
+            $response = $this->runnable->$method(...$arguments);
+
+            if ($response === $this->runnable) {
+                return $this;
+            }
+
+            return $response;
+        }
+
+        throw new BadMethodCallException('Only call '.$method.'() on '.Cached::class.' instances.');
     }
 }

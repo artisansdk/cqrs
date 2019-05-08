@@ -4,7 +4,7 @@ namespace ArtisanSdk\CQRS\Events;
 
 use ArtisanSdk\Contract\Event as Contract;
 use Illuminate\Queue\SerializesModels;
-use ReflectionClass;
+use ReflectionObject;
 
 /**
  * Event Base Class.
@@ -17,18 +17,18 @@ class Event implements Contract
     use SerializesModels;
 
     /**
-     * The event name.
+     * The event class name.
      *
      * @var string
      */
-    protected $event = __CLASS__;
+    protected $event;
 
     /**
-     * The event payload.
+     * The entity class name.
      *
-     * @var array
+     * @var string
      */
-    protected $payload;
+    protected $entity;
 
     /**
      * Inject the payload.
@@ -37,25 +37,12 @@ class Event implements Contract
      */
     public function __construct()
     {
-        $this->payload = func_num_args() ? func_get_arg(0) : [];
-    }
+        $this->event = static::class;
 
-    /**
-     * Get or set the event dynamically.
-     *
-     * @param string $event
-     *
-     * @return string|self
-     */
-    public function event($event = null)
-    {
-        if (is_null($event)) {
-            return $this->event;
+        $payload = func_num_args() ? func_get_arg(0) : [];
+        foreach ($payload as $key => $value) {
+            $this->$key = $value;
         }
-
-        $this->event = $event;
-
-        return $this;
     }
 
     /**
@@ -67,7 +54,7 @@ class Event implements Contract
     {
         $properties = collect();
 
-        foreach ((new ReflectionClass($this))->getProperties() as $property) {
+        foreach ((new ReflectionObject($this))->getProperties() as $property) {
             if ( ! $property->isPrivate()) {
                 $value = $this->getPropertyValue($property);
                 if ( ! is_null($value)) {
@@ -87,6 +74,42 @@ class Event implements Contract
     public function properties()
     {
         return $this->getProperties()->all();
+    }
+
+    /**
+     * Get or set the event class name dynamically.
+     *
+     * @param string $event
+     *
+     * @return string|self
+     */
+    public function event($event = null)
+    {
+        if (is_null($event)) {
+            return $this->event;
+        }
+
+        $this->event = $event;
+
+        return $this;
+    }
+
+    /**
+     * Get or set the entity class name dynamically.
+     *
+     * @param string $entity
+     *
+     * @return string|self
+     */
+    public function entity($entity = null)
+    {
+        if (is_null($entity)) {
+            return $this->entity;
+        }
+
+        $this->entity = $entity;
+
+        return $this;
     }
 
     /**

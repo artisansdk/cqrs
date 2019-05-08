@@ -19,7 +19,9 @@ use Illuminate\Database\Query\Builder;
  */
 abstract class Query implements Contract
 {
-    use Arguments, CQRS, Silencer;
+    use Arguments;
+    use CQRS;
+    use Silencer;
 
     /**
      * Create new instance of query.

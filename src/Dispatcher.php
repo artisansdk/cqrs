@@ -2,14 +2,17 @@
 
 namespace ArtisanSdk\CQRS;
 
+use ArtisanSdk\Contract\Cacheable;
 use ArtisanSdk\Contract\Command;
 use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\Contract\Query;
 use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\Taggable;
 use ArtisanSdk\Contract\Transactional;
 use ArtisanSdk\CQRS\Commands\Evented;
 use ArtisanSdk\CQRS\Commands\Transaction;
 use ArtisanSdk\CQRS\Events\Event;
+use ArtisanSdk\CQRS\Queries\Cached;
 use Illuminate\Container\Container as App;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher as Events;
@@ -126,15 +129,21 @@ class Dispatcher
             throw new InvalidArgumentException(get_class($runnable).' must be an instance of '.Command::class.'.');
         }
 
+        $command = $runnable;
+
+        if ($runnable instanceof Taggable) {
+            $command = new Cached($command, $this);
+        }
+
         if ($runnable instanceof Transactional) {
-            return $this->newBuilder(new Transaction($runnable, $this, $this->makeFromContainer(ConnectionInterface::class)));
+            $command = new Transaction($command, $this, $this->makeFromContainer(ConnectionInterface::class));
         }
 
         if ($runnable instanceof Eventable) {
-            return $this->newBuilder(new Evented($runnable, $this));
+            $command = new Evented($command, $this);
         }
 
-        return $this->newBuilder($runnable);
+        return $this->newBuilder($command);
     }
 
     /**
@@ -154,11 +163,17 @@ class Dispatcher
             throw new InvalidArgumentException(get_class($runnable).' must be an instance of '.Query::class.'.');
         }
 
-        if ($runnable instanceof Eventable) {
-            return $this->newBuilder(new Evented($runnable, $this));
+        $query = $runnable;
+
+        if ($runnable instanceof Cacheable) {
+            $query = new Cached($query, $this);
         }
 
-        return $this->newBuilder($runnable);
+        if ($runnable instanceof Eventable) {
+            $query = new Evented($query, $this);
+        }
+
+        return $this->newBuilder($query);
     }
 
     /**

@@ -3,7 +3,7 @@
 namespace ArtisanSdk\CQRS\Commands;
 
 use ArtisanSdk\Contract\Command as Contract;
-use ArtisanSdk\Contract\Eventable;
+use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Traits\Handle;
 
@@ -35,7 +35,6 @@ class Evented implements Contract
      */
     protected $progressiveMap = [
         'ate'                => 'ating',
-        'ect'                => 'ecting',
         'ish'                => 'ishing',
         'it'                 => 'itting',
         'ive'                => 'iving',
@@ -45,7 +44,7 @@ class Evented implements Contract
         '([aeiou])d'         => '$1ding',
         '([aeiou][^aeiou])e' => '$1ing',
         '(n|dr)d'            => '$1ding',
-        'e(ct|r|d|l)'        => 'e$1ing',
+        'e(ct|pt|r|d|l)'     => 'e$1ing',
     ];
 
     /**
@@ -54,26 +53,25 @@ class Evented implements Contract
      * @var array
      */
     protected $pastMap = [
-        'ect'         => 'ected',
-        'ind'         => 'ound',
-        'ish'         => 'ished',
-        'it'          => 'itted',
-        'mpt'         => 'mpted',
-        'n'           => 'nned',
-        'ost'         => 'osted',
-        '([^aeiou])e' => '$1ed',
-        '([aeiou])d'  => '$1ded',
-        '(n|d|r)d'    => '$1ded',
-        'e(ct|r|d|l)' => 'e$1ed',
+        'ind'            => 'ound',
+        'ish'            => 'ished',
+        'it'             => 'itted',
+        'mpt'            => 'mpted',
+        'n'              => 'nned',
+        'ost'            => 'osted',
+        '([^aeiou])e'    => '$1ed',
+        '([aeiou])d'     => '$1ded',
+        '(n|d|r)d'       => '$1ded',
+        'e(ct|pt|r|d|l)' => 'e$1ed',
     ];
 
     /**
      * Inject the underlying Eventable that this class proxies to.
      *
-     * @param \ArtisanSdk\Contract\Eventable $eventable
-     * @param \ArtisanSdk\CQRS\Dispatcher
+     * @param \ArtisanSdk\Contract\Runnable $eventable
+     * @param \ArtisanSdk\CQRS\Dispatcher   $dispatcher
      */
-    public function __construct(Eventable $eventable, Dispatcher $dispatcher = null)
+    public function __construct(Runnable $eventable, Dispatcher $dispatcher = null)
     {
         $this->eventable = $eventable;
         $this->dispatcher = $dispatcher ?? Dispatcher::make();

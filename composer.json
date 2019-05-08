@@ -26,10 +26,12 @@
     },
     "require-dev": {
         "artisansdk/bench": "dev-master",
+        "illuminate/cache": "~5.0",
         "illuminate/pagination": "~5.0",
         "illuminate/validation": "~5.0"
     },
     "suggest": {
+        "illuminate/cache": "CQRS supports automatic caching and cache-busting of queries using Laravel's CacheManager class.",
         "illuminate/pagination": "CQRS supports integration of LengthAwarePaginator by using Query::paginate() method.",
         "illuminate/validation": "CQRS supports automatic creation of a Validator using rules arrays with argument validation."
     },

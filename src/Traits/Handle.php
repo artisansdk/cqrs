@@ -21,11 +21,8 @@ trait Handle
             return $this->queue($event);
         }
 
-        $properties = $event->properties();
-        $arguments = array_get($properties, 'payload', $properties);
-
         return $this->command($this)
-            ->arguments($arguments)
+            ->arguments($event->properties())
             ->run();
     }
 
