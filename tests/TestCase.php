@@ -2,8 +2,8 @@
 
 namespace ArtisanSdk\CQRS\Tests;
 
-use ArtisanSdk\CQRS\Tests\Fakes\Bus\Dispatcher as Bus;
 use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
+use ArtisanSdk\CQRS\Tests\Fakes\Dispatcher as Bus;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Bus\Dispatcher as BusInterface;

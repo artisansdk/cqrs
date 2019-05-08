@@ -1,8 +1,8 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Unit\Traits;
+namespace ArtisanSdk\CQRS\Tests\Unit\Concerns;
 
-use ArtisanSdk\CQRS\Tests\Fakes\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\TestCase;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Fluent;

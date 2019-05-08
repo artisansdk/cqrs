@@ -9,17 +9,17 @@ use ArtisanSdk\CQRS\Builder;
 use ArtisanSdk\CQRS\Buses\Evented;
 use ArtisanSdk\CQRS\Buses\Transaction;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Tests\Fakes\Buses\Transactional;
-use ArtisanSdk\CQRS\Tests\Fakes\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Eventable as EventableCommand;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Foo;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Foo\Fizz;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Runnable;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Transactional;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Baz;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Foo\Bar;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Eventable as EventableQuery;
-use ArtisanSdk\CQRS\Tests\Fakes\Query;
+use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
 use ArtisanSdk\Event\Event;
 use InvalidArgumentException;
@@ -116,7 +116,7 @@ class DispatcherTest extends TestCase
     public function testInvalidCommandFails()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArtisanSdk\CQRS\Tests\Fakes\Query must be an instance of ArtisanSdk\Contract\Command.');
+        $this->expectExceptionMessage('ArtisanSdk\CQRS\Tests\Fakes\Queries\Query must be an instance of ArtisanSdk\Contract\Command.');
 
         $this->dispatcher->command(new Query());
     }
@@ -127,7 +127,7 @@ class DispatcherTest extends TestCase
     public function testInvalidQueryFails()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArtisanSdk\CQRS\Tests\Fakes\Command must be an instance of ArtisanSdk\Contract\Query.');
+        $this->expectExceptionMessage('ArtisanSdk\CQRS\Tests\Fakes\Commands\Command must be an instance of ArtisanSdk\Contract\Query.');
 
         $this->dispatcher->query(new Command());
     }

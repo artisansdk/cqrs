@@ -1,13 +1,13 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Unit\Traits;
+namespace ArtisanSdk\CQRS\Tests\Unit\Concerns;
 
 use ArtisanSdk\CQRS\Builder;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Tests\Fakes\Buses\Transactional;
-use ArtisanSdk\CQRS\Tests\Fakes\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Transactional;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
-use ArtisanSdk\CQRS\Tests\Fakes\Query;
+use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
 use ArtisanSdk\Event\Event;
 

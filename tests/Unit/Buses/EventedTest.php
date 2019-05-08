@@ -1,10 +1,11 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Unit\Commands;
+namespace ArtisanSdk\CQRS\Tests\Unit\Buses;
 
 use ArtisanSdk\Contract\Eventable as Contract;
 use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\CQRS\Buses\Evented;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Custom;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Eventable;

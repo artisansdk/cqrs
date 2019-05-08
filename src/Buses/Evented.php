@@ -154,7 +154,7 @@ class Evented implements Contract
 
         $method = $this->resolvePastTense(class_basename($this->eventable));
 
-        $this->dispatcher->{$method}($response ?? $this->eventable);
+        $this->dispatcher->{$method}($response);
     }
 
     /**

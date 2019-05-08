@@ -7,11 +7,24 @@ use Illuminate\Contracts\Queue\Job as Contract;
 class Job implements Contract
 {
     /**
-     * The deleted flag for the job.
+     * Indicates if the job has been deleted.
      *
      * @var bool
      */
     protected $deleted = false;
+
+    /**
+     * Indicates if the job has been released.
+     *
+     * @var bool
+     */
+    protected $released = false;
+    /**
+     * Indicates if the job has failed.
+     *
+     * @var bool
+     */
+    protected $failed = false;
 
     /**
      * Get the job identifier.
@@ -47,6 +60,17 @@ class Job implements Contract
      */
     public function release($delay = 0)
     {
+        $this->released = true;
+    }
+
+    /**
+     * Determine if the job was released back into the queue.
+     *
+     * @return bool
+     */
+    public function isReleased()
+    {
+        return $this->released;
     }
 
     /**
@@ -74,6 +98,35 @@ class Job implements Contract
      */
     public function isDeletedOrReleased()
     {
+        return $this->isDeleted() || $this->isReleased();
+    }
+
+    /**
+     * Determine if the job has been marked as a failure.
+     *
+     * @return bool
+     */
+    public function hasFailed()
+    {
+        return $this->failed;
+    }
+
+    /**
+     * Mark the job as "failed".
+     */
+    public function markAsFailed()
+    {
+        $this->failed = true;
+    }
+
+    /**
+     * Delete the job, call the "failed" method, and raise the failed job event.
+     *
+     * @param \Throwable|null $e
+     */
+    public function fail($e = null)
+    {
+        $this->markAsFailed();
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Unit\Queries;
+namespace ArtisanSdk\CQRS\Tests\Unit;
 
 use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Query as QueryInterface;

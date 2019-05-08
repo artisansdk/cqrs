@@ -1,13 +1,13 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Unit\Commands;
+namespace ArtisanSdk\CQRS\Tests\Unit;
 
 use ArtisanSdk\Contract\Command as CommandInterface;
 use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Builder;
 use ArtisanSdk\CQRS\Jobs\Chain;
-use ArtisanSdk\CQRS\Tests\Fakes\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable;
 use ArtisanSdk\CQRS\Tests\TestCase;
 

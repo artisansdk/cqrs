@@ -1,15 +1,15 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Unit\Commands;
+namespace ArtisanSdk\CQRS\Tests\Unit\Buses;
 
 use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\Contract\Transactional as Contract;
 use ArtisanSdk\CQRS\Buses\Transaction;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Tests\Fakes\Buses\Transactional;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Eventable;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Exceptional;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Transactional;
 use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
 use ArtisanSdk\CQRS\Tests\TestCase;

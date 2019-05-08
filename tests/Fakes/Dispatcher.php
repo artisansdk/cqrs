@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Fakes\Bus;
+namespace ArtisanSdk\CQRS\Tests\Fakes;
 
 use Illuminate\Contracts\Bus\QueueingDispatcher;
 

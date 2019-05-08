@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Unit\Traits;
+namespace ArtisanSdk\CQRS\Tests\Unit\Concerns;
 
 use ArtisanSdk\CQRS\Jobs\Chain;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable;

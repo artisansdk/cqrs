@@ -3,7 +3,7 @@
 namespace ArtisanSdk\CQRS\Tests\Jobs;
 
 use ArtisanSdk\CQRS\Jobs\Job;
-use ArtisanSdk\CQRS\Tests\Fakes\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Exceptional;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Handler;
 use ArtisanSdk\CQRS\Tests\Fakes\Jobs\Job as JobFake;
