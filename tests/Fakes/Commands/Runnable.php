@@ -3,8 +3,8 @@
 namespace ArtisanSdk\CQRS\Tests\Fakes\Commands;
 
 use ArtisanSdk\Contract\Runnable as Contract;
-use ArtisanSdk\CQRS\Traits\Arguments;
-use ArtisanSdk\CQRS\Traits\Silencer;
+use ArtisanSdk\CQRS\Concerns\Arguments;
+use ArtisanSdk\CQRS\Concerns\Silencer;
 
 class Runnable implements Contract
 {

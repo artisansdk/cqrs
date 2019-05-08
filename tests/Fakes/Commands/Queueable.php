@@ -3,7 +3,7 @@
 namespace ArtisanSdk\CQRS\Tests\Fakes\Commands;
 
 use ArtisanSdk\Contract\Queueable as Contract;
-use ArtisanSdk\CQRS\Traits\Queues;
+use ArtisanSdk\CQRS\Concerns\Queues;
 
 class Queueable extends Command implements Contract
 {

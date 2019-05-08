@@ -2,14 +2,14 @@
 
 namespace ArtisanSdk\CQRS\Tests\Jobs;
 
-use ArtisanSdk\CQRS\Events\Event;
 use ArtisanSdk\CQRS\Jobs\Job;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Command;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Exceptional;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Handler;
 use ArtisanSdk\CQRS\Tests\Fakes\Jobs\Job as JobFake;
 use ArtisanSdk\CQRS\Tests\Fakes\Log\Logger;
 use ArtisanSdk\CQRS\Tests\TestCase;
+use ArtisanSdk\Event\Event;
 use RuntimeException;
 
 class JobTest extends TestCase

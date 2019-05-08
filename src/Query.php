@@ -1,12 +1,11 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Queries;
+namespace ArtisanSdk\CQRS;
 
 use ArtisanSdk\Contract\Query as Contract;
-use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Traits\Arguments;
-use ArtisanSdk\CQRS\Traits\CQRS;
-use ArtisanSdk\CQRS\Traits\Silencer;
+use ArtisanSdk\CQRS\Concerns\Arguments;
+use ArtisanSdk\CQRS\Concerns\CQRS;
+use ArtisanSdk\CQRS\Concerns\Silencer;
 use Illuminate\Database\Query\Builder;
 
 /**

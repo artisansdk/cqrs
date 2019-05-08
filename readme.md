@@ -14,16 +14,19 @@ A foundational package for Command Query Responsibility Segregation (CQRS) compa
         - [How to Create an Evented Command](#how-to-create-an-evented-command)
         - [How to Run a Command in a Transaction](#how-to-run-a-command-in-a-transaction)
         - [How to Use a Command as an Event Handler](#how-to-use-a-command-as-an-event-handler)
-        - [How to Queue a Command](#how-to-queue-a-command)
+        - [How to Queue a Command as a Job](#how-to-queue-a-command-as-a-job)
+        - [How to Invalidate Queries from Commands](#how-to-invalidate-queries-from-commands)
     - [Queries](#queries)
         - [How to Create a Query](#how-to-create-a-query)
         - [How to Get Query Results](#how-to-get-query-results)
         - [How to Create an Evented Query](#how-to-create-an-evented-query)
+        - [How to Create a Cached Query](#how-to-create-a-cached-query)
+        - [How to Bust a Cached Query](#how-to-bust-a-cached-query)
     - [Events](#events)
         - [How Auto-resolution of Events Work](#how-auto-resolution-of-events-work)
         - [How to Customize the Before and After Events](#how-to-customize-the-before-and-after-events)
         - [Recommended Conventions for Command and Event Naming](#recommended-conventions-for-command-and-event-naming)
-    - [Traits](#traits)
+    - [Concerns](#concerns)
         - [Using CQRS in Your Classes](#using-cqrs-in-your-classes)
         - [Using Argument Validators](#using-argument-validators)
         - [Using Option Defaults](#using-option-defaults)
@@ -62,16 +65,16 @@ manually or rely on `Command::make()` or similar static functions.
   you will need this peer dependency for the actual job dispatching. See also
   [Framework Helper Functions](#framework-helper-functions).
 
-- `illuminate/events`: Using the `ArtisanSdk\CQRS\Commands\Evented` command wrapper
+- `illuminate/events`: Using the `ArtisanSdk\CQRS\Buses\Transaction` command wrapper
   will require this package which ships with Laravel. Essentially the dependency
   relies on the ability for the framework to dispatch the events to the framework
   layers and back down to the CQRS package level.
 
-- `illuminate/database`: Using the `ArtisanSdk\CQRS\Commands\Transaction` or
-  `ArtisanSdk\CQRS\Queries\Query` classes will require this database package to
+- `illuminate/database`: Using the `ArtisanSdk\CQRS\Buses\Transaction` or
+  `ArtisanSdk\CQRS\Query` classes will require this database package to
   provide database transactions and querying statements.
 
-- `illuminate/pagination`: Using `ArtisanSdk\CQRS\Queries\Query::paginate()` method
+- `illuminate/pagination`: Using `ArtisanSdk\CQRS\Query::paginate()` method
   will require the use of this package to return the paginated results.
 
 - `illuminate/queue`: Using any queueing functions of the Laravel framework will
@@ -97,7 +100,7 @@ to implement these helpers (much like this package did for testing purposes):
   built instance of that class.
 
 - `dispatch()` is used primarily used by chainable, queued commands via the
-  `ArtisanSdk\CQRS\Traits\Queueable` trait helper `dispatchNextJobInChain()`.
+  `ArtisanSdk\CQRS\Concerns\Queueable` trait helper `dispatchNextJobInChain()`.
   The function should accept a class and pass it along the framework's command
   bus. For Laravel-based applications this can be met by installing `illuminate\bus`
   which provides `Illuminate\Bus\Dispatcher` as the command bus.
@@ -115,7 +118,7 @@ return the result itself or nothing at all.
 ### How to Create a Command
 
 A basic example of using a command is to create a class that extends the
-`ArtisanSdk\CQRS\Commands\Command` class and implementing the `run()` method
+`ArtisanSdk\CQRS\Command` class and implementing the `run()` method
 returning whatever value you want after the command is ran. You can use the constructor
 method to inject any command dependencies. Argument dependencies are implicitly
 required and the caller must satisfy the requirements or else the developer must
@@ -126,7 +129,7 @@ prior to execution of critical command logic.
 namespace App\Commands\SaveUser;
 
 use App\User;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command
 {
@@ -179,10 +182,10 @@ $user = App\Commands\SaveUser::make()
 
 #### Run a Command From Anywhere
 
-Using `ArtisanSdk\CQRS\Traits\CQRS` helper trait on any class (e.g.: a controller)
+Using `ArtisanSdk\CQRS\Concerns\CQRS` helper trait on any class (e.g.: a controller)
 allows you to dispatch commands directly by simply calling `$this->dispatch()`
 or `$this->command()` passing the command's class name as the argument. This will
-return an instance of the command builder. The base `ArtisanSdk\CQRS\Commands\Command`
+return an instance of the command builder. The base `ArtisanSdk\CQRS\Command`
 uses this trait and therefore subcommands can be executed within a command in
 the same way:
 
@@ -191,7 +194,7 @@ namespace App\Http\Controllers;
 
 use App\Commands\SaveUser;
 use App\Http\Controllers\Controller;
-use ArtisanSdk\CQRS\Traits\CQRS;
+use ArtisanSdk\CQRS\Concerns\CQRS;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -241,7 +244,7 @@ namespace App\Commands;
 
 use App\User;
 use ArtisanSdk\Contracts\Commands\Eventable;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Eventable
 {
@@ -266,7 +269,7 @@ class SaveUser extends Command implements Eventable
 With the addition of the eventable contract implemented, an event will be fired
 before and another after the command is ran. The before event will be given the
 arguments passed to the command while the after event will be given the results
-of the command itself. The event fired is an instance of `ArtisanSdk\CQRS\Events\Event`.
+of the command itself. The event fired is an instance of `ArtisanSdk\Event\Event`.
 
 #### Silencing an Evented Command
 
@@ -290,14 +293,14 @@ multiple subcommands and there needs to be a certain level of atomicity relating
 the command's overall execution. If a sucommand or secondary write fails, you'll
 want to roll back the command. This boilerplate logic is annoying to have to
 write into each command so this package provides a trivial way to do this by
-implementing the `ArtisanSdk\Contracts\Commands\Transactional` interface on any
+implementing the `ArtisanSdk\Contracts\Buses\Transactional` interface on any
 command that should be transactional:
 
 ```php
 namespace App\Commands;
 
-use ArtisanSdk\Contracts\Commands\Transactional;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\Contracts\Buses\Transactional;
+use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Transactional
 {
@@ -336,8 +339,8 @@ transactional wrapper will still rollback but will not bubble any exception:
 namespace App\Commands;
 
 use App\User;
-use ArtisanSdk\Contracts\Commands\Transactional;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\Contracts\Buses\Transactional;
+use ArtisanSdk\CQRS\Command;
 
 class ChangePassword extends Command implements Transactional
 {
@@ -408,7 +411,7 @@ from the event object and pass that as arguments to a command builder and then
 self-execute by invoking the command's `run()` method.
 
 First you'll need to create a custom event that should fire. These events need
-to extend `ArtisanSdk\CQRS\Events\Event` which provides the payload of arguments
+to extend `ArtisanSdk\Event\Event` which provides the payload of arguments
 that will be passed to the command. In our example event we accept a type hinted
 `App\User` model as the only argument to the constructor to ensure that the event
 is created with the right kind of payload. We then assign this model to the `user`
@@ -419,7 +422,7 @@ assign to this argument to the payload property.
 namespace App\Events;
 
 use App\User;
-use ArtisanSdk\CQRS\Events\Event;
+use ArtisanSdk\Event\Event;
 
 class UserSaved extends Event
 {
@@ -443,7 +446,7 @@ namespace App\Commands;
 
 use App\Events\UserSaved;
 use ArtisanSdk\Contracts\Commands\Eventable;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Eventable
 {
@@ -486,7 +489,7 @@ for any `App\Events\UserSaved` events that are fired:
 ```php
 namespace App\Commands;
 
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class SendUserWelcomeEmail extends Command
 {
@@ -525,7 +528,7 @@ $handler = (new App\Commands\SendUserWelcomeEmail());
 $result = $handler->handle($event);
 ```
 
-### How to Queue a Command
+### How to Queue a Command as a Job
 
 In the case above, we're sending an email and this is often considered a background
 process that is not critical to response success. Usually a queued job would be
@@ -534,13 +537,13 @@ of an event and it's handler which is queued for later execution rather than
 immediate execution. Since commands can be these self-executing event handlers,
 the handler can also be queued as a job instead. This package makes it trivial to
 queue the handler by simply implementing the `ArtisanSdk\Contract\CQRS\Queueable` interface
-and adding the `ArtisanSdk\CQRS\Traits\Queues` trait on the command you want to
+and adding the `ArtisanSdk\CQRS\Concerns\Queues` trait on the command you want to
 be queued and support queue interactions:
 
 ```php
 namespace App\Commands;
 
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 use ArtisanSdk\CQRS\Triats\Queue;
 use ArtisanSdk\Contracts\CQRS\Queuable;
 
@@ -601,7 +604,7 @@ namespace App\Commands;
 use App\Events\NewPasswordSet;
 use App\Events\ChangingPassword;
 use ArtisanSdk\Contracts\Commands\Eventable;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class ChangePassword extends Command implements Eventable
 {
@@ -783,7 +786,7 @@ This package doesn't care how you organize things but you might find that organi
 into service boundaries will help reduce naming and organizing decisions and give
 you clean separation for later service packaging.
 
-## Traits
+## Concerns
 
 The package's primary functionality is exposed as a set of base classes but these
 classes are composed from a set of base traits. You can use these traits directly
@@ -792,7 +795,7 @@ prove to be a useful and consistent API for your application.
 
 ### Using CQRS in Your Classes
 
-`ArtisanSdk\CQRS\Traits\Arguments` is a trait that provides arguments and options
+`ArtisanSdk\CQRS\Concerns\Arguments` is a trait that provides arguments and options
 to a class including all the relevant validation logic and default resolvers.
 The public methods of the trait are:
 
@@ -801,7 +804,7 @@ The public methods of the trait are:
 - `Arguments::option($name, $default, $validator)` to get an optional argument and provide a default
 - `Arguments::hasOption($name)` to check if the optional argument is present
 
-`ArtisanSdk\CQRS\Traits\CQRS` is the trait that provides the main interactive
+`ArtisanSdk\CQRS\Concerns\CQRS` is the trait that provides the main interactive
 API for the CQRS pattern. This is the trait that is typically included on a controller,
 console command, or other class in order to directly dispatch commands using the
 command builder and dispatcher. The usable methods (most are protected) of the trait are:
@@ -819,7 +822,7 @@ command builder and dispatcher. The usable methods (most are protected) of the t
 - `CQRS::event($event, $payload)` to compose an after event with the payload and fire it using the dispatcher.
 - `CQRS::until($event, $payload)` to compose a before event with the payload and fire it using the dispatcher.
 
-`ArtisanSdk\CQRS\Traits\Handle` is a trait that can be used by commands to implement
+`ArtisanSdk\CQRS\Concerns\Handle` is a trait that can be used by commands to implement
 the `ArtisanSdk\Contracts\CQRS\Handler` interface such that an event object may be passed
 to the `handle()` method of a command and the command be ran through the command
 dispatcher using the properties of the event as the arguments. Additionally if the
@@ -827,19 +830,19 @@ command is queueable then the execution of the command will be deferred as a que
 job instead. When the job is resolved out of the queue, the command will be directly
 invoked, bypassing the handler yet still using the event properties as arguments.
 
-`ArtisanSdk\CQRS\Traits\Queues` is a wrapper trait for Laravel compatibility of
+`ArtisanSdk\CQRS\Concerns\Queues` is a wrapper trait for Laravel compatibility of
 making an event or command behave like a queued job. It also lets the command interact
 with the command much like a queued job can. The intended use for this trait is
 to make the class it is used on a queuable job. See Laravel's documentation on
 how to customize properties such as `$connection`, `$queue`, and `$delay` or
 to perform chaining of commands as queued jobs.
 
-`ArtisanSdk\CQRS\Traits\Save` is a trait that helps with saving of Eloquent models,
+`ArtisanSdk\CQRS\Concerns\Save` is a trait that helps with saving of Eloquent models,
 especially self-validating models like [`artisansdk\model`](http://github.com/artisansdk/model) provides. It simply provides
 a `save($model)` public method which ensures that the model is saved or throws an
 exception and if saved will return the saved model. See also [Saving Models Within Commands](#saving-models-within-commands).
 
-`ArtisanSdk\CQRS\Traits\Silencer` is a trait that the prevents the firing of events
+`ArtisanSdk\CQRS\Concerns\Silencer` is a trait that the prevents the firing of events
 when a command or query is ran. The public methods of the trait are:
 
 - `Silencer::silence()`: set the silence flag on the command so that events are
@@ -864,7 +867,7 @@ namespace App\Commands;
 
 use App\Invoice;
 use App\Coupon;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 use Illuminate\Validation\Factory as Validator;
 
 class CalculateInvoice extends Command
@@ -913,7 +916,7 @@ invoice is not saved:
 namespace App\Commands;
 
 use App\Invoice;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class CalculateInvoice extends Command
 {
@@ -939,7 +942,7 @@ invoice is always saved unless explicitly set to false.
 namespace App\Commands;
 
 use App\Invoice;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class CalculateInvoice extends Command
 {
@@ -970,7 +973,7 @@ namespace App\Commands;
 
 use App\Invoice;
 use App\User;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class CalculateInvoice extends Command
 {
@@ -1005,7 +1008,7 @@ class CalculateInvoice extends Command
 
 ### Saving Models Within Commands
 
-If you use the `ArtisanSdk\CQRS\Traits\Save` trait or the `ArtisanSdk\CQRS\Commands\Command`
+If you use the `ArtisanSdk\CQRS\Concerns\Save` trait or the `ArtisanSdk\CQRS\Command`
 which includes this trait, then you can quickly save Eloquent models including
 self-validating models like those provided by [`artisansdk\model`](http://github.com/artisansdk/model).
 Simply call `save()` from within the command or controller and pass in the model
@@ -1017,7 +1020,7 @@ and ensure that saves are being performed consistently.
 ```php
 namespace App\Commands;
 
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 
 class CalculateInvoice extends Command
 {
@@ -1043,8 +1046,8 @@ user registration, the `ResetUserPassword` command is called and yet you do not
 want to send out the normal email for password resets. Instead you wish to trigger
 the logic of resetting a password for an account and instead use `SendAccountActivationEmail`
 command to send an account activation in response to `UserRegistered` event. This
-is all possible using the `ArtisanSdk\CQRS\Traits\Silencer` trait which is already
-used by the base `ArtisanSdk\CQRS\Commands\Command` class.
+is all possible using the `ArtisanSdk\CQRS\Concerns\Silencer` trait which is already
+used by the base `ArtisanSdk\CQRS\Command` class.
 
 In order to accomplish the above example you might write the following:
 
@@ -1055,7 +1058,7 @@ use App\User;
 use App\Commands\ResetUserPassword;
 use App\Events\UserPasswordReset;
 use App\Events\UserRegistered;
-use ArtisanSdk\CQRS\Commands\Command;
+use ArtisanSdk\CQRS\Command;
 use ArtisanSdk\Contracts\Commands\Eventable;
 
 class RegisterUser extends Command implements Eventable

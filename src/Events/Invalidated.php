@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Events;
+namespace ArtisanSdk\Event;
 
 class Invalidated extends Event
 {

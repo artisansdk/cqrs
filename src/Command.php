@@ -1,14 +1,13 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Commands;
+namespace ArtisanSdk\CQRS;
 
 use ArtisanSdk\Contract\Command as Contract;
-use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Traits\Arguments;
-use ArtisanSdk\CQRS\Traits\CQRS;
-use ArtisanSdk\CQRS\Traits\Handle;
-use ArtisanSdk\CQRS\Traits\Save;
-use ArtisanSdk\CQRS\Traits\Silencer;
+use ArtisanSdk\CQRS\Concerns\Arguments;
+use ArtisanSdk\CQRS\Concerns\CQRS;
+use ArtisanSdk\CQRS\Concerns\Handle;
+use ArtisanSdk\CQRS\Concerns\Save;
+use ArtisanSdk\CQRS\Concerns\Silencer;
 
 /**
  * Command Base Class.

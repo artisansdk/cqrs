@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Queries;
+namespace ArtisanSdk\CQRS\Buses;
 
 use ArtisanSdk\Contract\Cacheable;
 use ArtisanSdk\Contract\Query as Contract;

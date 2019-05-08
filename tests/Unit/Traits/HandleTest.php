@@ -2,11 +2,11 @@
 
 namespace ArtisanSdk\CQRS\Tests\Unit\Traits;
 
-use ArtisanSdk\CQRS\Events\Event;
 use ArtisanSdk\CQRS\Jobs\Pending;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Command;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable;
 use ArtisanSdk\CQRS\Tests\TestCase;
+use ArtisanSdk\Event\Event;
 
 class HandleTest extends TestCase
 {

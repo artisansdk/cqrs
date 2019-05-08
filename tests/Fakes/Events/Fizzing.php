@@ -2,7 +2,7 @@
 
 namespace ArtisanSdk\CQRS\Tests\Fakes\Events;
 
-use ArtisanSdk\CQRS\Events\Event;
+use ArtisanSdk\Event\Event;
 
 class Fizzing extends Event
 {

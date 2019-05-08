@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Events;
+namespace ArtisanSdk\Event;
 
 use ArtisanSdk\Contract\Event as Contract;
 use Illuminate\Queue\SerializesModels;

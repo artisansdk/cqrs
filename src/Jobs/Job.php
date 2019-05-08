@@ -5,8 +5,8 @@ namespace ArtisanSdk\CQRS\Jobs;
 use ArtisanSdk\Contract\Event;
 use ArtisanSdk\Contract\Handler;
 use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\CQRS\Concerns\Queues;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Traits\Queues;
 use ArtisanSdk\Model\Exceptions\InvalidModel; // @todo
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;

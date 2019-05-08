@@ -18,6 +18,7 @@
     "require": {
         "php": ">=7.0",
         "artisansdk/contract": "dev-master",
+        "artisansdk/event": "dev-master",
         "illuminate/container": "~5.0",
         "illuminate/database": "~5.0",
         "illuminate/queue": "~5.0",

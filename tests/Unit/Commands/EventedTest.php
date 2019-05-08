@@ -5,9 +5,7 @@ namespace ArtisanSdk\CQRS\Tests\Unit\Commands;
 use ArtisanSdk\Contract\Eventable as Contract;
 use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
-use ArtisanSdk\CQRS\Commands\Evented;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Events\Event;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Custom;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Eventable;
 use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
@@ -15,6 +13,7 @@ use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzed;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
 use ArtisanSdk\CQRS\Tests\TestCase;
+use ArtisanSdk\Event\Event;
 use Illuminate\Contracts\Events\Dispatcher as EventsInterface;
 
 class EventedTest extends TestCase

@@ -1,11 +1,11 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Commands;
+namespace ArtisanSdk\CQRS\Buses;
 
 use ArtisanSdk\Contract\Command as Contract;
 use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\CQRS\Concerns\Handle;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Traits\Handle;
 use Exception;
 use Illuminate\Database\ConnectionInterface as Database;
 

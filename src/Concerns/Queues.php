@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Traits;
+namespace ArtisanSdk\CQRS\Concerns;
 
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;

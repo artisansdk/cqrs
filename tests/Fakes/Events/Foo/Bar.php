@@ -2,7 +2,7 @@
 
 namespace ArtisanSdk\CQRS\Tests\Fakes\Events\Foo;
 
-use ArtisanSdk\CQRS\Events\Event;
+use ArtisanSdk\Event\Event;
 
 class Bar extends Event
 {

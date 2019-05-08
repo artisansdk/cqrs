@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Traits;
+namespace ArtisanSdk\CQRS\Concerns;
 
 use ArtisanSdk\Contract\Event;
 use ArtisanSdk\Contract\Queueable;

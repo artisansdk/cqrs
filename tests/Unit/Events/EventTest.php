@@ -2,8 +2,8 @@
 
 namespace ArtisanSdk\CQRS\Tests\Events;
 
-use ArtisanSdk\CQRS\Events\Event;
 use ArtisanSdk\CQRS\Tests\TestCase;
+use ArtisanSdk\Event\Event;
 
 class EventTest extends TestCase
 {
