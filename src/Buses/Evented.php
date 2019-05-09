@@ -3,6 +3,7 @@
 namespace ArtisanSdk\CQRS\Buses;
 
 use ArtisanSdk\Contract\Command as Contract;
+use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Concerns\Handle;
 use ArtisanSdk\CQRS\Dispatcher;
@@ -15,14 +16,14 @@ class Evented implements Contract
     use Handle;
 
     /**
-     * The underlying Eventable this class proxies to.
+     * The underlying runnable this class proxies to.
      *
-     * @var \ArtisanSdk\Contract\Eventable
+     * @var \ArtisanSdk\Contract\Runnable
      */
-    protected $eventable;
+    protected $runnable;
 
     /**
-     * The eventable dispatcher.
+     * The runnable dispatcher.
      *
      * @var \ArtisanSdk\CQRS\Dispatcher
      */
@@ -68,13 +69,23 @@ class Evented implements Contract
     /**
      * Inject the underlying Eventable that this class proxies to.
      *
-     * @param \ArtisanSdk\Contract\Runnable $eventable
+     * @param \ArtisanSdk\Contract\Runnable $runnable
      * @param \ArtisanSdk\CQRS\Dispatcher   $dispatcher
      */
-    public function __construct(Runnable $eventable, Dispatcher $dispatcher = null)
+    public function __construct(Runnable $runnable, Dispatcher $dispatcher = null)
     {
-        $this->eventable = $eventable;
+        $this->runnable = $runnable;
         $this->dispatcher = $dispatcher ?? Dispatcher::make();
+    }
+
+    /**
+     * Get the base most runnable.
+     *
+     * @return \ArtisanSdk\Contract\Invokable
+     */
+    public function toBase(): Invokable
+    {
+        return $this->runnable->toBase();
     }
 
     /**
@@ -88,7 +99,7 @@ class Evented implements Contract
     }
 
     /**
-     * Run the eventable and emit before and after events.
+     * Run the runnable and emit before and after events.
      *
      * @return mixed
      */
@@ -96,9 +107,10 @@ class Evented implements Contract
     {
         $this->before();
 
-        $response = $this->eventable->run();
+        $response = $this->runnable->run();
 
-        if ( ! method_exists($this->eventable, 'aborted') || ! $this->eventable->aborted()) {
+        $runnable = $this->toBase();
+        if ( ! method_exists($runnable, 'aborted') || ! $runnable->aborted()) {
             $this->after($response);
         }
 
@@ -114,8 +126,9 @@ class Evented implements Contract
             return;
         }
 
-        if (method_exists($this->eventable, 'beforeEvent')) {
-            $name = $this->eventable->beforeEvent($this->arguments());
+        $runnable = $this->toBase();
+        if (method_exists($runnable, 'beforeEvent')) {
+            $name = $runnable->beforeEvent($this->arguments());
             $event = is_string($name)
                 ? $event = (new $name($this->arguments()))->event($name)
                 : $name;
@@ -125,9 +138,9 @@ class Evented implements Contract
             return;
         }
 
-        $method = $this->resolveProgressiveTense(class_basename($this->eventable));
+        $method = $this->resolveProgressiveTense(class_basename($runnable));
 
-        $this->dispatcher->{$method}($this->eventable);
+        $this->dispatcher->{$method}($runnable);
     }
 
     /**
@@ -141,8 +154,9 @@ class Evented implements Contract
             return;
         }
 
-        if (method_exists($this->eventable, 'afterEvent')) {
-            $name = $this->eventable->afterEvent($response);
+        $runnable = $this->toBase();
+        if (method_exists($runnable, 'afterEvent')) {
+            $name = $runnable->afterEvent($response);
             $event = is_string($name)
                 ? (new $name($response))->event($name)
                 : $name;
@@ -152,20 +166,22 @@ class Evented implements Contract
             return;
         }
 
-        $method = $this->resolvePastTense(class_basename($this->eventable));
+        $method = $this->resolvePastTense(class_basename($runnable));
 
         $this->dispatcher->{$method}($response);
     }
 
     /**
-     * Should the eventable command be silenced?
+     * Should the runnable command be silenced?
      *
      * @return bool
      */
     protected function shouldBeSilenced()
     {
-        return method_exists($this->eventable, 'silenced')
-            && $this->eventable->silenced();
+        $runnable = $this->toBase();
+
+        return method_exists($runnable, 'silenced')
+            && $runnable->silenced();
     }
 
     /**
@@ -214,9 +230,9 @@ class Evented implements Contract
      */
     public function __call($method, $arguments = [])
     {
-        $response = call_user_func_array([$this->eventable, $method], $arguments);
+        $response = call_user_func_array([$this->runnable, $method], $arguments);
 
-        if ($response === $this->eventable) {
+        if ($response === $this->runnable) {
             return $this;
         }
 
@@ -224,7 +240,7 @@ class Evented implements Contract
     }
 
     /**
-     * Invoke the eventable.
+     * Invoke the runnable.
      *
      * @return mixed
      */

@@ -3,6 +3,7 @@
 namespace ArtisanSdk\CQRS;
 
 use ArtisanSdk\Contract\Command as Contract;
+use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\CQRS;
 use ArtisanSdk\CQRS\Concerns\Handle;
@@ -43,6 +44,16 @@ abstract class Command implements Contract
         return Dispatcher::make()
             ->command(static::class)
             ->arguments($arguments);
+    }
+
+    /**
+     * Get the base most runnable.
+     *
+     * @return \ArtisanSdk\Contract\Invokable
+     */
+    public function toBase(): Invokable
+    {
+        return $this;
     }
 
     /**

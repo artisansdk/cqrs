@@ -3,10 +3,11 @@
 namespace ArtisanSdk\CQRS\Buses;
 
 use ArtisanSdk\Contract\Cacheable;
+use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Query as Contract;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Events\Invalidated;
+use ArtisanSdk\Event\Invalidated;
 use Closure;
 use Illuminate\Cache\CacheManager as Manager;
 use Illuminate\Contracts\Cache\Repository as Cache;
@@ -19,14 +20,14 @@ use RuntimeException;
 class Cached implements Contract
 {
     /**
-     * The underlying Cacheable this class proxies to.
+     * The underlying runnable this class proxies to.
      *
-     * @var \ArtisanSdk\Contract\Cacheable
+     * @var \ArtisanSdk\Contract\Runnable
      */
-    protected $cacheable;
+    protected $runnable;
 
     /**
-     * The cacheable dispatcher.
+     * The runnable dispatcher.
      *
      * @var \ArtisanSdk\CQRS\Dispatcher
      */
@@ -49,15 +50,25 @@ class Cached implements Contract
     /**
      * Inject the underlying  that this class proxies to.
      *
-     * @param \ArtisanSdk\Contract\Runnable          $taggable
+     * @param \ArtisanSdk\Contract\Runnable          $runnable
      * @param \ArtisanSdk\CQRS\Dispatcher            $dispatcher
      * @param \Illuminate\Contracts\Cache\Repository $driver
      */
-    public function __construct(Runnable $taggable, Dispatcher $dispatcher = null, Cache $driver = null)
+    public function __construct(Runnable $runnable, Dispatcher $dispatcher = null, Cache $driver = null)
     {
-        $this->taggable = $taggable;
+        $this->runnable = $runnable;
         $this->dispatcher = $dispatcher ?? Dispatcher::make();
         $this->driver = $driver;
+    }
+
+    /**
+     * Get the base most runnable.
+     *
+     * @return \ArtisanSdk\Contract\Invokable
+     */
+    public function toBase(): Invokable
+    {
+        return $this->runnable->toBase();
     }
 
     /**
@@ -104,10 +115,10 @@ class Cached implements Contract
     public function ttl(int $ttl = null)
     {
         if (is_null($ttl)) {
-            return (int) $this->taggable->ttl;
+            return (int) $this->toBase()->ttl;
         }
 
-        $this->taggable->ttl = $ttl;
+        $this->toBase()->ttl = $ttl;
 
         return $this;
     }
@@ -133,14 +144,14 @@ class Cached implements Contract
     }
 
     /**
-     * Run the cacheable and cache the response.
+     * Run the runnable and cache the response or invalidate the tags.
      *
      * @return mixed
      */
     public function run()
     {
         return $this->wrap(function () {
-            return $this->taggable->run();
+            return $this->runnable->run();
         });
     }
 
@@ -167,7 +178,7 @@ class Cached implements Contract
     public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
         return $this->wrap(function () use ($max, $columns, $name, $page) {
-            return $this->taggable->paginate($max, $columns, $name, $page);
+            return $this->runnable->paginate($max, $columns, $name, $page);
         });
     }
 
@@ -213,7 +224,9 @@ class Cached implements Contract
         $subkey = $this->subkey();
         $index = $key.':'.$subkey;
 
-        if ($this->cached() && $this->taggable instanceof Cacheable) {
+        $runnable = $this->toBase();
+
+        if ($this->cached() && $runnable instanceof Cacheable) {
             if ($driver->has($index)) {
                 return $driver->get($index);
             }
@@ -221,7 +234,7 @@ class Cached implements Contract
 
         $response = $callable();
 
-        if ($this->cached() && $this->taggable instanceof Cacheable) {
+        if ($this->cached() && $runnable instanceof Cacheable) {
             $driver->put($index, $response, $this->ttl());
             $keys = (array) $driver->get($key);
             $keys[] = $index;
@@ -245,26 +258,28 @@ class Cached implements Contract
     protected function driver()
     {
         if (is_null($this->driver)) {
-            $this->driver = app(Manager::class)->driver($this->taggable->driver ?? null);
+            $this->driver = (new Manager($this->dispatcher->container))->driver($this->toBase()->driver ?? null);
         }
 
         return $this->driver;
     }
 
     /**
-     * Get the tags for the cacheable.
+     * Get the tags for the runnable.
      *
      * @return array
      */
     protected function tags(): array
     {
-        $tags = (array) ($this->taggable->tags ?? []);
+        $runnable = $this->toBase();
+
+        $tags = (array) ($runnable->tags ?? []);
 
         if (empty($tags)) {
-            $comment = (new ReflectionClass($this->taggable))->getDocComment();
+            $comment = (new ReflectionClass($runnable))->getDocComment();
             preg_match('/@tags\s*([a-zA-Z0-9, ()_].*)/', $comment, $matches);
             if (empty($matches)) {
-                throw new RuntimeException('The '.$this->taggable.' class must provide @tags annotation or a $tags property.');
+                throw new RuntimeException('The '.$runnable.' class must provide @tags annotation or a $tags property.');
             }
             $tags = explode('|', preg_replace('/[^a-zA-Z0-9\-\_\:\.]+/', '|', end($matches)));
         }
@@ -283,7 +298,9 @@ class Cached implements Contract
      */
     protected function key(): string
     {
-        return $this->taggable->key ?? get_class($this->taggable);
+        $runnable = $this->toBase();
+
+        return $runnable->key ?? get_class($runnable);
     }
 
     /**
@@ -293,11 +310,11 @@ class Cached implements Contract
      */
     protected function subkey(): string
     {
-        return md5(http_build_query($this->taggable->arguments()));
+        return md5(http_build_query($this->arguments()));
     }
 
     /**
-     * Proxy calls to the underlying Cacheable instance.
+     * Proxy calls to the underlying runnable instance.
      *
      * @param string $method
      * @param array  $arguments
@@ -306,9 +323,9 @@ class Cached implements Contract
      */
     public function __call($method, $arguments = [])
     {
-        $response = call_user_func_array([$this->taggable, $method], $arguments);
+        $response = call_user_func_array([$this->runnable, $method], $arguments);
 
-        if ($response === $this->taggable) {
+        if ($response === $this->runnable) {
             return $this;
         }
 
@@ -316,7 +333,7 @@ class Cached implements Contract
     }
 
     /**
-     * Invoke the cacheable.
+     * Invoke the runnable.
      *
      * @return mixed
      */

@@ -3,6 +3,7 @@
 namespace ArtisanSdk\CQRS\Buses;
 
 use ArtisanSdk\Contract\Command as Contract;
+use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Concerns\Handle;
 use ArtisanSdk\CQRS\Dispatcher;
@@ -17,7 +18,7 @@ class Transaction implements Contract
     use Handle;
 
     /**
-     * The underlying command this class proxies to.
+     * The underlying runnable this class proxies to.
      *
      * @var \ArtisanSdk\Contract\Runnable
      */
@@ -41,6 +42,16 @@ class Transaction implements Contract
     {
         $this->runnable = $runnable;
         $this->database = $database;
+    }
+
+    /**
+     * Get the base most runnable.
+     *
+     * @return \ArtisanSdk\Contract\Invokable
+     */
+    public function toBase(): Invokable
+    {
+        return $this->runnable->toBase();
     }
 
     /**
@@ -69,7 +80,9 @@ class Transaction implements Contract
             throw $exception;
         }
 
-        if (method_exists($this->runnable, 'aborted') && $this->runnable->aborted()) {
+        $runnable = $this->toBase();
+
+        if (method_exists($runnable, 'aborted') && $runnable->aborted()) {
             $this->database->rollback();
 
             return $response;

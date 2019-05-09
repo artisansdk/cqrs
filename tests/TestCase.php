@@ -35,9 +35,13 @@ class TestCase extends PHPUnit
     {
         $this->app = Container::getInstance();
         $this->app->singleton(ContainerInterface::class, $this->app);
+
+        // Bind the fakes into the container for the tests
         $this->app->singleton(BusInterface::class, Bus::class);
         $this->app->bind(ConnectionInterface::class, Connection::class);
         $this->app->bind(EventsInterface::class, Events::class);
+
+        // Provide the validator with the translatior for error messages
         $this->app->singleton('files', function () {
             return new Filesystem();
         });
@@ -49,6 +53,17 @@ class TestCase extends PHPUnit
         });
         $this->app->singleton('validator', function ($app) {
             return new Factory($app['translator'], $app);
+        });
+
+        // Provide a cache config for the CacheManager
+        $this->app->singleton('config', function () {
+            return [
+                'cache.default'      => 'array',
+                'cache.stores.array' => [
+                    'driver' => 'array',
+                    'prefix' => 'test',
+                ],
+            ];
         });
     }
 }

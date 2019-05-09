@@ -9,12 +9,17 @@ use ArtisanSdk\CQRS\Buses\Transaction;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Eventable;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Exceptional;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Omni;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Transactional;
 use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
+use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzed;
+use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
 use ArtisanSdk\CQRS\Tests\TestCase;
+use ArtisanSdk\Event\Invalidated;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher as EventsInterface;
+use Illuminate\Database\ConnectionInterface;
 
 class TransactionTest extends TestCase
 {
@@ -113,5 +118,24 @@ class TransactionTest extends TestCase
         }
 
         $this->fail('An exception should have been rethrown by transaction wrapper.');
+    }
+
+    /**
+     * Test that a transaction is also eventable.
+     */
+    public function testTransactionIsEventable()
+    {
+        $dispatcher = new Events();
+        $this->app->singleton(EventsInterface::class, function () use ($dispatcher) {
+            return $dispatcher;
+        });
+        $this->app->bind(ConnectionInterface::class, function () {
+            return new Connection();
+        });
+
+        $command = Omni::make();
+        $response = $command->run();
+        $this->assertCount(3, $dispatcher->events, 'The transactional command should have fired 3 events: 1 before event, 1 after event, and 1 invalidated event for cache busting.');
+        $this->assertSame([Fizzing::class, Invalidated::class, Fizzed::class], array_keys($dispatcher->events), 'The transactional command should have fired the 3 events in that order.');
     }
 }
