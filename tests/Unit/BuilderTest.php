@@ -14,6 +14,7 @@ use ArtisanSdk\CQRS\Tests\TestCase;
 use BadMethodCallException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use InvalidArgumentException;
 
 class BuilderTest extends TestCase
 {
@@ -90,6 +91,23 @@ class BuilderTest extends TestCase
         $this->assertSame($original, $query);
         $this->assertSame(['foo' => 'bar'], $builder->arguments(), 'The query builder should have a "foo" argument with a value of "bar".');
         $this->assertSame(['foo' => 'bar'], $query->arguments(), 'The query should have received the builder\'s arguments.');
+    }
+
+    /**
+     * Test that a builder gets first argument or null.
+     */
+    public function testFirstArgumentOrNull()
+    {
+        $original = new Command();
+        $builder = new Builder($original);
+        $command = $builder->foo()->bar('first', 'second')->toBase();
+
+        $this->assertSame($original, $command);
+        $this->assertSame(['foo' => null, 'bar' => 'first'], $builder->arguments(), 'The query builder should have a "foo" argument with a value of "null" and a "bar" argument with just the "first" value.');
+        $this->assertSame('first', $command->argument('bar'), 'The command should for the "bar" argument the "first" value.');
+
+        $this->expectException(InvalidArgumentException::class, 'The command should have thrown an exception because "foo" argument was null and is a required argument.');
+        $command->argument('foo');
     }
 
     /**
