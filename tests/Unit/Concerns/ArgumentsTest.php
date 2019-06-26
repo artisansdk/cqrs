@@ -8,6 +8,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Fluent;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use JsonSerializable;
 use stdClass;
 
 class ArgumentsTest extends TestCase
@@ -178,11 +179,19 @@ class ArgumentsTest extends TestCase
         $command = new Command();
         $command->arguments([
             'foo' => new stdClass(),
+            'bar' => new class() implements JsonSerializable {
+                public function jsonSerialize()
+                {
+                    return [];
+                }
+            },
         ]);
 
-        $value = $command->argument('foo', stdClass::class);
+        $foo = $command->argument('foo', stdClass::class);
+        $bar = $command->argument('bar', JsonSerializable::class);
 
-        $this->assertInstanceOf(stdClass::class, $value, 'The value for the "foo" argument must be an instance of '.stdClass::class.'.');
+        $this->assertInstanceOf(stdClass::class, $foo, 'The value for the "foo" argument must be an instance of '.stdClass::class.'.');
+        $this->assertInstanceOf(JsonSerializable::class, $bar, 'The value for the "bar" argument must be an instance of '.JsonSerializable::class.'.');
 
         $command->arguments([
             'foo' => 'bar',

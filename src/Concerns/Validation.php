@@ -97,7 +97,7 @@ trait Validation
     }
 
     /**
-     * Is value a valid class.
+     * Is value a valid class?
      *
      * @param object $value
      * @param string $class
@@ -108,7 +108,21 @@ trait Validation
     {
         return is_object($value)
             && is_string($class)
-            && get_class($value) === $class;
+            && $this->valueIsValidType($value, $class);
+    }
+
+    /**
+     * Is value a valid type?
+     *
+     * @param object $value
+     * @param string $class
+     *
+     * @return bool
+     */
+    protected function valueIsValidType($value, $class): bool
+    {
+        return get_class($value) === $class
+            || $value instanceof $class;
     }
 
     /**
