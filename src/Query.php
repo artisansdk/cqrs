@@ -2,6 +2,7 @@
 
 namespace ArtisanSdk\CQRS;
 
+use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Query as Contract;
 use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\CQRS;
@@ -96,5 +97,15 @@ abstract class Query implements Contract
         return $this->builder()
             ->paginate($max, $columns, $name, $page)
             ->appends(array_except($this->arguments(), ['page']));
+    }
+    
+    /**
+     * Get the base most runnable.
+     *
+     * @return \ArtisanSdk\Contract\Invokable
+     */
+    public function toBase(): Invokable
+    {
+        return $this;
     }
 }
