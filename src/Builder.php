@@ -6,7 +6,7 @@ use ArtisanSdk\Contract\Query;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\Silencer;
-use ArtisanSdk\CQRS\Queries\Cached;
+use ArtisanSdk\CQRS\Buses\Cached;
 use BadMethodCallException;
 
 /**
