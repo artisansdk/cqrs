@@ -114,11 +114,13 @@ class Cached implements Contract
      */
     public function ttl(int $ttl = null)
     {
+        $runnable = $this->toBase();
+
         if (is_null($ttl)) {
-            return (int) $this->toBase()->ttl;
+            return (int) $runnable->ttl;
         }
 
-        $this->toBase()->ttl = $ttl;
+        $runnable->ttl = $ttl;
 
         return $this;
     }
@@ -290,7 +292,6 @@ class Cached implements Contract
 
         return array_unique($tags);
     }
-
     /**
      * Get the cache key.
      *
@@ -299,6 +300,10 @@ class Cached implements Contract
     protected function key(): string
     {
         $runnable = $this->toBase();
+
+        if( method_exists($runnable, 'key') ) {
+            return $runnable->key();
+        }
 
         return $runnable->key ?? get_class($runnable);
     }
@@ -310,7 +315,13 @@ class Cached implements Contract
      */
     protected function subkey(): string
     {
-        return md5(http_build_query($this->arguments()));
+        $runnable = $this->toBase();
+
+        if( method_exists($runnable, 'subkey') ) {
+            return $runnable->subkey();
+        }
+
+        return $runnable->subkey ?? md5(json_encode($this->arguments()));
     }
 
     /**
