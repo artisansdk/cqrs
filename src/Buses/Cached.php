@@ -142,7 +142,7 @@ class Cached implements Contract
      */
     public function refresh()
     {
-        return $this->invalidate()->__invoke();
+        return $this->bust()->__invoke();
     }
 
     /**
@@ -281,7 +281,7 @@ class Cached implements Contract
             $comment = (new ReflectionClass($runnable))->getDocComment();
             preg_match('/@tags\s*([a-zA-Z0-9, ()_].*)/', $comment, $matches);
             if (empty($matches)) {
-                throw new RuntimeException('The '.$runnable.' class must provide @tags annotation or a $tags property.');
+                throw new RuntimeException(sprintf('The %s class must provide @tags annotation or a $tags property.', is_string($runnable) ? $runnable : get_class($runnable)));
             }
             $tags = explode('|', preg_replace('/[^a-zA-Z0-9\-\_\:\.]+/', '|', end($matches)));
         }
