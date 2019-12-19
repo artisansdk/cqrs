@@ -101,6 +101,24 @@ trait Arguments
     }
 
     /**
+     * Does the class have all given options set?
+     * 
+     * @param array $names
+     * 
+     * @return bool
+     */
+    protected function hasOptions(array $names): bool
+    {
+        foreach ($names as $name) {
+            if (! $this->hasOption($name)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Resolve the default value from a primitive or a closure.
      *
      * @param string $name  of option
