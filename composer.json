@@ -19,17 +19,17 @@
         "php": ">=7.0",
         "artisansdk/contract": "dev-master",
         "artisansdk/event": "dev-master",
-        "illuminate/container": "~5.0 | ~6.0",
-        "illuminate/database": "~5.0 | ~6.0",
-        "illuminate/queue": "~5.0 | ~6.0",
-        "illuminate/support": "~5.0 | ~6.0",
+        "illuminate/container": "5.0 - 5.8 | ^6.0",
+        "illuminate/database": "5.0 - 5.8 | ^6.0",
+        "illuminate/queue": "5.0 - 5.8 | ^6.0",
+        "illuminate/support": "5.0 - 5.8 | ^6.0",
         "psr/log": "^1.0"
     },
     "require-dev": {
         "artisansdk/bench": "dev-master",
-        "illuminate/cache": "~5.0 | ~6.0",
-        "illuminate/pagination": "~5.0 | ~6.0",
-        "illuminate/validation": "~5.0 | ~6.0"
+        "illuminate/cache": "5.0 - 5.8 | ^6.0",
+        "illuminate/pagination": "5.0 - 5.8 | ^6.0",
+        "illuminate/validation": "5.0 - 5.8 | ^6.0"
     },
     "suggest": {
         "illuminate/cache": "CQRS supports automatic caching and cache-busting of queries using Laravel's CacheManager class.",
