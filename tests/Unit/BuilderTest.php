@@ -136,4 +136,23 @@ class BuilderTest extends TestCase
 
         $builder->toSql();
     }
+
+    /**
+     * Test that a macro call can be registered and forwarded to the base runnable.
+     */
+    public function testMacroCanBeForwarded()
+    {
+        Builder::macro('test', function (...$arguments) {
+            return $this->forwardToBase('test', Runnable::class, ...$arguments);
+        });
+
+        $runnable = new RunnableFake();
+        $builder = new Builder($runnable);
+        $builder->foo('bar');
+
+        $this->assertSame(['foo' => 'bar'], $builder->arguments(), 'The builder should receive arguments.');
+        $this->assertSame(['foo' => 'bar'], $builder->test(), 'The builder should forward builder arguments to base runnable.');
+        $this->assertSame(['foo', 'bar'], $builder->test('foo', 'bar'), 'The builder should forward macro arguments to base runnable method.');
+        $this->assertTrue($builder->run(), 'The builder should still be able to call the run method.');
+    }
 }

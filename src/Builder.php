@@ -8,8 +8,11 @@ use ArtisanSdk\CQRS\Buses\Cached;
 use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\Silencer;
 use BadMethodCallException;
+use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use ReflectionClass;
+use ReflectionMethod;
 
 /**
  * Runnable Class Builder.
@@ -30,6 +33,13 @@ class Builder implements Runnable
      * @var \ArtisanSdk\Contract\Runnable
      */
     protected $runnable;
+
+    /**
+     * The registered string macros.
+     *
+     * @var array
+     */
+    protected static $macros = [];
 
     /**
      * Inject the underlying command that this class proxies to.
@@ -54,6 +64,17 @@ class Builder implements Runnable
      */
     public function __call($method, $arguments = [])
     {
+        // Dynamically handle macro calls
+        if (static::hasMacro($method)) {
+            $macro = static::$macros[$method];
+
+            if ($macro instanceof Closure) {
+                return call_user_func_array($macro->bindTo($this, static::class), $arguments);
+            }
+
+            return $macro(...$arguments);
+        }
+
         // The use of head() or end() to get the first argument will return false if
         // an empty array which may conflict with false as a value for the first
         // value in a non-empty array making additional checking a necessity. While
@@ -282,5 +303,54 @@ class Builder implements Runnable
         }
 
         throw new BadMethodCallException('Only call '.$method.'() on '.Cached::class.' instances.');
+    }
+
+    /**
+     * Mix another object into the class.
+     *
+     * @param object $mixin
+     * @param bool   $replace
+     *
+     * @throws \ReflectionException
+     *
+     * @return void
+     */
+    public static function mixin($mixin, bool $replace = true)
+    {
+        $methods = (new ReflectionClass($mixin))->getMethods(
+            ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED
+        );
+
+        foreach ($methods as $method) {
+            if ($replace || ! static::hasMacro($method->name)) {
+                $method->setAccessible(true);
+                static::macro($method->name, $method->invoke($mixin));
+            }
+        }
+    }
+
+    /**
+     * Register a custom macro.
+     *
+     * @param string          $name
+     * @param object|callable $macro
+     *
+     * @return void
+     */
+    public static function macro($name, $macro)
+    {
+        static::$macros[$name] = $macro;
+    }
+
+    /**
+     * Checks if macro is registered.
+     *
+     * @param string $name
+     *
+     * @return bool
+     */
+    public static function hasMacro($name)
+    {
+        return isset(static::$macros[$name]);
     }
 }

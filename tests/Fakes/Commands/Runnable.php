@@ -11,6 +11,15 @@ class Runnable implements Contract
     use Arguments;
     use Silencer;
 
+    public function test(...$arguments)
+    {
+        if (empty($arguments)) {
+            return $this->arguments();
+        }
+
+        return $arguments;
+    }
+
     public function run()
     {
         return true;
