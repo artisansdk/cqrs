@@ -292,6 +292,7 @@ class Cached implements Contract
 
         return array_unique($tags);
     }
+
     /**
      * Get the cache key.
      *
@@ -301,7 +302,7 @@ class Cached implements Contract
     {
         $runnable = $this->toBase();
 
-        if( method_exists($runnable, 'key') ) {
+        if (method_exists($runnable, 'key')) {
             return $runnable->key();
         }
 
@@ -317,7 +318,7 @@ class Cached implements Contract
     {
         $runnable = $this->toBase();
 
-        if( method_exists($runnable, 'subkey') ) {
+        if (method_exists($runnable, 'subkey')) {
             return $runnable->subkey();
         }
 

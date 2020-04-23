@@ -10,6 +10,7 @@ use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\Model\Exceptions\InvalidModel; // @todo
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Str;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -168,7 +169,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
             return $handler;
         }
 
-        if (is_string($handler) && str_contains($handler, '@')) {
+        if (is_string($handler) && Str::contains($handler, '@')) {
             return explode('@', $handler);
         }
 

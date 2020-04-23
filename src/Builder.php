@@ -4,10 +4,12 @@ namespace ArtisanSdk\CQRS;
 
 use ArtisanSdk\Contract\Query;
 use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\CQRS\Buses\Cached;
 use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\Silencer;
-use ArtisanSdk\CQRS\Buses\Cached;
 use BadMethodCallException;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * Runnable Class Builder.
@@ -55,10 +57,10 @@ class Builder implements Runnable
         // The use of head() or end() to get the first argument will return false if
         // an empty array which may conflict with false as a value for the first
         // value in a non-empty array making additional checking a necessity. While
-        // not ideal, we'll just use array_first() from Laravel instead to handle
+        // not ideal, we'll just use Arr::first() from Laravel instead to handle
         // this in a more sane way so null is the default value if you accidentally
         // call $argumented->foo() without a value.
-        array_set($this->arguments, snake_case($method), array_first($arguments));
+        Arr::set($this->arguments, Str::snake($method), Arr::first($arguments));
 
         return $this;
     }

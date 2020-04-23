@@ -17,6 +17,7 @@ use Illuminate\Container\Container as App;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
@@ -75,9 +76,9 @@ class Dispatcher
         $class = head($attributes);
         $classname = is_object($class) ? get_class($class) : $class;
         $position = $this->findOccurence($classname, ['Commands\\', 'Queries\\', 'Models\\']);
-        $default = substr_replace($classname, 'Events\\'.studly_case($method), $position);
+        $default = substr_replace($classname, 'Events\\'.Str::studly($method), $position);
         $name = $this->resolveEventClass($classname, $default);
-        $fire = ends_with($method, 'ing') ? 'until' : 'event';
+        $fire = Str::endsWith($method, 'ing') ? 'until' : 'event';
 
         $event = (new $name(...$attributes))->event($this->normalizeEventClass($classname, $default));
 

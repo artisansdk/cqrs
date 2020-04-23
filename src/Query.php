@@ -8,6 +8,7 @@ use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\CQRS;
 use ArtisanSdk\CQRS\Concerns\Silencer;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Arr;
 
 /**
  * Query Base Class.
@@ -96,9 +97,9 @@ abstract class Query implements Contract
     {
         return $this->builder()
             ->paginate($max, $columns, $name, $page)
-            ->appends(array_except($this->arguments(), ['page']));
+            ->appends(Arr::except($this->arguments(), ['page']));
     }
-    
+
     /**
      * Get the base most runnable.
      *

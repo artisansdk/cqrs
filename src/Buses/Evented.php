@@ -7,6 +7,7 @@ use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Concerns\Handle;
 use ArtisanSdk\CQRS\Dispatcher;
+use Illuminate\Support\Str;
 
 /**
  * Evented Runnable Wrapper.
@@ -195,7 +196,7 @@ class Evented implements Contract
     {
         foreach ($this->progressiveMap as $present => $tense) {
             if (preg_match('/'.$present.'$/i', $command)) {
-                return camel_case(preg_replace('/'.$present.'$/i', $tense, $command));
+                return Str::camel(preg_replace('/'.$present.'$/i', $tense, $command));
             }
         }
 
@@ -213,7 +214,7 @@ class Evented implements Contract
     {
         foreach ($this->pastMap as $present => $tense) {
             if (preg_match('/'.$present.'$/i', $command)) {
-                return camel_case(preg_replace('/'.$present.'$/i', $tense, $command));
+                return Str::camel(preg_replace('/'.$present.'$/i', $tense, $command));
             }
         }
 

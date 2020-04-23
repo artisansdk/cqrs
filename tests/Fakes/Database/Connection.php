@@ -54,10 +54,11 @@ class Connection implements ConnectionInterface
      * Begin a fluent query against a database table.
      *
      * @param string $table
+     * @param string $as    alias
      *
      * @return \Illuminate\Database\Query\Builder
      */
-    public function table($table)
+    public function table($table, $as = null)
     {
     }
 

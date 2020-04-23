@@ -3,6 +3,7 @@
 namespace ArtisanSdk\CQRS\Concerns;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Arr;
 
 trait Arguments
 {
@@ -74,7 +75,7 @@ trait Arguments
     public function option(string $name, $default = null, $validator = null)
     {
         $value = $this->hasOption($name)
-            ? array_get($this->arguments, $name)
+            ? Arr::get($this->arguments, $name)
             : $this->resolveDefault($name, $default);
 
         if (is_string($value) && '' === $value) {
@@ -97,7 +98,7 @@ trait Arguments
      */
     protected function hasOption(string $name): bool
     {
-        return ! is_null(array_get($this->arguments, $name));
+        return ! is_null(Arr::get($this->arguments, $name));
     }
 
     /**
