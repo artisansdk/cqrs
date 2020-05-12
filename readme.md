@@ -15,6 +15,7 @@ A foundational package for Command Query Responsibility Segregation (CQRS) compa
         - [How to Run a Command in a Transaction](#how-to-run-a-command-in-a-transaction)
         - [How to Use a Command as an Event Handler](#how-to-use-a-command-as-an-event-handler)
         - [How to Queue a Command as a Job](#how-to-queue-a-command-as-a-job)
+        - [How to Run a Command on a Queue as a Job](#how-to-run-a-command-on-a-queue-as-a-job)
         - [How to Invalidate Queries from Commands](#how-to-invalidate-queries-from-commands)
     - [Queries](#queries)
         - [How to Create a Query](#how-to-create-a-query)
@@ -32,6 +33,9 @@ A foundational package for Command Query Responsibility Segregation (CQRS) compa
         - [Using Option Defaults](#using-option-defaults)
         - [Saving Models Within Commands](#saving-models-within-commands)
         - [Using the Silencer](#using-the-silencer)
+    - [Extending](#extending)
+        - [Using Macros on the Builder](#using-macros-on-the-builder)
+        - [Using Mixins on the Builder](#using-mixins-on-the-builder)
 - [Running the Tests](#running-the-tests)
 - [Licensing](#licensing)
 
@@ -561,13 +565,57 @@ and properties like `$connection`, `$queue`, and `$delay` are supported on the
 command now and you can therefore configure your commands with defined defaults
 or let the caller decide via `onConnection()`, `onQueue()`, etc.
 
+### How to Run a Command on a Queue as a Job
+
+While it's more common to have an event handler be queued since events are by
+nature asynchronous, some commands also lend themselves to background processing.
+These commands are not ran but rather queued. So this package makes it trivial
+to explicitly queue a command that implements `ArtisanSdk\Contract\CQRS\Queueable`:
+
+```php
+$job = App\Commands\SendUserWelcomeEmail::make()
+    ->email('johndoe@example.com')
+    ->queue();
+```
+
+Instead of calling `run()` on the command, you simply call `queue()`. The magic
+of this method is that the `ArtisanSdk\CQRS\Builder` class is wrapping the queueable
+command to pass the arguments to a generic `ArtisanSdk\Contract\Event\Event`
+implementation. This event is a polyfill for the real underlying
+`ArtisanSdk\Contract\CQRS\Queueable::queue($event)` method.
+
+While the dispatcher handles all the indirection automatically, it can be summarized
+as having accomplished the same as manually constructing and calling the following:
+
+```php
+$job = (new App\Commands\SendUserWelcomeEmail())
+    ->queue(new ArtisanSdk\Event\Event([
+        'email' => 'johndoe@example.com',
+    ]));
+```
+
+The pending job is returned and the framework dispatcher will push to the queue
+when the object is destructed. Having access to the job allows for further
+customization of the job prior to dispatch including calling familiar methods
+like `onConnection`, `onQueue`, `delay`, and `chain`.
+
+### How to Invalidate Queries from Commands
+
+<span style="color:red">[needs example and description]</span>
+
 ## Queries
 
 ### How to Create a Query
 
+<span style="color:red">[needs example and description]</span>
+
 ### How to Get Query Results
 
+<span style="color:red">[needs example and description]</span>
+
 ### How to Create an Evented Query
+
+<span style="color:red">[needs example and description]</span>
 
 ## Events
 
@@ -1103,6 +1151,51 @@ class ResetUserPassword extends Command implements Eventable
     }
 }
 ```
+
+## Extending
+
+### Using Macros on the Builder
+
+<span style="color:red">[needs example and description]</span>
+
+In the `App\Providers\AppServiceProvider@boot` (a Laravel default location):
+
+```php
+ArtisanSdk\CQRS\Builder::macro('attempt');
+```
+
+Now you can call `attempt()` on any invokable that supports the method and any arguments
+passed will be forwarded.
+
+The `ArtisanSdk\CQRS\Builder::macro()` method supports a second argument however
+that accepts a callable or closure. Closures passed have `$this` bound into the
+context of the builder and therefore behave exactly as if they were a method
+on the builder already with access to other protected methods of the builder
+such as `forwardToBase()`. You can therefore customize the builder using closure
+based macros:
+
+```php
+ArtisanSdk\CQRS\Builder::macro('attempt', function(...$arguments) {
+    try {
+        return $this->run();
+    } catch (Exception $error) {
+        throw new App\Exceptions\Error(sprintf($arguments[0], $error->getMessage()));
+    }
+});
+```
+
+From your app code you would then be able to attempt execution of any command and
+return a contextual exception without writing ugly try/catch logic everywhere:
+
+```php
+$user = App\Commands\SaveUser::make()
+    ->email('johndoe@example.com')
+    ->attempt('User could not be saved: %s');
+```
+
+### Using Mixins on the Builder
+
+<span style="color:red">[needs example and description]</span>
 
 # Running the Tests
 

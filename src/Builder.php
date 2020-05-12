@@ -2,11 +2,14 @@
 
 namespace ArtisanSdk\CQRS;
 
+use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Query;
+use ArtisanSdk\Contract\Queueable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Buses\Cached;
 use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\Silencer;
+use ArtisanSdk\Event\Event;
 use BadMethodCallException;
 use Closure;
 use Illuminate\Support\Arr;
@@ -104,6 +107,16 @@ class Builder implements Runnable
     public function run()
     {
         return $this->toBase()->run();
+    }
+
+    /**
+     * Queue a qeueable command.
+     *
+     * @return mixed
+     */
+    public function queue()
+    {
+        return $this->forwardToBase(__FUNCTION__, Queueable::class, new Event($this->arguments()));
     }
 
     /**
@@ -332,14 +345,16 @@ class Builder implements Runnable
     /**
      * Register a custom macro.
      *
-     * @param string          $name
-     * @param object|callable $macro
+     * @param string               $name
+     * @param object|callable|null $macro
      *
      * @return void
      */
-    public static function macro($name, $macro)
+    public static function macro($name, $macro = null)
     {
-        static::$macros[$name] = $macro;
+        static::$macros[$name] = $macro ?: function (...$arguments) {
+            return $this->forwardToBase($name, Invokable::class, ...$arguments);
+        };
     }
 
     /**

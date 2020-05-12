@@ -2,18 +2,22 @@
 
 namespace ArtisanSdk\CQRS\Tests\Unit;
 
+use ArtisanSdk\Contract\Event;
 use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Builder;
 use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\Silencer;
+use ArtisanSdk\CQRS\Jobs\Pending;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable as QueueableFake;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Runnable as RunnableFake;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
 use BadMethodCallException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Arr;
 use InvalidArgumentException;
 
 class BuilderTest extends TestCase
@@ -135,6 +139,20 @@ class BuilderTest extends TestCase
         $this->expectExceptionMessage('Only call toSql() on ArtisanSdk\Contract\Query instances.');
 
         $builder->toSql();
+    }
+
+    /**
+     * Test that queue method call forwards to the queueable with a generic event containing all the arguments as properties.
+     */
+    public function testQueueForwardsToQueueable()
+    {
+        $queueable = new QueueableFake();
+        $builder = new Builder($queueable);
+        $job = $builder->foo('bar')->queue();
+
+        $this->assertInstanceOf(Event::class, $queueable->event, 'The queuable command should receive an event.');
+        $this->assertArraySubset($builder->arguments(), Arr::except($queueable->event->properties(), 'event'), 'The event should contain the builder arguments as properties.');
+        $this->assertInstanceOf(Pending::class, $job, 'The queue method should return a pending job.');
     }
 
     /**
