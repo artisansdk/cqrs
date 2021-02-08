@@ -1,6 +1,6 @@
 <?php
 
-namespace ArtisanSdk\CQRS\Tests\Jobs;
+namespace ArtisanSdk\CQRS\Tests\Unit\Jobs;
 
 use ArtisanSdk\CQRS\Jobs\Chain;
 use ArtisanSdk\CQRS\Jobs\Job;
