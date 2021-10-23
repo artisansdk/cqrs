@@ -113,7 +113,7 @@ to implement these helpers (much like this package did for testing purposes):
 
 ## Commands
 
-A command implements the `ArtisanSdk\Contracts\Commands\Runnable` interface which
+A command implements the `ArtisanSdk\Contract\Runnable` interface which
 makes it both invokable and runnable. The intended use of a command is to perform
 some sort of "write" operation or complete a unit of work and return its results.
 An asynchronous command would return a promise while a synchronous command would
@@ -130,7 +130,7 @@ throw an exception to ensure all required arguments are passed and validated
 prior to execution of critical command logic.
 
 ```php
-namespace App\Commands\SaveUser;
+namespace App\Commands;
 
 use App\User;
 use ArtisanSdk\CQRS\Command;
@@ -240,14 +240,14 @@ added wrapper functionality the dispatcher offers.
 Sometimes you want the rest of your code to be made aware of the processing of a
 particular command. You may want to execute some code before the command or after
 the command based on the result of the command. Using the dispatcher this is
-trivially done by simply implementing the `ArtisanSdk\Contracts\Commands\Eventable`
+trivially done by simply implementing the `ArtisanSdk\Contract\Eventable`
 interface on any command that should be evented:
 
 ```php
 namespace App\Commands;
 
 use App\User;
-use ArtisanSdk\Contracts\Commands\Eventable;
+use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Eventable
@@ -297,13 +297,13 @@ multiple subcommands and there needs to be a certain level of atomicity relating
 the command's overall execution. If a sucommand or secondary write fails, you'll
 want to roll back the command. This boilerplate logic is annoying to have to
 write into each command so this package provides a trivial way to do this by
-implementing the `ArtisanSdk\Contracts\Buses\Transactional` interface on any
+implementing the `ArtisanSdk\Contract\Buses\Transactional` interface on any
 command that should be transactional:
 
 ```php
 namespace App\Commands;
 
-use ArtisanSdk\Contracts\Buses\Transactional;
+use ArtisanSdk\Contract\Buses\Transactional;
 use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Transactional
@@ -343,7 +343,7 @@ transactional wrapper will still rollback but will not bubble any exception:
 namespace App\Commands;
 
 use App\User;
-use ArtisanSdk\Contracts\Buses\Transactional;
+use ArtisanSdk\Contract\Buses\Transactional;
 use ArtisanSdk\CQRS\Command;
 
 class ChangePassword extends Command implements Transactional
@@ -449,7 +449,7 @@ construct and pass the `App\User` returned by `run()` to the event's constructor
 namespace App\Commands;
 
 use App\Events\UserSaved;
-use ArtisanSdk\Contracts\Commands\Eventable;
+use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Eventable
@@ -549,7 +549,7 @@ namespace App\Commands;
 
 use ArtisanSdk\CQRS\Command;
 use ArtisanSdk\CQRS\Triats\Queue;
-use ArtisanSdk\Contracts\CQRS\Queuable;
+use ArtisanSdk\Contract\CQRS\Queuable;
 
 class SendUserWelcomeEmail extends Command implements Queueable
 {
@@ -601,21 +601,431 @@ like `onConnection`, `onQueue`, `delay`, and `chain`.
 
 ### How to Invalidate Queries from Commands
 
-<span style="color:red">[needs example and description]</span>
+<span style="color:red">Documenation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
 
 ## Queries
 
+A query implements the `ArtisanSdk\Contract\Query` interface which makes it
+both invokable and runnable, therefore indistinguishable from a command. The
+intended use of a query is to perform some sort of "read" operation or get a
+result from a data store. An asynchronous query would return a promise while a
+synchronous command would block program execution until the result is returned.
+
 ### How to Create a Query
 
-<span style="color:red">[needs example and description]</span>
+A basic example of using a query is to create a class that extends the
+`ArtisanSdk\CQRS\Query` class. This abstract class forwards `__invoke()` to
+`run()`. The class also includes a shorthand `get()` method which forwards to
+`run()` to make it feel more similar to working with the `DB::table()->get()` or
+`Eloquent::query()->get()` method. implementing the `builder()` method returning
+whatever query builder you want to be executed by the `get()` method. So
+implementing a `run()` method that returns query results is all that is
+necessary to take advantage of the query bus.
+
+You can use the constructor method to inject any query dependencies such as an
+Eloquent model, a service class, etc. Argument dependencies are implicitly
+required and the caller must satisfy the requirements or else the developer must
+throw an exception to ensure all required arguments are passed and validated
+prior to execution of critical query logic.
+
+> **Important:** While using Eloquent ORM may sanitize or escape arguments, this
+> package makes no assumptions that the arguments passed to the query class are
+> safe. Make sure you validate and sanitize values before executing against the
+> data backend.
+
+The abstract `ArtisanSdk\CQRS\Query` class actually assumes you are using
+Laravel's Database ORM and query builder. The `run()` method therefore calls to
+an abstract `builder()` to get the SQL builder. You will need to implement this
+`builder()` method or stub it out if you are using, for example a RESTful API as
+the query backend.
+
+#### Flat File Implemenation
+
+Assuming you had a `resources/lang/en/states.php` file containing a PHP array
+of state abbreviations and names then the following query would be the minimal
+implementation required. Note that the `builder()` method is stubbed out to satisfy
+the parent class's abstract definition. Also note that we do not need to use a
+database as the results can be loaded from a flat file on the system disk.
+
+```php
+namespace App\Queries;
+
+use ArtisanSdk\CQRS\Query;
+
+class GetStates extends Query
+{
+    public function builder()
+    {
+        // required to satisfy abstract parent
+    }
+
+    public function run()
+    {
+        return trans('states');
+    }
+}
+```
+
+Here's how you could call this query to get the states:
+
+```php
+$states = App\Queries\GetStates::make()->get();
+```
+
+#### HTTP API Implemenation
+
+Again instead of a database, you could have your data backed by an HTTP API and
+use an HTTP client like Guzzle to fetch the results:
+
+```php
+namespace App\Queries;
+
+use ArtisanSdk\CQRS\Query;
+use GuzzleHttp\Client as Guzzle;
+
+class GeocodeIP extends Query
+{
+    protected $http;
+
+    public function __construct(Guzzle $http)
+    {
+        $this->http = $http;
+    }
+
+    public function builder()
+    {
+        // required to satisfy abstract parent
+    }
+
+    public function run()
+    {
+        // Require the argument and validate as an IPv4 address
+        $ip = $this->argument('ip', ['ipv4']);
+
+        // Generate a URL to injected with the IP address
+        $url = sprintf('https://freegeoip.app/json/%s', $ip);
+
+        // Use Guzzle to get the geocoded response
+        $response = $this->http->get($url);
+
+        // Parse the JSON body of the response
+        return json_decode($response->getBody()->getContent());
+    }
+}
+```
+
+In this example we use a dynamic query argument to build up the HTTP request when
+we make the `get()` call to execute the request. Remember `get()` is forwarded to
+our custom `run()` implementation so it all just works. Everything you know about
+how fluently building up command arguments applies to queries as well.
+
+```php
+$result = App\Queries\GeocodeIP::make()
+    ->ip('104.131.182.33')
+    ->get();
+
+echo $result->zip_code; // 07014
+```
+
+#### Database Implemenation
+
+Back to that `builder()` method though. As mentioned, the package assumes you will
+be using Eloquent ORM or at minimum a database abstraction and so the `builder()`
+method is intended to be used to return a query builder. Therefore an implementation
+of a model backed query would look like this:
+
+```php
+namespace App\Queries;
+
+use App\User;
+use ArtisanSdk\CQRS\Query;
+
+class ListUsers extends Query
+{
+    protected $model;
+
+    public function __construct(User $model)
+    {
+        $this->model = $model;
+    }
+
+    public function builder()
+    {
+        $query = $this->model->query();
+
+        $order = $this->option('order', 'id', ['in:id,name,email,created_at,updated_at']);
+        $sort = $this->option('sort', 'desc', ['in:asc,desc']);
+
+        $query->orderBy($order, $sort);
+
+        if( $keyword = $this->option('keyword', null, ['string', 'max:64']) ) {
+            $this->scopeKeyword($query, $keyword);
+        }
+
+        return $query;
+    }
+
+    // This method could be called anything, but naming it similar to Eloquent
+    // helps clarify the intent of such builder abstractions to protected methods.
+    protected scopeKeyword($query, string $keyword)
+    {
+        $wildcard = sprintf('%%s%', $keyword);
+
+        return $query->where(function($query) use ($wildcard) {
+            return $query
+                ->orWhere('name', 'LIKE', $wildcard)
+                ->orWhere('email', 'LIKE', $wildcard);
+        });
+    }
+}
+```
+
+We don't need to define the `run()` method because the parent class
+automatically executes the required `$this->builder()->get()` call to return the
+result of the query when we run it. Passing arguments to the query lets you
+customize the results at call time.
+
+```php
+// Get the users with default arguments: sort desc by name
+$users = App\Queries\ListUsers::make()->get();
+
+// Get the users using custom arguments which are validated in the builder
+$users = App\Queries\ListUsers::make()
+    ->order('name')
+    ->sort('asc')
+    ->keyword('john')
+    ->get();
+```
 
 ### How to Get Query Results
 
-<span style="color:red">[needs example and description]</span>
+The base query implements `get()` but also implements the convenient method of `paginate()`.
+
+```php
+// Get the ?page=# results of users with only the name and email columns
+$paginator = App\Queries\ListUsers::make()->paginate(10, ['name', 'email']);
+```
+
+Furthermore if you need to inspect the query you can call `toSql()` instead of `get()`
+or `builder()` directly to customize the query further for one-off query executions:
+
+```php
+// select * from `users` order by `name` desc
+$sql = App\Queries\ListUsers::make()
+    ->order('name')
+    ->toSql();
+
+// Bypass the run() method and execute against the builder directly
+$users = App\Queries\ListUsers::make()
+    ->order('name')
+    ->builder()
+    ->limit(10)
+    ->get();
+
+// Customize the builder outside of the query
+$query = App\Queries\ListUsers::make();
+$query->order('name');
+$builder = $query->builder(); // get the builder outside of the query
+$builder->whereIn('id', [1, 2, 3]); // a customization to the query
+$users = $query->get(); // since $builder is referenced, query executes against customized builder
+```
+
+It is common practice to create base classes to help with common queries
+involving just one result including expanding the interface to include `first()`
+or `firstOrFail()` among other query execution methods.
+
+```php
+namespace App\Queries;
+
+use App\User;
+use ArtisanSdk\CQRS\Query;
+
+class FindUserByEmail extends Query
+{
+    protected $model;
+
+    public function __construct(User $model)
+    {
+        $this->model = $model;
+    }
+
+    public function builder()
+    {
+        return $this->model->query()
+            ->where('email', $this->argument('email', ['email']));
+    }
+
+    public function run()
+    {
+        return $this->builder()->first();
+    }
+
+    public function firstOrFail()
+    {
+        return $this->builder()->firstOrFail();
+    }
+
+    public static function find(string $email)
+    {
+        return static::make()->email($email)->run();
+    }
+
+    public static function findOrFail(string $email)
+    {
+        return static::make()->email($email)->firstOrFail();
+    }
+}
+```
+
+There are a lot of ways to run this query including:
+
+```php
+$user = ArtisanSdk\CQRS\Dispatcher::make()
+    ->query(App\Queries\FindUserByEmail::class)
+    ->email('johndoe@example.com')
+    ->run(); // or get()
+
+$user = App\Queries\FindUserByEmail::make()
+    ->email('johndoe@example.com')
+    ->get();
+
+// Throw Illuminate\Database\Eloquent\ModelNotFoundException if not found
+$user = App\Queries\FindUserByEmail::make()
+    ->email('johndoe@example.com')
+    ->firstOrFail();
+
+// Returns null if not found
+$user = App\Queries\FindUserByEmail::find('johndoe@example.com');
+
+// Throw Illuminate\Database\Eloquent\ModelNotFoundException if not found
+$user = App\Queries\FindUserByEmail::findOrFail('johndoe@example.com');
+```
+
+A query can also be executed from within a controller or any service that includes the uses the `ArtisanSdk\CQRS\Concerns\CQRS` trait:
+
+```php
+namespace App\Http\Controllers;
+
+use App\Commands\FindUserByEmail;
+use App\Http\Controllers\Controller;
+use ArtisanSdk\CQRS\Concerns\CQRS;
+use Illuminate\Http\Request;
+
+class UserController extends Controller
+{
+    use CQRS;
+
+    public function show(Request $request, string $email)
+    {
+        return $this->query(FindUserByEmail::class)
+            ->email($email)
+            ->firstOrFail();
+    }
+}
+```
 
 ### How to Create an Evented Query
 
-<span style="color:red">[needs example and description]</span>
+Sometimes you want the rest of your code to be made aware that a particular
+query was executed. You may want to execute some code before the query or after
+the query based on the result of the query. Using the dispatcher this is
+trivially done by simply implementing the `ArtisanSdk\Contract\Eventable`
+interface on any query that should be evented:
+
+```php
+namespace App\Queries;
+
+use App\Post;
+use ArtisanSdk\Contract\Eventable;
+use ArtisanSdk\CQRS\Query;
+
+class MostPopularPosts extends Query implements Eventable
+{
+    protected $model;
+
+    public function __construct(Post $model)
+    {
+        $this->model = $model;
+    }
+
+    public function builder()
+    {
+        return $this->query()
+            ->orderBy('views', 'desc')
+            ->take($this->option('limit', 10, 'is_integer'));
+    }
+}
+```
+
+With the addition of the eventable contract implemented, an event will be fired
+before and another after the command is ran. The before event will be given the
+arguments passed to the query while the after event will be given the results of
+the query itself. The event fired is an instance of `ArtisanSdk\CQRS\Events\Event`.
+
+As an example use case for the above query, the post authors could be notified
+that their post is now being featured on the website using an after event
+handler. Alternatively instrumentation could be started prior to the execution
+and then captured after in the after event as the elapsed time the query took to
+execute.
+
+All other event bus behaviors relating to eventable commands also apply to commands.
+See documentation on eventable commands for more details.
+
+### How to Create a Cached Query
+
+Maybe you want the results of a query to be cached since the result does not
+change very often given the same query arguments. This package makes that a
+trivial effort by simply implementing `ArtisanSdk\Contract\Cacheable` and
+setting a `public $ttl` property, set in seconds, on the query class. The query
+bus will handle all the cache key creation and cache busting using the default
+cache drivers of Laravel.
+
+```php
+namespace App\Queries;
+
+use App\Post;
+use ArtisanSdk\Contract\Cacheable;
+use ArtisanSdk\CQRS\Query;
+
+class MostPopularPosts extends Query implements Cacheable
+{
+    public $ttl = 60 * 60 * 24 * 7; // 1 week cache
+
+    // ... same logic as above
+}
+```
+
+You can also dynamically call `->ttl($seconds)` on the query builder to customize
+the TTL of the cache results when querying. You can customize `public $key` property
+to set a custom key for the query but by default the value will be generated based
+on a hash of the query itself. This makes unique queries cacheable under separate
+auto-generated keys.
+
+### How to Bust a Cached Query
+
+While caching is great, sometimes you need to bypass the cache or clear the cache.
+
+```php
+// Get the results and cache them for future query execution
+$posts = MostPopularPosts::make()->get();
+
+// Secondary calls return the cached results
+$cached = MostPopularPosts::make()->get();
+
+// Bust the cache then get the results
+$busted = MostPopularPosts::make()->busted()->get();
+
+// This is shorthand for cache busted results
+$busted = MostPopularPosts::make()->fresh();
+```
+
+See the `ArtisanSdk\CQRS\Buses\Cached` class for more public methods that can be
+used to customize the query's caching mechanisms including bypassing cache,
+setting a custom key, using tag based caches, and using a different cache
+driver. The cache bus is probably the most compelling reason to use the query
+bus when using an Eloquent model because while Eloquent models are Active Record
+implementations with lots of query builder capabilities, they don't handle
+domain argument validation nor caching out of the box and with ease.
 
 ## Events
 
@@ -651,7 +1061,7 @@ namespace App\Commands;
 
 use App\Events\NewPasswordSet;
 use App\Events\ChangingPassword;
-use ArtisanSdk\Contracts\Commands\Eventable;
+use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\CQRS\Command;
 
 class ChangePassword extends Command implements Eventable
@@ -871,7 +1281,7 @@ command builder and dispatcher. The usable methods (most are protected) of the t
 - `CQRS::until($event, $payload)` to compose a before event with the payload and fire it using the dispatcher.
 
 `ArtisanSdk\CQRS\Concerns\Handle` is a trait that can be used by commands to implement
-the `ArtisanSdk\Contracts\CQRS\Handler` interface such that an event object may be passed
+the `ArtisanSdk\Contract\CQRS\Handler` interface such that an event object may be passed
 to the `handle()` method of a command and the command be ran through the command
 dispatcher using the properties of the event as the arguments. Additionally if the
 command is queueable then the execution of the command will be deferred as a queued
@@ -1107,7 +1517,7 @@ use App\Commands\ResetUserPassword;
 use App\Events\UserPasswordReset;
 use App\Events\UserRegistered;
 use ArtisanSdk\CQRS\Command;
-use ArtisanSdk\Contracts\Commands\Eventable;
+use ArtisanSdk\Contract\Eventable;
 
 class RegisterUser extends Command implements Eventable
 {
@@ -1156,8 +1566,6 @@ class ResetUserPassword extends Command implements Eventable
 
 ### Using Macros on the Builder
 
-<span style="color:red">[needs example and description]</span>
-
 In the `App\Providers\AppServiceProvider@boot` (a Laravel default location):
 
 ```php
@@ -1195,7 +1603,7 @@ $user = App\Commands\SaveUser::make()
 
 ### Using Mixins on the Builder
 
-<span style="color:red">[needs example and description]</span>
+<span style="color:red">Documenation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
 
 # Running the Tests
 
