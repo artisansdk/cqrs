@@ -7,7 +7,7 @@ use ArtisanSdk\CQRS\Jobs\Job;
 use ArtisanSdk\CQRS\Jobs\Pending;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\TestCase;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 
 class ChainTest extends TestCase
 {

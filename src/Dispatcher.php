@@ -12,7 +12,7 @@ use ArtisanSdk\Contract\Transactional;
 use ArtisanSdk\CQRS\Buses\Cached;
 use ArtisanSdk\CQRS\Buses\Evented;
 use ArtisanSdk\CQRS\Buses\Transaction;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 use Illuminate\Container\Container as App;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher as Events;
@@ -53,18 +53,18 @@ class Dispatcher
     /**
      * Dynamically forward methods as events.
      *
-     * @example creating(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\Event\Bar\Creating
-     *          created(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\Event\Bar\Created
-     *          updating(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\Event\Bar\Updating
-     *          updated(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\Event\Bar\Updated
-     *          deleting(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\Event\Bar\Deleting
-     *          deleted(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\Event\Bar\Deleted
-     *          finding(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\Event\Bar\Finding
-     *          found(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\Event\Bar\Found
-     *          running(new \ArtisanSdk\Command\Bar) => \ArtisanSdk\Event\Bar\Running
-     *          ran(new \ArtisanSdk\Command\Bar) => \ArtisanSdk\Event\Bar\Ran
-     *          querying(new \ArtisanSdk\Query\Bar) => \ArtisanSdk\Event\Bar\Querying
-     *          queried(new \ArtisanSdk\Query\Bar) => \ArtisanSdk\Event\Bar\Queried
+     * @example creating(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\CQR\Events\Bar\Creating
+     *          created(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\CQR\Events\Bar\Created
+     *          updating(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\CQR\Events\Bar\Updating
+     *          updated(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\CQR\Events\Bar\Updated
+     *          deleting(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\CQR\Events\Bar\Deleting
+     *          deleted(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\CQR\Events\Bar\Deleted
+     *          finding(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\CQR\Events\Bar\Finding
+     *          found(new \ArtisanSdk\Model\Bar) => \ArtisanSdk\CQR\Events\Bar\Found
+     *          running(new \ArtisanSdk\Command\Bar) => \ArtisanSdk\CQR\Events\Bar\Running
+     *          ran(new \ArtisanSdk\Command\Bar) => \ArtisanSdk\CQR\Events\Bar\Ran
+     *          querying(new \ArtisanSdk\Query\Bar) => \ArtisanSdk\CQR\Events\Bar\Querying
+     *          queried(new \ArtisanSdk\Query\Bar) => \ArtisanSdk\CQR\Events\Bar\Queried
      *
      * @param string $method
      * @param array  $attributes
@@ -256,10 +256,10 @@ class Dispatcher
      *
      * If no event exists for the given class and the action, the default is returned.
      *
-     * @example resolveEventClass(\ArtisanSdk\Model\Bar\Model, \ArtisanSdk\Event\Creating) ==> \ArtisanSdk\Event\Bar\Creating
-     *          resolveEventClass(\ArtisanSdk\Model\Bar, \ArtisanSdk\Event\Creating) ==> \ArtisanSdk\Event\Bar\Creating
-     *          resolveEventClass(\ArtisanSdk\Command\Bar, \ArtisanSdk\Event\Running) ==> \ArtisanSdk\Event\Bar\Running
-     *          resolveEventClass(\ArtisanSdk\Query\Bar, \ArtisanSdk\Event\Querying) ==> \ArtisanSdk\Event\Bar\Querying
+     * @example resolveEventClass(\ArtisanSdk\Model\Bar\Model, \ArtisanSdk\CQR\Events\Creating) ==> \ArtisanSdk\CQR\Events\Bar\Creating
+     *          resolveEventClass(\ArtisanSdk\Model\Bar, \ArtisanSdk\CQR\Events\Creating) ==> \ArtisanSdk\CQR\Events\Bar\Creating
+     *          resolveEventClass(\ArtisanSdk\Command\Bar, \ArtisanSdk\CQR\Events\Running) ==> \ArtisanSdk\CQR\Events\Bar\Running
+     *          resolveEventClass(\ArtisanSdk\Query\Bar, \ArtisanSdk\CQR\Events\Querying) ==> \ArtisanSdk\CQR\Events\Bar\Querying
      *
      * @param string $class
      * @param string $default

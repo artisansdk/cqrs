@@ -7,7 +7,7 @@ use ArtisanSdk\Contract\Invokable;
 use ArtisanSdk\Contract\Query as Contract;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\Event\Invalidated;
+use ArtisanSdk\CQRS\Events\Invalidated;
 use Closure;
 use Illuminate\Cache\CacheManager as Manager;
 use Illuminate\Contracts\Cache\Repository as Cache;

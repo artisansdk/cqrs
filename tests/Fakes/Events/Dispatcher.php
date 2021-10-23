@@ -19,7 +19,7 @@ class Dispatcher implements DispatcherInterface
      * @param string|array $events
      * @param mixed        $listener
      */
-    public function listen($events, $listener)
+    public function listen($events, $listener = null)
     {
     }
 

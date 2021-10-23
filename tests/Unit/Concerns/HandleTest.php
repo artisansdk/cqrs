@@ -6,7 +6,7 @@ use ArtisanSdk\CQRS\Jobs\Pending;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable;
 use ArtisanSdk\CQRS\Tests\TestCase;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 
 class HandleTest extends TestCase
 {

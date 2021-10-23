@@ -21,7 +21,7 @@ use ArtisanSdk\CQRS\Tests\Fakes\Events\Foo\Bar;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Eventable as EventableQuery;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 use InvalidArgumentException;
 
 class DispatcherTest extends TestCase
@@ -36,7 +36,7 @@ class DispatcherTest extends TestCase
     /**
      * Setup tests.
      */
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 

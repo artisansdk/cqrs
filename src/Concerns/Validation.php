@@ -93,7 +93,8 @@ trait Validation
      */
     protected function validatorValidates($validator): bool
     {
-        return method_exists($validator, 'validate');
+        return is_object($validator)
+            && method_exists($validator, 'validate');
     }
 
     /**

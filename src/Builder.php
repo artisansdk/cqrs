@@ -9,7 +9,7 @@ use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Buses\Cached;
 use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\Silencer;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 use BadMethodCallException;
 use Closure;
 use Illuminate\Support\Arr;

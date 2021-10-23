@@ -18,7 +18,6 @@
     "require": {
         "php": ">=7.0|>=8.0",
         "artisansdk/contract": "dev-master",
-        "artisansdk/event": "dev-master",
         "illuminate/container": "^5.0 | ^6.0 | ^7.0 | ^8.0",
         "illuminate/database": "^5.0 | ^6.0 | ^7.0 | ^8.0",
         "illuminate/queue": "^5.0 | ^6.0 | ^7.0 | ^8.0",
@@ -26,11 +25,14 @@
         "psr/log": "^1.0"
     },
     "require-dev": {
+        "artisansdk/bench": "dev-master",
+        "dms/phpunit-arraysubset-asserts": "^0.3.1",
         "illuminate/cache": "^5.0 | ^6.0 | ^7.0 | ^8.0",
         "illuminate/pagination": "^5.0 | ^6.0 | ^7.0 | ^8.0",
         "illuminate/validation": "^5.0 | ^6.0 | ^7.0 | ^8.0"
     },
     "suggest": {
+        "artisansdk/event": "CQRS is a pattern used in event-driven applications. The artisansdk/event package is a general purpose event sourcing library for event stores.",
         "illuminate/cache": "CQRS supports automatic caching and cache-busting of queries using Laravel's CacheManager class.",
         "illuminate/pagination": "CQRS supports integration of LengthAwarePaginator by using Query::paginate() method.",
         "illuminate/validation": "CQRS supports automatic creation of a Validator using rules arrays with argument validation."

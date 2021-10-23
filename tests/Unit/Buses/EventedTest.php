@@ -14,7 +14,7 @@ use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzed;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
 use ArtisanSdk\CQRS\Tests\TestCase;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 use Illuminate\Contracts\Events\Dispatcher as EventsInterface;
 
 class EventedTest extends TestCase

@@ -27,6 +27,15 @@ class Job implements Contract
     protected $failed = false;
 
     /**
+     * Get the UUID of the job.
+     *
+     * @return string|null
+     */
+    public function uuid()
+    {
+    }
+
+    /**
      * Get the job identifier.
      *
      * @return string
@@ -157,11 +166,29 @@ class Job implements Contract
     }
 
     /**
+     * Get the maximum number of exceptions allowed, regardless of attempts.
+     *
+     * @return int|null
+     */
+    public function maxExceptions()
+    {
+    }
+
+    /**
      * Get the number of seconds the job can run.
      *
      * @return int|null
      */
     public function timeout()
+    {
+    }
+
+    /**
+     * Get the timestamp indicating when the job should timeout.
+     *
+     * @return int|null
+     */
+    public function retryUntil()
     {
     }
 

@@ -15,15 +15,18 @@ use Illuminate\Translation\FileLoader;
 use Illuminate\Translation\Translator;
 use Illuminate\Validation\Factory;
 use PHPUnit\Framework\TestCase as PHPUnit;
+use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 
 class TestCase extends PHPUnit
 {
+    use ArraySubsetAsserts;
+
     protected $app;
 
     /**
      * Setup tests.
      */
-    public function setUp()
+    public function setUp() : void
     {
         $this->createApplication();
     }
@@ -34,7 +37,9 @@ class TestCase extends PHPUnit
     public function createApplication()
     {
         $this->app = Container::getInstance();
-        $this->app->singleton(ContainerInterface::class, $this->app);
+        $this->app->singleton(ContainerInterface::class, function() {
+            return $this->app;
+        });
 
         // Bind the fakes into the container for the tests
         $this->app->singleton(BusInterface::class, Bus::class);

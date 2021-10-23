@@ -7,6 +7,26 @@ use Illuminate\Contracts\Bus\QueueingDispatcher;
 class Dispatcher implements QueueingDispatcher
 {
     /**
+     * Attempt to find the batch with the given ID.
+     *
+     * @param  string  $batchId
+     * @return \Illuminate\Bus\Batch|null
+     */
+    public function findBatch(string $batchId)
+    {
+    }
+
+    /**
+     * Create a new batch of queueable jobs.
+     *
+     * @param  \Illuminate\Support\Collection|array  $jobs
+     * @return \Illuminate\Bus\PendingBatch
+     */
+    public function batch($jobs)
+    {
+    }
+
+    /**
      * Dispatch a command to its appropriate handler.
      *
      * @param mixed $command
@@ -14,6 +34,19 @@ class Dispatcher implements QueueingDispatcher
      * @return mixed
      */
     public function dispatch($command)
+    {
+    }
+
+    /**
+     * Dispatch a command to its appropriate handler in the current process.
+     *
+     * Queueable jobs will be dispatched to the "sync" queue.
+     *
+     * @param  mixed  $command
+     * @param  mixed  $handler
+     * @return mixed
+     */
+    public function dispatchSync($command, $handler = null)
     {
     }
 

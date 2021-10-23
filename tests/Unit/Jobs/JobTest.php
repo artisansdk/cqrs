@@ -9,7 +9,7 @@ use ArtisanSdk\CQRS\Tests\Fakes\Commands\Handler;
 use ArtisanSdk\CQRS\Tests\Fakes\Jobs\Job as JobFake;
 use ArtisanSdk\CQRS\Tests\Fakes\Log\Logger;
 use ArtisanSdk\CQRS\Tests\TestCase;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 use RuntimeException;
 
 class JobTest extends TestCase

@@ -256,4 +256,13 @@ class Connection implements ConnectionInterface
     {
         return $callback();
     }
+
+    /**
+     * Get the name of the connected database.
+     *
+     * @return string
+     */
+    public function getDatabaseName()
+    {
+    }
 }

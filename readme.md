@@ -273,7 +273,7 @@ class SaveUser extends Command implements Eventable
 With the addition of the eventable contract implemented, an event will be fired
 before and another after the command is ran. The before event will be given the
 arguments passed to the command while the after event will be given the results
-of the command itself. The event fired is an instance of `ArtisanSdk\Event\Event`.
+of the command itself. The event fired is an instance of `ArtisanSdk\CQRS\Events\Event`.
 
 #### Silencing an Evented Command
 
@@ -415,7 +415,7 @@ from the event object and pass that as arguments to a command builder and then
 self-execute by invoking the command's `run()` method.
 
 First you'll need to create a custom event that should fire. These events need
-to extend `ArtisanSdk\Event\Event` which provides the payload of arguments
+to extend `ArtisanSdk\CQRS\Events\Event` which provides the payload of arguments
 that will be passed to the command. In our example event we accept a type hinted
 `App\User` model as the only argument to the constructor to ensure that the event
 is created with the right kind of payload. We then assign this model to the `user`
@@ -426,7 +426,7 @@ assign to this argument to the payload property.
 namespace App\Events;
 
 use App\User;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 
 class UserSaved extends Event
 {
@@ -589,7 +589,7 @@ as having accomplished the same as manually constructing and calling the followi
 
 ```php
 $job = (new App\Commands\SendUserWelcomeEmail())
-    ->queue(new ArtisanSdk\Event\Event([
+    ->queue(new ArtisanSdk\CQRS\Events\Event([
         'email' => 'johndoe@example.com',
     ]));
 ```

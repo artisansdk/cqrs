@@ -9,7 +9,7 @@ use ArtisanSdk\CQRS\Tests\Fakes\Commands\Transactional;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
-use ArtisanSdk\Event\Event;
+use ArtisanSdk\CQRS\Events\Event;
 
 class CQRSTest extends TestCase
 {
@@ -59,7 +59,9 @@ class CQRSTest extends TestCase
     public function testEvent()
     {
         $dispatcher = new Events();
-        $this->app->bind(DispatcherInterface::class, $dispatcher);
+        $this->app->bind(DispatcherInterface::class, function() use ($dispatcher) {
+            return $dispatcher;
+        });
         $response = (new Command())->testEvent(new Event());
         $event = array_shift($response);
 
@@ -73,7 +75,9 @@ class CQRSTest extends TestCase
     public function testUntil()
     {
         $dispatcher = new Events();
-        $this->app->bind(DispatcherInterface::class, $dispatcher);
+        $this->app->bind(DispatcherInterface::class, function() use ($dispatcher) {
+            return $dispatcher;
+        });
         $response = (new Command())->testUntil(new Event());
         $event = array_shift($response);
 
