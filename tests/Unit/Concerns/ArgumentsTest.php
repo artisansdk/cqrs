@@ -139,7 +139,7 @@ class ArgumentsTest extends TestCase
             $value = $command->argument('foo', ['integer']);
         } catch (ValidationException $exception) {
             $this->assertSame(
-                'The given data was invalid.',
+                'validation.integer',
                 $exception->getMessage(),
                 'An argument that fails the validator rules passed should throw a '.ValidationException::class.'.'
             );
@@ -164,7 +164,7 @@ class ArgumentsTest extends TestCase
             $value = $command->argument('foo', $command->makeValidator('foo', 'bar', ['integer']));
         } catch (ValidationException $exception) {
             $this->assertSame(
-                'The given data was invalid.',
+                'validation.integer',
                 $exception->getMessage(),
                 'An argument that fails the validator rules passed should throw a '.ValidationException::class.'.'
             );
@@ -180,7 +180,7 @@ class ArgumentsTest extends TestCase
         $command->arguments([
             'foo' => new stdClass(),
             'bar' => new class() implements JsonSerializable {
-                public function jsonSerialize()
+                public function jsonSerialize() : mixed
                 {
                     return [];
                 }

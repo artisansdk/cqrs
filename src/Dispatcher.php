@@ -35,7 +35,7 @@ class Dispatcher
      *
      * @param \Illuminate\Contracts\Container\Container $container
      */
-    public function __construct(Container $container)
+    public function __construct(public Container $container)
     {
         $this->container = $container;
     }

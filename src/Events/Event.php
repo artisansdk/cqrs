@@ -20,8 +20,9 @@ use ReflectionObject;
  * @method array       properties()
  * @method array       toArray()
  * @method string      toJson(int $options)
- * @method array       jsonSerialize()
+ * @method mixed       jsonSerialize()
  */
+#[\AllowDynamicProperties]
 class Event implements Contract
 {
     use SerializesModels;
@@ -55,7 +56,7 @@ class Event implements Contract
         }
         if (is_array($payload)) {
             foreach ($payload as $key => $value) {
-                $this->$key = $value;
+                $this->{$key} = $value;
             }
         }
     }
@@ -142,7 +143,7 @@ class Event implements Contract
      *
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize() : mixed
     {
         return $this->toArray();
     }

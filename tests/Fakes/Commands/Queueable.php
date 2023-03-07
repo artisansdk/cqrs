@@ -10,6 +10,8 @@ class Queueable extends Command implements Contract
 {
     use Queues;
 
+    public Event $event;
+
     public function __construct()
     {
         $this->queue = 'default';
