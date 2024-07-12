@@ -4,7 +4,6 @@ namespace ArtisanSdk\CQRS\Events;
 
 use ArtisanSdk\Contract\Event as Contract;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Queue\SerializesModels;
 use ReflectionObject;
 
 /**
@@ -25,8 +24,6 @@ use ReflectionObject;
 #[\AllowDynamicProperties]
 class Event implements Contract
 {
-    use SerializesModels;
-
     /**
      * The event class name.
      *
@@ -72,7 +69,7 @@ class Event implements Contract
 
         foreach ((new ReflectionObject($this))->getProperties() as $property) {
             if ( ! $property->isPrivate()) {
-                $value = $this->getPropertyValue($property);
+                $value = $property->getValue($this);
                 if ( ! is_null($value)) {
                     $properties->put($property->name, $value);
                 }

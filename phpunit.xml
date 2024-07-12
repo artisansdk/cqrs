@@ -1,31 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit cacheResult="true"
-         backupGlobals="false"
-         backupStaticAttributes="false"
-         bootstrap="vendor/autoload.php"
-         colors="true"
-         verbose="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         processIsolation="false"
-         stopOnFailure="false">
-    <testsuites>
-        <testsuite name="Feature">
-            <directory>./tests/Feature</directory>
-        </testsuite>
-        <testsuite name="Unit">
-            <directory>./tests/Unit</directory>
-        </testsuite>
-    </testsuites>
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">./src</directory>
-        </whitelist>
-    </filter>
-    <logging>
-        <log type="coverage-html" target="./reports/coverage"/>
-        <log type="coverage-text" target="./reports/coverage.txt"/>
-        <log type="junit" target="./reports/coverage.xml"/>
-    </logging>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" cacheResult="true" backupGlobals="false" bootstrap="vendor/autoload.php" colors="true" processIsolation="false" stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" cacheDirectory=".phpunit.cache" backupStaticProperties="false">
+  <coverage>
+    <report>
+      <html outputDirectory="./reports/coverage"/>
+      <text outputFile="./reports/coverage.txt"/>
+    </report>
+  </coverage>
+  <testsuites>
+    <testsuite name="Feature">
+      <directory>./tests/Feature</directory>
+    </testsuite>
+    <testsuite name="Unit">
+      <directory>./tests/Unit</directory>
+    </testsuite>
+  </testsuites>
+  <logging>
+    <junit outputFile="./reports/coverage.xml"/>
+  </logging>
+  <source>
+    <include>
+      <directory suffix=".php">./src</directory>
+    </include>
+  </source>
 </phpunit>

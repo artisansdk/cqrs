@@ -7,8 +7,8 @@ use ArtisanSdk\Contract\Handler;
 use ArtisanSdk\Contract\Runnable;
 use ArtisanSdk\CQRS\Concerns\Queues;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\Model\Exceptions\InvalidModel; // @todo
-use Exception;
+use ArtisanSdk\Model\Exceptions\InvalidAttributes;
+use Throwable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerAwareInterface;
@@ -84,7 +84,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
             }
 
             return $this->call($this->handler, 'handle', $this->event);
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->failed($exception);
         }
     }
@@ -128,11 +128,11 @@ class Job implements ShouldQueue, LoggerAwareInterface
      *
      * @param \Throwable $exception
      */
-    public function failed(Exception $exception)
+    public function failed(Throwable $exception)
     {
         $this->log($exception);
 
-        if ($exception instanceof RuntimeException || $exception instanceof InvalidModel) {
+        if ($exception instanceof RuntimeException || $exception instanceof InvalidAttributes) {
             return $this->delete();
         }
 
@@ -215,9 +215,9 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Log the exception as an error if the logger is present.
      *
-     * @param \Exception $exception
+     * @param \Throwable $exception
      */
-    protected function log(Exception $exception)
+    protected function log(Throwable $exception)
     {
         if ($logger = $this->logger()) {
             $logger = $logger->error(sprintf('%s: %s', $this->getHandlerSignature($this->handler), $exception->getMessage()));

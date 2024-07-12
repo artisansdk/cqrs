@@ -15,6 +15,7 @@
 *.sublime-workspace
 /.composer/
 /.idea
+/.phpunit.cache
 /.ssh/
 /.vagrant
 /coverage/
