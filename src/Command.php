@@ -37,7 +37,7 @@ abstract class Command implements Contract
      *
      * @param array $arguments
      *
-     * @return \ArtisanSdk\Contract\Command
+     * @return \ArtisanSdk\CQRS\Builder<TContract>
      */
     public static function make(array $arguments = [])
     {

@@ -29,7 +29,7 @@ abstract class Query implements Contract
      *
      * @param array $arguments
      *
-     * @return \ArtisanSdk\Contract\Query
+     * @return \ArtisanSdk\CQRS\Builder<TContract>
      */
     public static function make(array $arguments = [])
     {
