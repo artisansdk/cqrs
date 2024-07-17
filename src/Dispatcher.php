@@ -120,7 +120,7 @@ class Dispatcher
      *
      * @throws \InvalidArugmentException if class argument is not an instance of \ArtisanSdk\Contract\Command
      *
-     * @return \ArtisanSdk\Contract\Command
+     * @return \ArtisanSdk\CQRS\Builder<TCommand>
      */
     public function command($class)
     {
@@ -154,7 +154,7 @@ class Dispatcher
      *
      * @throws \InvalidArugmentException if class argument is not an instance of \ArtisanSdk\Contract\Query
      *
-     * @return \ArtisanSdk\Contract\Query
+     * @return \ArtisanSdk\CQRS\Builder<TQuery>
      */
     public function query($class)
     {
@@ -232,7 +232,7 @@ class Dispatcher
      *
      * @param string $class
      *
-     * @return \ArtisanSdk\Contract\Runnable
+     * @return mixed
      */
     protected function makeFromContainer($class)
     {
