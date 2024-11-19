@@ -995,10 +995,10 @@ class MostPopularPosts extends Query implements Cacheable
 }
 ```
 
-You can also dynamically call `->ttl($seconds)` on the query builder to customize
-the TTL of the cache results when querying. You can customize `public $key` property
-to set a custom key for the query but by default the value will be generated based
-on a hash of the query itself. This makes unique queries cacheable under separate
+You can also dynamically call `->ttl($seconds)` on the query builder to customize the TTL of the
+cache results when querying. You can customize `public $key` property or call `->key($key)` and
+optionally `->subKey($subKey)` to set a custom key for the query but by default the value will be
+generated based on a hash of the query itself. This makes unique queries cacheable under separate
 auto-generated keys.
 
 ### How to Bust a Cached Query

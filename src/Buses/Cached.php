@@ -126,6 +126,46 @@ class Cached implements Contract
     }
 
     /**
+     * Get or set the cache key.
+     *
+     * @param string|null $key
+     *
+     * @return string|self
+     */
+    public function key(string $key = null)
+    {
+        $runnable = $this->toBase();
+
+        if (is_null($key)) {
+            return (string) $runnable->key;
+        }
+
+        $runnable->key = $key;
+
+        return $this;
+    }
+
+    /**
+     * Get or set the cache sub key.
+     *
+     * @param string|null $subkey
+     *
+     * @return string|self
+     */
+    public function subkey(string $subkey = null)
+    {
+        $runnable = $this->toBase();
+
+        if (is_null($subkey)) {
+            return (string) $runnable->subkey;
+        }
+
+        $runnable->subkey = $subkey;
+
+        return $this;
+    }
+
+    /**
      * Run the query outside the cache.
      *
      * @return mixed
@@ -298,7 +338,7 @@ class Cached implements Contract
      *
      * @return string
      */
-    protected function key(): string
+    protected function getKey(): string
     {
         $runnable = $this->toBase();
 
@@ -314,7 +354,7 @@ class Cached implements Contract
      *
      * @return string
      */
-    protected function subkey(): string
+    protected function getSubkey(): string
     {
         $runnable = $this->toBase();
 
