@@ -68,13 +68,13 @@ class Dispatcher
     public function __call($method, $attributes = [])
     {
         $class = head($attributes);
-        $classname = is_object($class) ? get_class($class) : $class;
-        $position = $this->findOccurence((string) $classname, ['Commands\\', 'Queries\\', 'Models\\']);
-        $default = substr_replace((string) $classname, 'Events\\'.Str::studly($method), (int) $position);
+        $classname = (string) (is_object($class) ? get_class($class) : $class);
+        $position = $this->findOccurence($classname, ['Commands\\', 'Queries\\', 'Models\\']);
+        $default = substr_replace( $classname, 'Events\\'.Str::studly($method), $position);
         $name = $this->resolveEventClass($classname, $default);
         $fire = Str::endsWith($method, 'ing') ? 'until' : 'event';
 
-        $event = (new $name(...$attributes))->event($this->normalizeEventClass((string) $classname, $default));
+        $event = (new $name(...$attributes))->event($this->normalizeEventClass( $classname, $default));
 
         return $this->{$fire}($event);
     }
@@ -279,7 +279,7 @@ class Dispatcher
      * @param  string|array  $needles
      * @return int
      */
-    protected function findOccurence($haystack, $needles)
+    protected function findOccurence($haystack, $needles): int
     {
         $position = strlen($haystack);
 
@@ -290,7 +290,7 @@ class Dispatcher
             }
         }
 
-        return $position;
+        return (int) $position;
     }
 
     /**
