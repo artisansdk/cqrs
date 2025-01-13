@@ -1,17 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS;
 
-use ArtisanSdk\Contract\Cacheable;
-use ArtisanSdk\Contract\Command;
-use ArtisanSdk\Contract\Eventable;
-use ArtisanSdk\Contract\Query;
-use ArtisanSdk\Contract\Runnable;
-use ArtisanSdk\Contract\Taggable;
-use ArtisanSdk\Contract\Transactional;
-use ArtisanSdk\CQRS\Buses\Cached;
-use ArtisanSdk\CQRS\Buses\Evented;
-use ArtisanSdk\CQRS\Buses\Transaction;
+use ArtisanSdk\Contract\{Cacheable, Command, Eventable, Query, Runnable, Taggable, Transactional};
+use ArtisanSdk\CQRS\Buses\{Cached, Evented, Transaction};
 use ArtisanSdk\CQRS\Events\Event;
 use Illuminate\Container\Container as App;
 use Illuminate\Contracts\Container\Container;
@@ -19,6 +13,7 @@ use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use InvalidArugmentException;
 
 /**
  * Runnable Class Dispatcher (aka Command Bus).
@@ -33,7 +28,7 @@ class Dispatcher
     /**
      * Inject the application container into the dispatcher to resolve global services.
      *
-     * @param \Illuminate\Contracts\Container\Container $container
+     * @param  Container  $container
      */
     public function __construct(public Container $container)
     {
@@ -43,7 +38,7 @@ class Dispatcher
     /**
      * Make an instance of the dispatcher.
      *
-     * @return \ArtisanSdk\CQRS\Dispatcher
+     * @return Dispatcher
      */
     public static function make()
     {
@@ -66,21 +61,20 @@ class Dispatcher
      *          querying(new \ArtisanSdk\Query\Bar) => \ArtisanSdk\CQR\Events\Bar\Querying
      *          queried(new \ArtisanSdk\Query\Bar) => \ArtisanSdk\CQR\Events\Bar\Queried
      *
-     * @param string $method
-     * @param array  $attributes
-     *
+     * @param  string  $method
+     * @param  array  $attributes
      * @return array|null
      */
     public function __call($method, $attributes = [])
     {
         $class = head($attributes);
-        $classname = is_object($class) ? get_class($class) : $class;
+        $classname = (string) (is_object($class) ? get_class($class) : $class);
         $position = $this->findOccurence($classname, ['Commands\\', 'Queries\\', 'Models\\']);
-        $default = substr_replace($classname, 'Events\\'.Str::studly($method), $position);
+        $default = substr_replace( $classname, 'Events\\'.Str::studly($method), $position);
         $name = $this->resolveEventClass($classname, $default);
         $fire = Str::endsWith($method, 'ing') ? 'until' : 'event';
 
-        $event = (new $name(...$attributes))->event($this->normalizeEventClass($classname, $default));
+        $event = (new $name(...$attributes))->event($this->normalizeEventClass( $classname, $default));
 
         return $this->{$fire}($event);
     }
@@ -88,17 +82,16 @@ class Dispatcher
     /**
      * Dispatch a runnable command or query.
      *
-     * @param string|\ArtisanSdk\Contract\Runnable $class
+     * @param  string|Runnable  $class
+     * @return Runnable
      *
-     * @throws \InvalidArugmentException if class argument is not an instance of \ArtisanSdk\Contract\Runnable
-     *
-     * @return \ArtisanSdk\Contract\Runnable
+     * @throws InvalidArugmentException if class argument is not an instance of \ArtisanSdk\Contract\Runnable
      */
     public function dispatch($class)
     {
         $runnable = $this->resolveClass($class);
 
-        if ( ! $runnable instanceof Runnable) {
+        if (! $runnable instanceof Runnable) {
             throw new InvalidArgumentException(get_class($class).' must be an instance of '.Runnable::class.'.');
         }
 
@@ -116,17 +109,16 @@ class Dispatcher
     /**
      * Instantiate a command so it can be ran.
      *
-     * @param string|\ArtisanSdk\Contract\Runnable $class
+     * @param  string|Runnable  $class
+     * @return Builder<TCommand>
      *
-     * @throws \InvalidArugmentException if class argument is not an instance of \ArtisanSdk\Contract\Command
-     *
-     * @return \ArtisanSdk\CQRS\Builder<TCommand>
+     * @throws InvalidArgumentException if class argument is not an instance of \ArtisanSdk\Contract\Command
      */
     public function command($class)
     {
         $runnable = $this->resolveClass($class);
 
-        if ( ! $runnable instanceof Command) {
+        if (! $runnable instanceof Command) {
             throw new InvalidArgumentException(get_class($runnable).' must be an instance of '.Command::class.'.');
         }
 
@@ -150,17 +142,16 @@ class Dispatcher
     /**
      * Instantiate a query so it can be ran.
      *
-     * @param string|\ArtisanSdk\Contract\Query $class
+     * @param  string|Query  $class
+     * @return Builder<TQuery>
      *
-     * @throws \InvalidArugmentException if class argument is not an instance of \ArtisanSdk\Contract\Query
-     *
-     * @return \ArtisanSdk\CQRS\Builder<TQuery>
+     * @throws InvalidArgumentException if class argument is not an instance of \ArtisanSdk\Contract\Query
      */
     public function query($class)
     {
         $runnable = $this->resolveClass($class);
 
-        if ( ! $runnable instanceof Query) {
+        if (! $runnable instanceof Query) {
             throw new InvalidArgumentException(get_class($runnable).' must be an instance of '.Query::class.'.');
         }
 
@@ -180,9 +171,8 @@ class Dispatcher
     /**
      * Fire an event.
      *
-     * @param string|\ArtisanSdk\Contract\Event $event
-     * @param array                             $payload
-     *
+     * @param  string|\ArtisanSdk\Contract\Event  $event
+     * @param  array  $payload
      * @return array|null
      */
     public function event($event, $payload = [])
@@ -198,8 +188,7 @@ class Dispatcher
      * Fire an event until it is halted.
      *
      * @param string|\ArtisanSdk\Contract\Event
-     * @param array $payload
-     *
+     * @param  array  $payload
      * @return array|null
      */
     public function until($event, $payload = [])
@@ -210,7 +199,7 @@ class Dispatcher
     /**
      * Wrap the class with an argument builder.
      *
-     * @return \ArtisanSdk\CQRS\Builder
+     * @return Builder
      */
     protected function newBuilder($class)
     {
@@ -230,8 +219,7 @@ class Dispatcher
     /**
      * Make a class from the container.
      *
-     * @param string $class
-     *
+     * @param  string  $class
      * @return mixed
      */
     protected function makeFromContainer($class)
@@ -242,9 +230,8 @@ class Dispatcher
     /**
      * Resolve a runnable class.
      *
-     * @param string|\ArtisanSdk\Contract\Runnable $class
-     *
-     * @return \ArtisanSdk\Contract\Runnable
+     * @param  string|Runnable  $class
+     * @return Runnable
      */
     protected function resolveClass($class)
     {
@@ -261,14 +248,13 @@ class Dispatcher
      *          resolveEventClass(\ArtisanSdk\Command\Bar, \ArtisanSdk\CQR\Events\Running) ==> \ArtisanSdk\CQR\Events\Bar\Running
      *          resolveEventClass(\ArtisanSdk\Query\Bar, \ArtisanSdk\CQR\Events\Querying) ==> \ArtisanSdk\CQR\Events\Bar\Querying
      *
-     * @param string $class
-     * @param string $default
-     *
+     * @param  string  $class
+     * @param  string  $default
      * @return string
      */
     protected function resolveEventClass($class, $default)
     {
-        $event = $this->normalizeEventClass($class, $default);
+        $event = $this->normalizeEventClass((string) $class, $default);
 
         if (class_exists($event)) {
             return $event;
@@ -287,33 +273,31 @@ class Dispatcher
     }
 
     /**
-     * Find the positional occurence of the first needle in the haystack.
+     * Find the positional occurrence of the first needle in the haystack.
      *
-     * @param string       $haystack
-     * @param string|array $needles
-     *
+     * @param  string  $haystack
+     * @param  string|array  $needles
      * @return int
      */
-    protected function findOccurence($haystack, $needles)
+    protected function findOccurence($haystack, $needles): int
     {
         $position = strlen($haystack);
 
         foreach ((array) $needles as $needle) {
             $position = stripos($haystack, $needle);
-            if (false !== $position) {
+            if ($position !== false) {
                 break;
             }
         }
 
-        return $position;
+        return (int) $position;
     }
 
     /**
      * Get the normalized event class name.
      *
-     * @param string $class
-     * @param string $default
-     *
+     * @param  string  $class
+     * @param  string  $default
      * @return string
      */
     protected function normalizeEventClass($class, $default)

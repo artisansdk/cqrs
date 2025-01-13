@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit\Concerns;
 
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
@@ -16,13 +18,13 @@ class ArgumentsTest extends TestCase
     /**
      * Test that the arguments can be set from an arrayable object.
      */
-    public function testArraybleArguments()
+    public function test_arrayble_arguments()
     {
         $arrayable = new Fluent([
             'foo' => 'bar',
         ]);
 
-        $command = new Command();
+        $command = new Command;
         $command->arguments($arrayable);
 
         $this->assertInstanceOf(Arrayable::class, $arrayable, 'The arguments passed should implement '.Arrayable::class.'.');
@@ -32,9 +34,9 @@ class ArgumentsTest extends TestCase
     /**
      * Test that an argument is required.
      */
-    public function testArgumentIsRequired()
+    public function test_argument_is_required()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'bar' => '',
             'baz' => null,
@@ -74,9 +76,9 @@ class ArgumentsTest extends TestCase
     /**
      * Test that an argument cannot be validated with an unsupported validator.
      */
-    public function testArgumentCannotBeValidatedWithUnsupportedValidator()
+    public function test_argument_cannot_be_validated_with_unsupported_validator()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'foo' => 'bar',
         ]);
@@ -95,23 +97,19 @@ class ArgumentsTest extends TestCase
     /**
      * Test that an argument can be validated with a callable.
      */
-    public function testArgumentIsValidatedWithCallable()
+    public function test_argument_is_validated_with_callable()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'foo' => 'bar',
         ]);
 
-        $value = $command->argument('foo', function ($value, string $name) {
-            return true;
-        });
+        $value = $command->argument('foo', fn ($value, string $name) => true);
 
         $this->assertSame('bar', $value, 'The callable validator should have returned true and therefore resolved the value as "bar".');
 
         try {
-            $value = $command->argument('foo', function ($value, string $name) {
-                return false;
-            });
+            $value = $command->argument('foo', fn ($value, string $name) => false);
         } catch (InvalidArgumentException $exception) {
             $this->assertSame(
                 'The value for the "foo" argument could not be validated using the callable.',
@@ -124,9 +122,9 @@ class ArgumentsTest extends TestCase
     /**
      * Test that an argument can be validated using an array of rules.
      */
-    public function testArgumentIsValidatedWithRulesArray()
+    public function test_argument_is_validated_with_rules_array()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'foo' => 'bar',
         ]);
@@ -149,9 +147,9 @@ class ArgumentsTest extends TestCase
     /**
      * Test that an argument can be validated using a validator.
      */
-    public function testArgumentIsValidatedWithValidator()
+    public function test_argument_is_validated_with_validator()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'foo' => 'bar',
         ]);
@@ -174,13 +172,14 @@ class ArgumentsTest extends TestCase
     /**
      * Test that an argument can be validated against a class or interface name.
      */
-    public function testArgumentValidatesAgainstClassName()
+    public function test_argument_validates_against_class_name()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
-            'foo' => new stdClass(),
-            'bar' => new class() implements JsonSerializable {
-                public function jsonSerialize() : mixed
+            'foo' => new stdClass,
+            'bar' => new class implements JsonSerializable
+            {
+                public function jsonSerialize(): mixed
                 {
                     return [];
                 }
@@ -211,9 +210,9 @@ class ArgumentsTest extends TestCase
     /**
      * Test that an argument can be validated against type check.
      */
-    public function testArgumentValidatesAgainstTypeCheck()
+    public function test_argument_validates_against_type_check()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'foo' => 'bar',
         ]);
@@ -236,20 +235,16 @@ class ArgumentsTest extends TestCase
     /**
      * Test that an option can be validated.
      */
-    public function testOptionCanBeValidated()
+    public function test_option_can_be_validated()
     {
-        $command = new Command();
+        $command = new Command;
 
-        $value = $command->option('foo', 'bar', function ($value, string $name) {
-            return 'bar' === $value;
-        });
+        $value = $command->option('foo', 'bar', fn ($value, string $name) => $value === 'bar');
 
         $this->assertSame('bar', $value, 'The callable validator should have returned true and therefore resolved the value as "bar".');
 
         try {
-            $value = $command->option('foo', null, function ($value, string $name) {
-                return false;
-            });
+            $value = $command->option('foo', null, fn ($value, string $name) => false);
         } catch (InvalidArgumentException $exception) {
             $this->assertSame(
                 'The value for the "foo" argument could not be validated using the callable.',
@@ -262,9 +257,9 @@ class ArgumentsTest extends TestCase
     /**
      * Test that the default option value is returned when no value is set.
      */
-    public function testDefaultOption()
+    public function test_default_option()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'foo' => 'bar',
         ]);
@@ -276,27 +271,23 @@ class ArgumentsTest extends TestCase
     /**
      * Test that the default option can be a callable.
      */
-    public function testCallableDefault()
+    public function test_callable_default()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'foo' => 'bar',
         ]);
 
-        $this->assertSame('bar', $command->option('foo', function () {
-            return 'baz';
-        }), 'The default callable for the set option "foo" should not have been called.');
-        $this->assertSame('baz', $command->option('bar', function () {
-            return 'baz';
-        }), 'The default callable for the unset option "bar" should have been called.');
+        $this->assertSame('bar', $command->option('foo', fn () => 'baz'), 'The default callable for the set option "foo" should not have been called.');
+        $this->assertSame('baz', $command->option('bar', fn () => 'baz'), 'The default callable for the unset option "bar" should have been called.');
     }
 
     /**
      * Test that the default option is returned when the value is an empty string.
      */
-    public function testEmptyStringReturnsDefault()
+    public function test_empty_string_returns_default()
     {
-        $command = new Command();
+        $command = new Command;
         $command->arguments([
             'foo' => '',
         ]);

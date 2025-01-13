@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Concerns;
 
 use Illuminate\Contracts\Support\Arrayable;
@@ -19,8 +21,7 @@ trait Arguments
     /**
      * Get or set the arguments and options for the command.
      *
-     * @param array|\Illuminate\Contracts\Support\Arrayable|null $arguments
-     *
+     * @param  array|Arrayable|null  $arguments
      * @return self|array
      */
     public function arguments($arguments = null)
@@ -39,9 +40,8 @@ trait Arguments
     /**
      * Get the argument by key name and optionally validate the value.
      *
-     * @param string $name
-     * @param mixed  $validator
-     *
+     * @param  string  $name
+     * @param  mixed  $validator
      * @return mixed
      */
     public function argument($name, $validator = null)
@@ -66,10 +66,9 @@ trait Arguments
     /**
      * Get the option by key name or provide a default.
      *
-     * @param string $name
-     * @param mixed  $default
-     * @param mixed  $validator
-     *
+     * @param  string  $name
+     * @param  mixed  $default
+     * @param  mixed  $validator
      * @return mixed
      */
     public function option(string $name, $default = null, $validator = null)
@@ -78,11 +77,11 @@ trait Arguments
             ? Arr::get($this->arguments, $name)
             : $this->resolveDefault($name, $default);
 
-        if (is_string($value) && '' === $value) {
+        if (is_string($value) && $value === '') {
             $value = $this->resolveDefault($name, $default);
         }
 
-        if ( ! is_null($value) && $validator) {
+        if (! is_null($value) && $validator) {
             return $this->validateValue($name, $value, $validator);
         }
 
@@ -92,8 +91,7 @@ trait Arguments
     /**
      * Does the class have the option set?
      *
-     * @param string $name
-     *
+     * @param  string  $name
      * @return bool
      */
     protected function hasOption(string $name): bool
@@ -104,9 +102,8 @@ trait Arguments
     /**
      * Resolve the default value from a primitive or a closure.
      *
-     * @param string $name  of option
-     * @param mixed  $value
-     *
+     * @param  string  $name  of option
+     * @param  mixed  $value
      * @return mixed
      */
     protected function resolveDefault(string $name, $value)

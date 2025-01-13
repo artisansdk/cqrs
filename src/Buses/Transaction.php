@@ -1,10 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Buses;
 
-use ArtisanSdk\Contract\Command as Contract;
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\{Command as Contract, Invokable, Runnable};
 use ArtisanSdk\CQRS\Concerns\Handle;
 use ArtisanSdk\CQRS\Dispatcher;
 use Exception;
@@ -20,25 +20,25 @@ class Transaction implements Contract
     /**
      * The underlying runnable this class proxies to.
      *
-     * @var \ArtisanSdk\Contract\Runnable
+     * @var Runnable
      */
     protected $runnable;
 
     /**
      * The database connection.
      *
-     * @var \Illuminate\Database\ConnectionInterface
+     * @var Database
      */
     protected $database;
 
     /**
      * Inject the underlying command that this class proxies to.
      *
-     * @param \ArtisanSdk\Contract\Runnable            $runnable
-     * @param \ArtisanSdk\CQRS\Dispatcher              $dispatcher
-     * @param \Illuminate\Database\ConnectionInterface $database
+     * @param  Runnable  $runnable
+     * @param  Dispatcher  $dispatcher
+     * @param  Database  $database
      */
-    public function __construct(Runnable $runnable, Dispatcher $dispatcher = null, Database $database = null)
+    public function __construct(Runnable $runnable, ?Dispatcher $dispatcher = null, ?Database $database = null)
     {
         $this->runnable = $runnable;
         $this->database = $database;
@@ -47,7 +47,7 @@ class Transaction implements Contract
     /**
      * Get the base most runnable.
      *
-     * @return \ArtisanSdk\Contract\Invokable
+     * @return Invokable
      */
     public function toBase(): Invokable
     {
@@ -96,9 +96,8 @@ class Transaction implements Contract
     /**
      * Proxy calls to the underlying command instance.
      *
-     * @param string $method
-     * @param array  $arguments
-     *
+     * @param  string  $method
+     * @param  array  $arguments
      * @return mixed
      */
     public function __call($method, $arguments = [])

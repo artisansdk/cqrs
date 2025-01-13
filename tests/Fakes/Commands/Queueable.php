@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Fakes\Commands;
 
-use ArtisanSdk\Contract\Event;
-use ArtisanSdk\Contract\Queueable as Contract;
+use ArtisanSdk\Contract\{Event, Queueable as Contract};
 use ArtisanSdk\CQRS\Concerns\Queues;
 
 class Queueable extends Command implements Contract

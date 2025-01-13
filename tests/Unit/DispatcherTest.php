@@ -1,42 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit;
 
-use ArtisanSdk\Contract\Command as CommandInterface;
-use ArtisanSdk\Contract\Query as QueryInterface;
-use ArtisanSdk\Contract\Runnable as RunnableInterface;
-use ArtisanSdk\CQRS\Builder;
-use ArtisanSdk\CQRS\Buses\Evented;
-use ArtisanSdk\CQRS\Buses\Transaction;
-use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Eventable as EventableCommand;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Foo;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Foo\Fizz;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Runnable;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Transactional;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Baz;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Foo\Bar;
-use ArtisanSdk\CQRS\Tests\Fakes\Queries\Eventable as EventableQuery;
-use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
-use ArtisanSdk\CQRS\Tests\TestCase;
+use ArtisanSdk\Contract\{Command as CommandInterface, Query as QueryInterface, Runnable as RunnableInterface};
+use ArtisanSdk\CQRS\Buses\{Evented, Transaction};
 use ArtisanSdk\CQRS\Events\Event;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\Foo\Fizz;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\{Command, Eventable as EventableCommand, Foo, Runnable, Transactional};
+use ArtisanSdk\CQRS\Tests\Fakes\Events\Foo\Bar;
+use ArtisanSdk\CQRS\Tests\Fakes\Events\{Baz, Fizzing};
+use ArtisanSdk\CQRS\Tests\Fakes\Queries\{Eventable as EventableQuery, Query};
+use ArtisanSdk\CQRS\Tests\TestCase;
+use ArtisanSdk\CQRS\{Builder, Dispatcher};
 use InvalidArgumentException;
+use stdClass;
 
 class DispatcherTest extends TestCase
 {
     /**
      * A dispatcher instance.
      *
-     * @var \ArtisanSdk\CQRS\Dispatcher
+     * @var Dispatcher
      */
     protected $dispatcher;
 
     /**
      * Setup tests.
      */
-    public function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -46,7 +39,7 @@ class DispatcherTest extends TestCase
     /**
      * Test a static factory.
      */
-    public function testMake()
+    public function test_make()
     {
         $this->assertInstanceOf(Dispatcher::class, $this->dispatcher, 'The dispatcher\'s factory constructor make() method should return an instance of a dispatcher.');
     }
@@ -54,9 +47,9 @@ class DispatcherTest extends TestCase
     /**
      * Test runnable can be dispatched.
      */
-    public function testDispatchRunnable()
+    public function test_dispatch_runnable()
     {
-        $runnable = $this->dispatcher->dispatch(new Runnable());
+        $runnable = $this->dispatcher->dispatch(new Runnable);
 
         $this->assertNotInstanceOf(Builder::class, $runnable, 'A runnable should be dispatched but not wrapped in a builder.');
         $this->assertInstanceOf(RunnableInterface::class, $runnable, 'The dispatched runnable should be an instance of a runnable.');
@@ -70,9 +63,9 @@ class DispatcherTest extends TestCase
     /**
      * Test commands can be dispatched.
      */
-    public function testDispatchCommand()
+    public function test_dispatch_command()
     {
-        $builder = $this->dispatcher->dispatch(new Command());
+        $builder = $this->dispatcher->dispatch(new Command);
 
         $this->assertInstanceOf(Builder::class, $builder, 'A command should be dispatched and wrapped in a builder.');
         $this->assertInstanceOf(CommandInterface::class, $builder->toBase(), 'The dispatched command should be an instance of a command.');
@@ -86,9 +79,9 @@ class DispatcherTest extends TestCase
     /**
      * Test queries can be dispatched.
      */
-    public function testDispatchQuery()
+    public function test_dispatch_query()
     {
-        $builder = $this->dispatcher->dispatch(new Query());
+        $builder = $this->dispatcher->dispatch(new Query);
 
         $this->assertInstanceOf(Builder::class, $builder, 'A query should be dispatched and wrapped in a builder.');
         $this->assertInstanceOf(QueryInterface::class, $builder->toBase(), 'The dispatched query should be an instance of a query.');
@@ -102,42 +95,42 @@ class DispatcherTest extends TestCase
     /**
      * Test invalid runnable throws an exception.
      */
-    public function testInvalidRunnableFails()
+    public function test_invalid_runnable_fails()
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('stdClass must be an instance of ArtisanSdk\Contract\Runnable.');
 
-        $this->dispatcher->dispatch(new \stdClass());
+        $this->dispatcher->dispatch(new stdClass);
     }
 
     /**
      * Test invalid command throws an exception.
      */
-    public function testInvalidCommandFails()
+    public function test_invalid_command_fails()
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArtisanSdk\CQRS\Tests\Fakes\Queries\Query must be an instance of ArtisanSdk\Contract\Command.');
 
-        $this->dispatcher->command(new Query());
+        $this->dispatcher->command(new Query);
     }
 
     /**
      * Test invalid query throws an exception.
      */
-    public function testInvalidQueryFails()
+    public function test_invalid_query_fails()
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArtisanSdk\CQRS\Tests\Fakes\Commands\Command must be an instance of ArtisanSdk\Contract\Query.');
 
-        $this->dispatcher->query(new Command());
+        $this->dispatcher->query(new Command);
     }
 
     /**
      * Test a command can be transactional.
      */
-    public function testTransactionalCommand()
+    public function test_transactional_command()
     {
-        $builder = $this->dispatcher->dispatch(new Transactional());
+        $builder = $this->dispatcher->dispatch(new Transactional);
 
         $this->assertInstanceOf(Builder::class, $builder, 'A transactional should be dispatched and wrapped in a builder.');
         $this->assertInstanceOf(Transaction::class, $builder->toBase(), 'The dispatched transactional should be a transaction.');
@@ -151,9 +144,9 @@ class DispatcherTest extends TestCase
     /**
      * Test a command can be evented.
      */
-    public function testEventableCommand()
+    public function test_eventable_command()
     {
-        $builder = $this->dispatcher->dispatch(new EventableCommand());
+        $builder = $this->dispatcher->dispatch(new EventableCommand);
 
         $this->assertInstanceOf(Builder::class, $builder, 'An eventable should be dispatched and wrapped in a builder.');
         $this->assertInstanceOf(Evented::class, $builder->toBase(), 'The dispatched eventable should be evented.');
@@ -167,9 +160,9 @@ class DispatcherTest extends TestCase
     /**
      * Test a query can be evented.
      */
-    public function testEventableQuery()
+    public function test_eventable_query()
     {
-        $builder = $this->dispatcher->dispatch(new EventableQuery());
+        $builder = $this->dispatcher->dispatch(new EventableQuery);
 
         $this->assertInstanceOf(Builder::class, $builder, 'An eventable should be queried and wrapped in a builder.');
         $this->assertInstanceOf(Evented::class, $builder->toBase(), 'The queried eventable should be evented.');
@@ -183,9 +176,9 @@ class DispatcherTest extends TestCase
     /**
      * Test an event can be fired.
      */
-    public function testEvent()
+    public function test_event()
     {
-        $event = new Event();
+        $event = new Event;
         $events = $this->dispatcher->event($event, ['foo' => 'bar']);
 
         $this->assertSame($event, $events[0]['class'], 'The event should have been dispatched.');
@@ -202,9 +195,9 @@ class DispatcherTest extends TestCase
     /**
      * Test an event can be fired until halted..
      */
-    public function testEventUntil()
+    public function test_event_until()
     {
-        $event = new Event();
+        $event = new Event;
         $events = $this->dispatcher->until($event, ['foo' => 'bar']);
 
         $this->assertSame($event, $events[0]['class'], 'The event should have been dispatched.');
@@ -221,9 +214,9 @@ class DispatcherTest extends TestCase
     /**
      * Test an event can be fired dynamically as a progressive tense (until) event.
      */
-    public function testProgressiveTenseEvent()
+    public function test_progressive_tense_event()
     {
-        $class = new Foo();
+        $class = new Foo;
         $events = $this->dispatcher->creating($class);
 
         $this->assertSame(Event::class, $events[0]['name'], 'The default event should have fired.');
@@ -235,9 +228,9 @@ class DispatcherTest extends TestCase
     /**
      * Test an event can be fired dynamically as a past (fire) event.
      */
-    public function testPastTenseEvent()
+    public function test_past_tense_event()
     {
-        $class = new Foo();
+        $class = new Foo;
         $events = $this->dispatcher->created($class);
 
         $this->assertSame(Event::class, $events[0]['name'], 'The default event should have fired.');
@@ -249,9 +242,9 @@ class DispatcherTest extends TestCase
     /**
      * Test an event can be fired dynamically and resolved to an existing one based on convention.
      */
-    public function testExistingEvent()
+    public function test_existing_event()
     {
-        $class = new Foo();
+        $class = new Foo;
         $events = $this->dispatcher->bar($class);
 
         $this->assertSame(Bar::class, $events[0]['name'], 'The bar event should have fired.');
@@ -263,9 +256,9 @@ class DispatcherTest extends TestCase
     /**
      * Test an event can be fired dynamically and resolved to a fallback one based on convention.
      */
-    public function testFallbackEvent()
+    public function test_fallback_event()
     {
-        $class = new Foo();
+        $class = new Foo;
         $events = $this->dispatcher->baz($class);
 
         $this->assertSame(Baz::class, $events[0]['name'], 'The baz event should have fired.');
@@ -277,9 +270,9 @@ class DispatcherTest extends TestCase
     /**
      * Test an event can be fired dynamically and resolved to a default one based on convention.
      */
-    public function testDefaultEvent()
+    public function test_default_event()
     {
-        $class = new Fizz();
+        $class = new Fizz;
         $events = $this->dispatcher->fizzing($class);
 
         $this->assertSame(Fizzing::class, $events[0]['name'], 'The fizzing event should have fired.');

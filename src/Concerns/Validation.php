@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Concerns;
 
 use InvalidArgumentException;
@@ -9,13 +11,12 @@ trait Validation
     /**
      * Validate the argument value by key name.
      *
-     * @param string $name      of argument
-     * @param mixed  $value     of argument
-     * @param mixed  $validator
-     *
-     * @throws \InvalidArgumentException
-     *
+     * @param  string  $name  of argument
+     * @param  mixed  $value  of argument
+     * @param  mixed  $validator
      * @return mixed
+     *
+     * @throws InvalidArgumentException
      */
     protected function validateValue(string $name, $value, $validator)
     {
@@ -37,7 +38,7 @@ trait Validation
             return $value;
         }
 
-        if ( ! $this->valueIsValidClass($value, $validator)) {
+        if (! $this->valueIsValidClass($value, $validator)) {
             $this->invalidArgument(
                 'The "%s" argument validator must be a class or interface name, a callable, or an instance of a Validator.',
                 $name
@@ -50,8 +51,7 @@ trait Validation
     /**
      * Is validator a rules array?
      *
-     * @param array $validator
-     *
+     * @param  array  $validator
      * @return bool
      */
     protected function validatorIsRulesArray($validator): bool
@@ -62,8 +62,7 @@ trait Validation
     /**
      * Is validator a function reference?
      *
-     * @param mixed $validator
-     *
+     * @param  mixed  $validator
      * @return bool
      */
     protected function validatorIsFunction($validator): bool
@@ -75,8 +74,7 @@ trait Validation
     /**
      * Is validator a callable?
      *
-     * @param mixed $validator
-     *
+     * @param  mixed  $validator
      * @return bool
      */
     protected function validatorIsCallable($validator): bool
@@ -87,8 +85,7 @@ trait Validation
     /**
      * Does validator have a validate method?
      *
-     * @param object $validator
-     *
+     * @param  object  $validator
      * @return bool
      */
     protected function validatorValidates($validator): bool
@@ -100,9 +97,8 @@ trait Validation
     /**
      * Is value a valid class?
      *
-     * @param object $value
-     * @param string $class
-     *
+     * @param  object  $value
+     * @param  string  $class
      * @return bool
      */
     protected function valueIsValidClass($value, $class): bool
@@ -115,9 +111,8 @@ trait Validation
     /**
      * Is value a valid type?
      *
-     * @param object $value
-     * @param string $class
-     *
+     * @param  object  $value
+     * @param  string  $class
      * @return bool
      */
     protected function valueIsValidType($value, $class): bool
@@ -129,15 +124,14 @@ trait Validation
     /**
      * Validate the value with the function.
      *
-     * @param string   $name
-     * @param mixed    $value
-     * @param function $validator
-     *
+     * @param  string  $name
+     * @param  mixed  $value
+     * @param  function  $validator
      * @return mixed
      */
     protected function validateWithFunction(string $name, $value, $validator)
     {
-        if ( ! $validator($value)) {
+        if (! $validator($value)) {
             $this->invalidArgument(
                 'The value for the "%s" argument could not be validated using %s().',
                 $name,
@@ -151,15 +145,14 @@ trait Validation
     /**
      * Validate the value with the callable.
      *
-     * @param string   $name
-     * @param mixed    $value
-     * @param callable $validator
-     *
+     * @param  string  $name
+     * @param  mixed  $value
+     * @param  callable  $validator
      * @return mixed
      */
     protected function validateWithCallable(string $name, $value, $validator)
     {
-        if ( ! $validator($value, $name)) {
+        if (! $validator($value, $name)) {
             $this->invalidArgument(
                 'The value for the "%s" argument could not be validated using the callable.',
                 $name,
@@ -173,10 +166,9 @@ trait Validation
     /**
      * Validate the value with rules.
      *
-     * @param string $name
-     * @param mixed  $value
-     * @param array  $rules
-     *
+     * @param  string  $name
+     * @param  mixed  $value
+     * @param  array  $rules
      * @return mixed
      */
     protected function validateWithRules(string $name, $value, array $rules)
@@ -189,10 +181,9 @@ trait Validation
     /**
      * Make a validator out of the rules.
      *
-     * @param string $name
-     * @param mixed  $value
-     * @param array  $rules
-     *
+     * @param  string  $name
+     * @param  mixed  $value
+     * @param  array  $rules
      * @return \Illuminate\Contracts\Validation\Validator
      */
     public static function makeValidator(string $name, $value, array $rules)
@@ -207,10 +198,10 @@ trait Validation
     /**
      * Throw an invalid argument exception.
      *
-     * @param string   $message
-     * @param string[] $replacements
+     * @param  string  $message
+     * @param  string[]  $replacements
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     protected function invalidArgument(string $message, ...$replacements)
     {

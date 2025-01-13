@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Events;
 
+use AllowDynamicProperties;
 use ArtisanSdk\Contract\Event as Contract;
 use Illuminate\Contracts\Support\Arrayable;
 use ReflectionObject;
@@ -16,12 +19,12 @@ use ReflectionObject;
  *
  * @method string|self event(string $name)
  * @method string|self entity(string $entity)
- * @method array       properties()
- * @method array       toArray()
- * @method string      toJson(int $options)
- * @method mixed       jsonSerialize()
+ * @method array properties()
+ * @method array toArray()
+ * @method string toJson(int $options)
+ * @method mixed jsonSerialize()
  */
-#[\AllowDynamicProperties]
+#[AllowDynamicProperties]
 class Event implements Contract
 {
     /**
@@ -41,7 +44,7 @@ class Event implements Contract
     /**
      * Inject the payload.
      *
-     * @param mixed $payload
+     * @param  mixed  $payload
      */
     public function __construct()
     {
@@ -68,9 +71,9 @@ class Event implements Contract
         $properties = collect();
 
         foreach ((new ReflectionObject($this))->getProperties() as $property) {
-            if ( ! $property->isPrivate()) {
+            if (! $property->isPrivate()) {
                 $value = $property->getValue($this);
-                if ( ! is_null($value)) {
+                if (! is_null($value)) {
                     $properties->put($property->name, $value);
                 }
             }
@@ -92,8 +95,7 @@ class Event implements Contract
     /**
      * Get or set the event class name dynamically.
      *
-     * @param string $event
-     *
+     * @param  string  $event
      * @return string|self
      */
     public function event($event = null)
@@ -110,8 +112,7 @@ class Event implements Contract
     /**
      * Get or set the entity class name dynamically.
      *
-     * @param string $entity
-     *
+     * @param  string  $entity
      * @return string|self
      */
     public function entity($entity = null)
@@ -140,7 +141,7 @@ class Event implements Contract
      *
      * @return array
      */
-    public function jsonSerialize() : mixed
+    public function jsonSerialize(): mixed
     {
         return $this->toArray();
     }
@@ -148,8 +149,7 @@ class Event implements Contract
     /**
      * Convert the event instance to JSON.
      *
-     * @param int $options
-     *
+     * @param  int  $options
      * @return string
      */
     public function toJson($options = 0)

@@ -1,21 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit\Buses;
 
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Runnable;
-use ArtisanSdk\Contract\Transactional as Contract;
+use ArtisanSdk\Contract\{Invokable, Runnable, Transactional as Contract};
 use ArtisanSdk\CQRS\Buses\Transaction;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Events\Invalidated;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Eventable;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Exceptional;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Omni;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Transactional;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\{Eventable, Exceptional, Omni, Transactional};
 use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzed;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
+use ArtisanSdk\CQRS\Tests\Fakes\Events\{Dispatcher as Events, Fizzed, Fizzing};
 use ArtisanSdk\CQRS\Tests\TestCase;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher as EventsInterface;
@@ -26,10 +21,10 @@ class TransactionTest extends TestCase
     /**
      * Test that a transaction can be invoked.
      */
-    public function testIsInvokable()
+    public function test_is_invokable()
     {
-        $command = new Transactional();
-        $transaction = new Transaction($command, new Dispatcher($this->app), new Connection());
+        $command = new Transactional;
+        $transaction = new Transaction($command, new Dispatcher($this->app), new Connection);
 
         $this->assertInstanceOf(Contract::class, $command, 'A command that should be run in a transaction must implement the '.Contract::class.' interface.');
         $this->assertInstanceOf(Invokable::class, $transaction, 'A transaction must implement the '.Invokable::class.' interface.');
@@ -41,9 +36,9 @@ class TransactionTest extends TestCase
     /**
      * Test that a transaction proxies responses.
      */
-    public function testResponseIsProxied()
+    public function test_response_is_proxied()
     {
-        $transaction = new Transaction(new Transactional(), new Dispatcher($this->app), new Connection());
+        $transaction = new Transaction(new Transactional, new Dispatcher($this->app), new Connection);
 
         $this->assertEmpty($transaction->arguments(), 'When the proxied method return something other than the command the proxy should return the response.');
         $this->assertSame($transaction, $transaction->arguments(['foo' => 'bar']), 'When a proxied method is for a fluent method then the proxy should be returned instead.');
@@ -54,13 +49,11 @@ class TransactionTest extends TestCase
     /**
      * Test that a transactional command is silent when the command is silenced.
      */
-    public function testSilentWhenSilenced()
+    public function test_silent_when_silenced()
     {
-        $dispatcher = new Events();
-        $this->app->singleton(EventsInterface::class, function () use ($dispatcher) {
-            return $dispatcher;
-        });
-        $transaction = new Transaction(new Eventable(), new Dispatcher($this->app), new Connection());
+        $dispatcher = new Events;
+        $this->app->singleton(EventsInterface::class, fn () => $dispatcher);
+        $transaction = new Transaction(new Eventable, new Dispatcher($this->app), new Connection);
         $response = $transaction->silently();
         $events = $dispatcher->events;
 
@@ -71,10 +64,10 @@ class TransactionTest extends TestCase
     /**
      * Test that a transaction is committed when the command is not aborted.
      */
-    public function testCommitWhenNotAborted()
+    public function test_commit_when_not_aborted()
     {
-        $database = new Connection();
-        $command = new Transaction(new Transactional(), new Dispatcher($this->app), $database);
+        $database = new Connection;
+        $command = new Transaction(new Transactional, new Dispatcher($this->app), $database);
         $response = $command->run();
 
         $this->assertSame(0, $database->transactionLevel(), 'The transaction should have been committed.');
@@ -86,10 +79,10 @@ class TransactionTest extends TestCase
     /**
      * Test that a transaction rollsback when the command is aborted.
      */
-    public function testRollbackWhenAborted()
+    public function test_rollback_when_aborted()
     {
-        $database = new Connection();
-        $command = new Transaction(new Transactional(), new Dispatcher($this->app), $database);
+        $database = new Connection;
+        $command = new Transaction(new Transactional, new Dispatcher($this->app), $database);
         $response = $command->abort()->run();
 
         $this->assertSame(0, $database->transactionLevel(), 'The transaction should have been rolled back.');
@@ -101,10 +94,10 @@ class TransactionTest extends TestCase
     /**
      * Test that a transaction rollsback when command throws an exception.
      */
-    public function testRollbackOnException()
+    public function test_rollback_on_exception()
     {
-        $database = new Connection();
-        $command = new Transaction(new Exceptional(), new Dispatcher($this->app), $database);
+        $database = new Connection;
+        $command = new Transaction(new Exceptional, new Dispatcher($this->app), $database);
 
         try {
             $command->run();
@@ -123,15 +116,11 @@ class TransactionTest extends TestCase
     /**
      * Test that a transaction is also eventable.
      */
-    public function testTransactionIsEventable()
+    public function test_transaction_is_eventable()
     {
-        $dispatcher = new Events();
-        $this->app->singleton(EventsInterface::class, function () use ($dispatcher) {
-            return $dispatcher;
-        });
-        $this->app->bind(ConnectionInterface::class, function () {
-            return new Connection();
-        });
+        $dispatcher = new Events;
+        $this->app->singleton(EventsInterface::class, fn () => $dispatcher);
+        $this->app->bind(ConnectionInterface::class, fn () => new Connection);
 
         $command = Omni::make();
         $response = $command->run();

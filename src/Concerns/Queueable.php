@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Concerns;
+
+use DateInterval;
+use DateTimeInterface;
 
 trait Queueable
 {
@@ -35,7 +40,7 @@ trait Queueable
     /**
      * The number of seconds before the job should be made available.
      *
-     * @var \DateTimeInterface|\DateInterval|int|null
+     * @var DateTimeInterface|DateInterval|int|null
      */
     public $delay;
 
@@ -49,8 +54,7 @@ trait Queueable
     /**
      * Set the desired connection for the job.
      *
-     * @param string|null $connection
-     *
+     * @param  string|null  $connection
      * @return $this
      */
     public function onConnection($connection)
@@ -63,8 +67,7 @@ trait Queueable
     /**
      * Set the desired queue for the job.
      *
-     * @param string|null $queue
-     *
+     * @param  string|null  $queue
      * @return $this
      */
     public function onQueue($queue)
@@ -77,8 +80,7 @@ trait Queueable
     /**
      * Set the desired connection for the chain.
      *
-     * @param string|null $connection
-     *
+     * @param  string|null  $connection
      * @return $this
      */
     public function allOnConnection($connection)
@@ -92,8 +94,7 @@ trait Queueable
     /**
      * Set the desired queue for the chain.
      *
-     * @param string|null $queue
-     *
+     * @param  string|null  $queue
      * @return $this
      */
     public function allOnQueue($queue)
@@ -107,8 +108,7 @@ trait Queueable
     /**
      * Set the desired delay for the job.
      *
-     * @param \DateTimeInterface|\DateInterval|int|null $delay
-     *
+     * @param  DateTimeInterface|DateInterval|int|null  $delay
      * @return $this
      */
     public function delay($delay)
@@ -121,15 +121,12 @@ trait Queueable
     /**
      * Set the jobs that should run if this job is successful.
      *
-     * @param array $chain
-     *
+     * @param  array  $chain
      * @return $this
      */
     public function chain($chain)
     {
-        $this->chained = collect($chain)->map(function ($job) {
-            return serialize($job);
-        })->all();
+        $this->chained = collect($chain)->map(fn ($job) => serialize($job))->all();
 
         return $this;
     }
@@ -139,7 +136,7 @@ trait Queueable
      */
     public function dispatchNextJobInChain()
     {
-        if ( ! empty($this->chained)) {
+        if (! empty($this->chained)) {
             dispatch(tap(unserialize(array_shift($this->chained)), function ($next) {
                 $next->chained = $this->chained;
 

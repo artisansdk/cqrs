@@ -1,20 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS;
 
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Query;
-use ArtisanSdk\Contract\Queueable;
-use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\{Invokable, Query, Queueable, Runnable};
 use ArtisanSdk\CQRS\Buses\Cached;
-use ArtisanSdk\CQRS\Concerns\Arguments;
-use ArtisanSdk\CQRS\Concerns\Silencer;
+use ArtisanSdk\CQRS\Concerns\{Arguments, Silencer};
 use ArtisanSdk\CQRS\Events\Event;
 use BadMethodCallException;
 use Closure;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
+use Illuminate\Support\{Arr, Str};
 use ReflectionClass;
+use ReflectionException;
 use ReflectionMethod;
 
 /**
@@ -33,7 +31,7 @@ class Builder implements Runnable
     /**
      * The underlying runnable this class proxies to.
      *
-     * @var \ArtisanSdk\Contract\Runnable
+     * @var Runnable
      */
     protected $runnable;
 
@@ -47,7 +45,7 @@ class Builder implements Runnable
     /**
      * Inject the underlying command that this class proxies to.
      *
-     * @param \ArtisanSdk\Contract\Runnable $runnable
+     * @param  Runnable  $runnable
      */
     public function __construct(Runnable $runnable)
     {
@@ -60,9 +58,8 @@ class Builder implements Runnable
      * @example $argumented->foo('bar')->fizz('baz') // $argumented
      *          $argumented->arguments() // ['foo' => 'bar', 'fizz' => 'baz']
      *
-     * @param string $method
-     * @param array  $arguments
-     *
+     * @param  string  $method
+     * @param  array  $arguments
      * @return self
      */
     public function __call($method, $arguments = [])
@@ -132,11 +129,10 @@ class Builder implements Runnable
     /**
      * Paginate the given query into a simple paginator.
      *
-     * @param int      $max     per page
-     * @param array    $columns to fetch
-     * @param string   $name    of page request param
-     * @param int|null $page    number
-     *
+     * @param  int  $max  per page
+     * @param  array  $columns  to fetch
+     * @param  string  $name  of page request param
+     * @param  int|null  $page  number
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
@@ -177,11 +173,10 @@ class Builder implements Runnable
     /**
      * Get or set the cache TTL.
      *
-     * @param int|null $ttl in seconds
-     *
+     * @param  int|null  $ttl  in seconds
      * @return int|self
      */
-    public function ttl(int $ttl = null)
+    public function ttl(?int $ttl = null)
     {
         return $this->proxyToCached(__FUNCTION__, $ttl);
     }
@@ -249,7 +244,7 @@ class Builder implements Runnable
     /**
      * Assign the arguments to the underlying command and return it.
      *
-     * @return \ArtisanSdk\Contract\Runnable
+     * @return Runnable
      */
     public function toBase()
     {
@@ -263,13 +258,12 @@ class Builder implements Runnable
     /**
      * Forward calls to the base command.
      *
-     * @param string $method    to forward
-     * @param string $class     to forward to
-     * @param array  $arguments to forward to method on class
-     *
-     * @throws \BadMethodCallException when runnable is not an instance of $class
-     *
+     * @param  string  $method  to forward
+     * @param  string  $class  to forward to
+     * @param  array  $arguments  to forward to method on class
      * @return mixed
+     *
+     * @throws BadMethodCallException when runnable is not an instance of $class
      */
     protected function forwardToBase($method, $class, ...$arguments)
     {
@@ -283,9 +277,8 @@ class Builder implements Runnable
     /**
      * Forward calls to the query.
      *
-     * @param string $method    to forward
-     * @param array  $arguments to forward to method on query
-     *
+     * @param  string  $method  to forward
+     * @param  array  $arguments  to forward to method on query
      * @return mixed
      */
     protected function forwardToQuery($method, ...$arguments)
@@ -296,12 +289,11 @@ class Builder implements Runnable
     /**
      * Proxy calls to the cached builder.
      *
-     * @param string $method    to foward
-     * @param array  $arguments to forward to method on cached builder
-     *
-     * @throws \BadMethodCallException when runnable is not an instance of $class
-     *
+     * @param  string  $method  to foward
+     * @param  array  $arguments  to forward to method on cached builder
      * @return mixed
+     *
+     * @throws BadMethodCallException when runnable is not an instance of $class
      */
     protected function proxyToCached($method, ...$arguments)
     {
@@ -321,12 +313,11 @@ class Builder implements Runnable
     /**
      * Mix another object into the class.
      *
-     * @param object $mixin
-     * @param bool   $replace
-     *
-     * @throws \ReflectionException
-     *
+     * @param  object  $mixin
+     * @param  bool  $replace
      * @return void
+     *
+     * @throws ReflectionException
      */
     public static function mixin($mixin, bool $replace = true)
     {
@@ -345,23 +336,19 @@ class Builder implements Runnable
     /**
      * Register a custom macro.
      *
-     * @param string               $name
-     * @param object|callable|null $macro
-     *
+     * @param  string  $name
+     * @param  object|callable|null  $macro
      * @return void
      */
     public static function macro($name, $macro = null)
     {
-        static::$macros[$name] = $macro ?: function (...$arguments) {
-            return $this->forwardToBase($name, Invokable::class, ...$arguments);
-        };
+        static::$macros[$name] = $macro ?: fn (...$arguments) => $this->forwardToBase($name, Invokable::class, ...$arguments);
     }
 
     /**
      * Checks if macro is registered.
      *
-     * @param string $name
-     *
+     * @param  string  $name
      * @return bool
      */
     public static function hasMacro($name)

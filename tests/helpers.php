@@ -1,16 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 use ArtisanSdk\CQRS\Jobs\Pending;
 use Illuminate\Container\Container;
 
-if ( ! function_exists('app')) {
+if (! function_exists('app')) {
     /**
      * Get the available container instance.
      *
-     * @param string $abstract
-     * @param array  $parameters
-     *
-     * @return mixed|\Illuminate\Foundation\Application
+     * @param  string  $abstract
+     * @param  array  $parameters
+     * @return mixed|Illuminate\Foundation\Application
      */
     function app($abstract = null, array $parameters = [])
     {
@@ -22,13 +23,12 @@ if ( ! function_exists('app')) {
     }
 }
 
-if ( ! function_exists('dispatch')) {
+if (! function_exists('dispatch')) {
     /**
      * Dispatch a job to its appropriate handler.
      *
-     * @param mixed $job
-     *
-     * @return \ArtisanSdk\CQRS\Jobs\Pending
+     * @param  mixed  $job
+     * @return Pending
      */
     function dispatch($job)
     {

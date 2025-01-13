@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Fakes\Commands;
 
 use ArtisanSdk\Contract\Eventable as Contract;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzed;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
+use ArtisanSdk\CQRS\Tests\Fakes\Events\{Fizzed, Fizzing};
 
 class Custom extends Command implements Contract
 {

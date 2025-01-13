@@ -1,14 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS;
 
-use ArtisanSdk\Contract\Command as Contract;
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\CQRS\Concerns\Arguments;
-use ArtisanSdk\CQRS\Concerns\CQRS;
-use ArtisanSdk\CQRS\Concerns\Handle;
-use ArtisanSdk\CQRS\Concerns\Save;
-use ArtisanSdk\CQRS\Concerns\Silencer;
+use ArtisanSdk\Contract\{Command as Contract, Invokable};
+use ArtisanSdk\CQRS\Concerns\{Arguments, CQRS, Handle, Save, Silencer};
 
 /**
  * Command Base Class.
@@ -35,9 +32,8 @@ abstract class Command implements Contract
     /**
      * Create new instance of command.
      *
-     * @param array $arguments
-     *
-     * @return \ArtisanSdk\CQRS\Builder<TContract>
+     * @param  array  $arguments
+     * @return Builder<TContract>
      */
     public static function make(array $arguments = [])
     {
@@ -49,7 +45,7 @@ abstract class Command implements Contract
     /**
      * Get the base most runnable.
      *
-     * @return \ArtisanSdk\Contract\Invokable
+     * @return Invokable
      */
     public function toBase(): Invokable
     {
@@ -59,8 +55,7 @@ abstract class Command implements Contract
     /**
      * Abort the command with a response.
      *
-     * @param mixed $response
-     *
+     * @param  mixed  $response
      * @return self
      */
     public function abort()

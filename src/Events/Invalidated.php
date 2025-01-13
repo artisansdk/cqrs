@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Events;
 
 /**
@@ -21,7 +23,7 @@ class Invalidated extends Event
     /**
      * Prepare the event payload.
      *
-     * @param array $tags
+     * @param  array  $tags
      */
     public function __construct(array $tags = [])
     {
@@ -31,11 +33,10 @@ class Invalidated extends Event
     /**
      * Get or set the event tags dynamically.
      *
-     * @param string[]|null $tags
-     *
+     * @param  string[]|null  $tags
      * @return string[]|self
      */
-    public function tags(array $tags = null)
+    public function tags(?array $tags = null)
     {
         if (is_null($tags)) {
             return $this->tags;

@@ -1,20 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit\Buses;
 
-use ArtisanSdk\Contract\Eventable as Contract;
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\{Eventable as Contract, Invokable, Runnable};
 use ArtisanSdk\CQRS\Buses\Evented;
 use ArtisanSdk\CQRS\Dispatcher;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Custom;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Eventable;
-use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzed;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
-use ArtisanSdk\CQRS\Tests\TestCase;
 use ArtisanSdk\CQRS\Events\Event;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\{Custom, Eventable};
+use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
+use ArtisanSdk\CQRS\Tests\Fakes\Events\{Dispatcher as Events, Fizzed, Fizzing};
+use ArtisanSdk\CQRS\Tests\TestCase;
 use Illuminate\Contracts\Events\Dispatcher as EventsInterface;
 
 class EventedTest extends TestCase
@@ -22,10 +19,10 @@ class EventedTest extends TestCase
     /**
      * Test that an evented command can be invoked.
      */
-    public function testIsInvokable()
+    public function test_is_invokable()
     {
-        $command = new Eventable();
-        $evented = new Evented($command, new Dispatcher($this->app), new Connection());
+        $command = new Eventable;
+        $evented = new Evented($command, new Dispatcher($this->app), new Connection);
 
         $this->assertInstanceOf(Contract::class, $command, 'A command that should be fire events must implement the '.Contract::class.' interface.');
         $this->assertInstanceOf(Invokable::class, $evented, 'An evented command must implement the '.Invokable::class.' interface.');
@@ -37,9 +34,9 @@ class EventedTest extends TestCase
     /**
      * Test that an evented command proxies responses.
      */
-    public function testResponseIsProxied()
+    public function test_response_is_proxied()
     {
-        $evented = new Evented(new Eventable(), new Dispatcher($this->app), new Connection());
+        $evented = new Evented(new Eventable, new Dispatcher($this->app), new Connection);
 
         $this->assertEmpty($evented->arguments(), 'When the proxied method return something other than the command the proxy should return the response.');
         $this->assertSame($evented, $evented->arguments(['foo' => 'bar']), 'When a proxied method is for a fluent method then the proxy should be returned instead.');
@@ -50,13 +47,11 @@ class EventedTest extends TestCase
     /**
      * Test that an evented command fires the after event when the command is not aborted.
      */
-    public function testAfterEventWhenNotAborted()
+    public function test_after_event_when_not_aborted()
     {
-        $dispatcher = new Events();
-        $this->app->singleton(EventsInterface::class, function () use ($dispatcher) {
-            return $dispatcher;
-        });
-        $evented = new Evented(new Eventable(), new Dispatcher($this->app), new Connection());
+        $dispatcher = new Events;
+        $this->app->singleton(EventsInterface::class, fn () => $dispatcher);
+        $evented = new Evented(new Eventable, new Dispatcher($this->app), new Connection);
         $response = $evented->run();
         $events = $dispatcher->events;
 
@@ -67,13 +62,11 @@ class EventedTest extends TestCase
     /**
      * Test that an evented command is silent when the command is aborted.
      */
-    public function testSilentWhenAborted()
+    public function test_silent_when_aborted()
     {
-        $dispatcher = new Events();
-        $this->app->singleton(EventsInterface::class, function () use ($dispatcher) {
-            return $dispatcher;
-        });
-        $evented = new Evented(new Eventable(), new Dispatcher($this->app), new Connection());
+        $dispatcher = new Events;
+        $this->app->singleton(EventsInterface::class, fn () => $dispatcher);
+        $evented = new Evented(new Eventable, new Dispatcher($this->app), new Connection);
         $response = $evented->abort()->run();
         $events = $dispatcher->events;
 
@@ -84,13 +77,11 @@ class EventedTest extends TestCase
     /**
      * Test that an evented command is silent when the command is silenced.
      */
-    public function testSilentWhenSilenced()
+    public function test_silent_when_silenced()
     {
-        $dispatcher = new Events();
-        $this->app->singleton(EventsInterface::class, function () use ($dispatcher) {
-            return $dispatcher;
-        });
-        $evented = new Evented(new Eventable(), new Dispatcher($this->app), new Connection());
+        $dispatcher = new Events;
+        $this->app->singleton(EventsInterface::class, fn () => $dispatcher);
+        $evented = new Evented(new Eventable, new Dispatcher($this->app), new Connection);
         $response = $evented->silently();
         $events = $dispatcher->events;
 
@@ -101,9 +92,9 @@ class EventedTest extends TestCase
     /**
      * Test that the default "executed" event name is resolved for past tense events.
      */
-    public function testDefaultEventName()
+    public function test_default_event_name()
     {
-        $evented = new Evented(new Eventable(), new Dispatcher($this->app), new Connection());
+        $evented = new Evented(new Eventable, new Dispatcher($this->app), new Connection);
 
         $this->assertSame('executed', $evented->resolvePastTense('foo'), 'The default "executed" event should be resolved for past tense names.');
     }
@@ -111,13 +102,11 @@ class EventedTest extends TestCase
     /**
      * Test that custom events can be fired.
      */
-    public function testCustomEvents()
+    public function test_custom_events()
     {
-        $dispatcher = new Events();
-        $this->app->singleton(EventsInterface::class, function () use ($dispatcher) {
-            return $dispatcher;
-        });
-        $evented = new Evented(new Custom(), new Dispatcher($this->app), new Connection());
+        $dispatcher = new Events;
+        $this->app->singleton(EventsInterface::class, fn () => $dispatcher);
+        $evented = new Evented(new Custom, new Dispatcher($this->app), new Connection);
         $response = $evented->run();
         $events = $dispatcher->events;
 
