@@ -115,7 +115,7 @@ class Cached implements Contract
         $runnable = $this->toBase();
 
         if (is_null($ttl)) {
-            return (int) $runnable->ttl;
+            return (int) ($runnable->ttl ?? 60);
         }
 
         $runnable->ttl = $ttl;
@@ -123,7 +123,7 @@ class Cached implements Contract
         return $this;
     }
 
-    /**
+ /**
      * Get or set the cache key.
      *
      * @param  string|null  $key
@@ -134,7 +134,7 @@ class Cached implements Contract
         $runnable = $this->toBase();
 
         if (is_null($key)) {
-            return (string) $runnable->key;
+            return $this->computeKey($runnable);
         }
 
         $runnable->key = $key;
@@ -153,7 +153,7 @@ class Cached implements Contract
         $runnable = $this->toBase();
 
         if (is_null($subkey)) {
-            return (string) $runnable->subkey;
+            return $this->computeSubkey($runnable);
         }
 
         $runnable->subkey = $subkey;
@@ -336,8 +336,20 @@ class Cached implements Contract
             return $runnable->key();
         }
 
-        return $runnable->key ?? get_class($runnable);
+        return $this->computeKey($runnable);
     }
+
+     /**
+     * Compute the key from the runnable.
+     *
+     * @param Invokable $runnable
+     * @return string
+     */
+    protected function computeKey(Invokable $runnable) : string
+    {
+        return (string) ($runnable->key ?? get_class($runnable));
+    }
+
 
     /**
      * Get the cache subkey.
@@ -352,7 +364,18 @@ class Cached implements Contract
             return $runnable->subkey();
         }
 
-        return $runnable->subkey ?? md5(json_encode($this->arguments()));
+        return $this->computeSubkey($runnable);
+    }
+
+     /**
+     * Compute the subkey from the runnable.
+     *
+     * @param Invokable $runnable
+     * @return string
+     */
+    protected function computeSubkey(Invokable $runnable) : string
+    {
+        return (string) ($runnable->subkey ?? md5(json_encode($this->arguments())));
     }
 
     /**
