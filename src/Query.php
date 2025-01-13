@@ -2,16 +2,24 @@
 
 namespace ArtisanSdk\CQRS;
 
+use BadMethodCallException;
+use Illuminate\Support\Arr;
 use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Query as Contract;
-use ArtisanSdk\CQRS\Concerns\Arguments;
 use ArtisanSdk\CQRS\Concerns\CQRS;
+use Illuminate\Support\Collection;
 use ArtisanSdk\CQRS\Concerns\Silencer;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Arr;
+use ArtisanSdk\CQRS\Concerns\Arguments;
+use ArtisanSdk\Contract\Query as Contract;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Query Base Class.
+ * 
+ * If you use this class to get data from an ORM, like Laravel's Eloquent, you will need to supply a
+ * 'builder' method on your query that returns '\Illuminate\Database\Query\Builder' or the
+ * equivalent for your ORM. All other data can be returned from the 'run' method directly.
  *
  * @example  $statement = Query::make($arguments)->toSql()
  *          $collection = Query::make($arguments)->builder()->where('foo', 'bar')->get()
@@ -47,20 +55,17 @@ abstract class Query implements Contract
     }
 
     /**
-     * Get the query builder.
-     *
-     * @return \Illuminate\Database\Query\Builder
-     */
-    abstract public function builder();
-
-    /**
      * Convert the query builder to a SQL statement.
      *
      * @return string
      */
     public function toSql()
     {
-        return $this->builder()->toSql();
+        if($this->hasBuilder()) {
+            return $this->builder()->toSql();
+        }
+
+        throw new BadMethodCallException("You must implement 'builder' on class: " . __CLASS__);
     }
 
     /**
@@ -70,7 +75,11 @@ abstract class Query implements Contract
      */
     public function run()
     {
-        return $this->builder()->get();
+        if($this->hasBuilder()) {
+            return $this->builder()->get();
+        }
+
+        return;
     }
 
     /**
@@ -95,9 +104,22 @@ abstract class Query implements Contract
      */
     public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
-        return $this->builder()
-            ->paginate($max, $columns, $name, $page)
-            ->appends(Arr::except($this->arguments(), ['page']));
+        if($this->hasBuilder()) {
+            return $this->builder()
+                ->paginate($max, $columns, $name, $page)
+                ->appends(Arr::except($this->arguments(), ['page']));
+        }
+
+        $results = $this->run();
+
+        if(! is_array($results) && ! $results instanceof Arrayable && ! $results instanceof Collection) {
+            $results = collect([$results]);
+        }
+
+        /** @var \Illuminate\Support\Collection $results */
+        return (new LengthAwarePaginator($results, $results->count(), $max, $page))
+            ->appends(Arr::except(func_get_args(), ['page']));
+
     }
 
     /**
@@ -108,5 +130,15 @@ abstract class Query implements Contract
     public function toBase(): Invokable
     {
         return $this;
+    }
+
+    /**
+     * Does $this have a builder?
+     *
+     * @return boolean
+     */
+    protected function hasBuilder(): bool
+    {
+        return method_exists($this, 'builder');
     }
 }

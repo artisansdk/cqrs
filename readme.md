@@ -294,7 +294,7 @@ $user = App\Commands\SaveUser::make()
 Often you'll create a command that performs multiple database writes to different
 tables or multiple records. Alternatively you may have a command that executes
 multiple subcommands and there needs to be a certain level of atomicity relating
-the command's overall execution. If a sucommand or secondary write fails, you'll
+the command's overall execution. If a subcommand or secondary write fails, you'll
 want to roll back the command. This boilerplate logic is annoying to have to
 write into each command so this package provides a trivial way to do this by
 implementing the `ArtisanSdk\Contract\Buses\Transactional` interface on any
@@ -548,7 +548,7 @@ be queued and support queue interactions:
 namespace App\Commands;
 
 use ArtisanSdk\CQRS\Command;
-use ArtisanSdk\CQRS\Triats\Queue;
+use ArtisanSdk\CQRS\Traits\Queue;
 use ArtisanSdk\Contract\CQRS\Queuable;
 
 class SendUserWelcomeEmail extends Command implements Queueable
@@ -601,7 +601,7 @@ like `onConnection`, `onQueue`, `delay`, and `chain`.
 
 ### How to Invalidate Queries from Commands
 
-<span style="color:red">Documenation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
+<span style="color:red">Documentation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
 
 ## Queries
 
@@ -639,13 +639,12 @@ an abstract `builder()` to get the SQL builder. You will need to implement this
 `builder()` method or stub it out if you are using, for example a RESTful API as
 the query backend.
 
-#### Flat File Implemenation
+#### Flat File Implementation
 
 Assuming you had a `resources/lang/en/states.php` file containing a PHP array
 of state abbreviations and names then the following query would be the minimal
-implementation required. Note that the `builder()` method is stubbed out to satisfy
-the parent class's abstract definition. Also note that we do not need to use a
-database as the results can be loaded from a flat file on the system disk.
+implementation required. Note that we do not need to use a database as the 
+results can be loaded from a flat file on the system disk.
 
 ```php
 namespace App\Queries;
@@ -654,11 +653,6 @@ use ArtisanSdk\CQRS\Query;
 
 class GetStates extends Query
 {
-    public function builder()
-    {
-        // required to satisfy abstract parent
-    }
-
     public function run()
     {
         return trans('states');
@@ -672,7 +666,7 @@ Here's how you could call this query to get the states:
 $states = App\Queries\GetStates::make()->get();
 ```
 
-#### HTTP API Implemenation
+#### HTTP API Implementation
 
 Again instead of a database, you could have your data backed by an HTTP API and
 use an HTTP client like Guzzle to fetch the results:
@@ -690,11 +684,6 @@ class GeocodeIP extends Query
     public function __construct(Guzzle $http)
     {
         $this->http = $http;
-    }
-
-    public function builder()
-    {
-        // required to satisfy abstract parent
     }
 
     public function run()
@@ -727,12 +716,11 @@ $result = App\Queries\GeocodeIP::make()
 echo $result->zip_code; // 07014
 ```
 
-#### Database Implemenation
+#### Database Implementation
 
-Back to that `builder()` method though. As mentioned, the package assumes you will
-be using Eloquent ORM or at minimum a database abstraction and so the `builder()`
-method is intended to be used to return a query builder. Therefore an implementation
-of a model backed query would look like this:
+This package assumes you will be using Eloquent ORM or at minimum a database 
+abstraction and so the `builder()` method is intended to be used to return a 
+query builder. Therefore an implementation of a model backed query would look like this:
 
 ```php
 namespace App\Queries;
@@ -781,7 +769,7 @@ class ListUsers extends Query
 ```
 
 We don't need to define the `run()` method because the parent class
-automatically executes the required `$this->builder()->get()` call to return the
+automatically executes `$this->builder()->get()` to return the
 result of the query when we run it. Passing arguments to the query lets you
 customize the results at call time.
 
@@ -806,8 +794,9 @@ The base query implements `get()` but also implements the convenient method of `
 $paginator = App\Queries\ListUsers::make()->paginate(10, ['name', 'email']);
 ```
 
-Furthermore if you need to inspect the query you can call `toSql()` instead of `get()`
-or `builder()` directly to customize the query further for one-off query executions:
+Furthermore if your query uses an ORM and you need to inspect the query, you can call 
+`toSql()` instead of `get()` or `builder()` directly to customize the query further 
+for one-off query executions:
 
 ```php
 // select * from `users` order by `name` desc
@@ -1291,7 +1280,7 @@ invoked, bypassing the handler yet still using the event properties as arguments
 `ArtisanSdk\CQRS\Concerns\Queues` is a wrapper trait for Laravel compatibility of
 making an event or command behave like a queued job. It also lets the command interact
 with the command much like a queued job can. The intended use for this trait is
-to make the class it is used on a queuable job. See Laravel's documentation on
+to make the class it is used on a queueable job. See Laravel's documentation on
 how to customize properties such as `$connection`, `$queue`, and `$delay` or
 to perform chaining of commands as queued jobs.
 
@@ -1420,7 +1409,7 @@ class CalculateInvoice extends Command
 Occasionally you will want to perform some logical work that is more expensive
 when an option is not set and the default value needs to be resolved. For example
 you may want to default to the authenticated user when no user is passed to a
-command or query as an option. In Laravel this incurs a hit agains the database
+command or query as an option. In Laravel this incurs a hit against the database
 which is considered expensive and unnecessary if the default option is not actually
 used. Therefore it's preferred to defer this expensive work. This
 package supports a resolver callable for the default option which ensures that
@@ -1603,7 +1592,7 @@ $user = App\Commands\SaveUser::make()
 
 ### Using Mixins on the Builder
 
-<span style="color:red">Documenation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
+<span style="color:red">Documentation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
 
 # Running the Tests
 
