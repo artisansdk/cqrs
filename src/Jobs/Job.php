@@ -1,19 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Jobs;
 
-use ArtisanSdk\Contract\Event;
-use ArtisanSdk\Contract\Handler;
-use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\{Event, Handler, Runnable};
 use ArtisanSdk\CQRS\Concerns\Queues;
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\Model\Exceptions\InvalidAttributes;
-use Throwable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerInterface;
+use Psr\Log\{LoggerAwareInterface, LoggerInterface};
 use RuntimeException;
+use Throwable;
 
 /**
  * Queueable Command Wrapper.
@@ -25,44 +24,44 @@ use RuntimeException;
  * that command with the event as payload which resolves the properties are arguments
  * to the command when it is invoked as the job handler.
  */
-class Job implements ShouldQueue, LoggerAwareInterface
+class Job implements LoggerAwareInterface, ShouldQueue
 {
     use Queues;
 
     /**
      * The event that contains the queued handler's arguments.
      *
-     * @var \ArtisanSdk\Contract\Event
+     * @var Event
      */
     protected $event;
 
     /**
      * The handler that this queued job is executed through.
      *
-     * @var \ArtisanSdk\Contract\Handler
+     * @var Handler
      */
     protected $handler;
 
     /**
      * The logger interface.
      *
-     * @var \Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
     protected $logger;
 
     /**
      * Construct the job arguments.
      *
-     * @param \ArtisanSdk\Contract\Event                $event
-     * @param string|array|\ArtisanSdk\Contract\Handler $handler
-     * @param \Psr\Log\LoggerInterface                  $logger
+     * @param  Event  $event
+     * @param  string|array|Handler  $handler
+     * @param  LoggerInterface  $logger
      */
-    public function __construct(Event $event, $handler, LoggerInterface $logger = null)
+    public function __construct(Event $event, $handler, ?LoggerInterface $logger = null)
     {
         $this->setEvent($event);
         $this->setHandler($handler);
 
-        if ( ! is_null($logger)) {
+        if (! is_null($logger)) {
             $this->setLogger($logger);
         }
     }
@@ -92,9 +91,8 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Run the command.
      *
-     * @param string                     $handler
-     * @param \ArtisanSdk\Contract\Event $event
-     *
+     * @param  string  $handler
+     * @param  Event  $event
      * @return mixed
      */
     public function run($handler, Event $event)
@@ -108,10 +106,9 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Call the handler method.
      *
-     * @param string                     $class
-     * @param string                     $handler
-     * @param \ArtisanSdk\Contract\Event $event
-     *
+     * @param  string  $class
+     * @param  string  $handler
+     * @param  Event  $event
      * @return mixed
      */
     public function call($class, $handler, Event $event)
@@ -126,7 +123,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Process an exception that caused the job to fail.
      *
-     * @param \Throwable $exception
+     * @param  Throwable  $exception
      */
     public function failed(Throwable $exception)
     {
@@ -142,21 +139,19 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Determine if handler is a runnable.
      *
-     * @param string|array $handler
-     *
+     * @param  string|array  $handler
      * @return bool
      */
     protected function isRunnable($handler)
     {
         return (is_string($handler) && is_subclass_of($handler, Runnable::class))
-            || (is_array($handler) && 'run' === end($handler));
+            || (is_array($handler) && end($handler) === 'run');
     }
 
     /**
      * Resolve the handler for this job.
      *
-     * @param string|array|\ArtisanSdk\Contract\Handler $handler
-     *
+     * @param  string|array|Handler  $handler
      * @return array|object
      */
     protected function resolveHandler($handler)
@@ -179,7 +174,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Copy the queue settings from the handler on to this job.
      *
-     * @param stdClass $handler
+     * @param  stdClass  $handler
      */
     protected function copyQueueSettingsFromHandler($handler)
     {
@@ -199,8 +194,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Get the handler signature name.
      *
-     * @param string|array $handler
-     *
+     * @param  string|array  $handler
      * @return string
      */
     protected function getHandlerSignature($handler)
@@ -215,7 +209,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Log the exception as an error if the logger is present.
      *
-     * @param \Throwable $exception
+     * @param  Throwable  $exception
      */
     protected function log(Throwable $exception)
     {
@@ -227,13 +221,12 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Get or set the logger.
      *
-     * @param \Psr\Log\LoggerInterface $logger
-     *
-     * @return \Psr\Log\LoggerInterface
+     * @param  LoggerInterface  $logger
+     * @return LoggerInterface
      */
-    public function logger(LoggerInterface $logger = null)
+    public function logger(?LoggerInterface $logger = null)
     {
-        if ( ! is_null($logger)) {
+        if (! is_null($logger)) {
             $this->setLogger($logger);
 
             return $this;
@@ -245,7 +238,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Set the event on the object.
      *
-     * @param \ArtisanSdk\Contract\Event $event
+     * @param  Event  $event
      */
     public function setEvent(Event $event)
     {
@@ -255,7 +248,7 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Set the event handler on the object.
      *
-     * @param string|array|\ArtisanSdk\Contract\Handler $handler
+     * @param  string|array|Handler  $handler
      */
     public function setHandler($handler)
     {
@@ -269,9 +262,9 @@ class Job implements ShouldQueue, LoggerAwareInterface
     /**
      * Set a logger instance on the object.
      *
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param  LoggerInterface  $logger
      */
-    public function setLogger(LoggerInterface $logger) : void
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }

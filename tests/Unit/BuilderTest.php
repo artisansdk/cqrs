@@ -1,17 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit;
 
-use ArtisanSdk\Contract\Event;
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\{Event, Invokable, Runnable};
 use ArtisanSdk\CQRS\Builder;
-use ArtisanSdk\CQRS\Concerns\Arguments;
-use ArtisanSdk\CQRS\Concerns\Silencer;
+use ArtisanSdk\CQRS\Concerns\{Arguments, Silencer};
 use ArtisanSdk\CQRS\Jobs\Pending;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable as QueueableFake;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Runnable as RunnableFake;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\{Command, Queueable as QueueableFake, Runnable as RunnableFake};
 use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
@@ -26,9 +23,9 @@ class BuilderTest extends TestCase
     /**
      * Test that the builder implements the required behaviors.
      */
-    public function testImplementsBehavior()
+    public function test_implements_behavior()
     {
-        $runnable = new RunnableFake();
+        $runnable = new RunnableFake;
         $builder = new Builder($runnable);
 
         $this->assertInstanceOf(Invokable::class, $builder, 'The builder must implement the '.Invokable::class.' interface.');
@@ -39,9 +36,9 @@ class BuilderTest extends TestCase
     /**
      * Test that a command can be built with the builder.
      */
-    public function testCommandCanBeBuilt()
+    public function test_command_can_be_built()
     {
-        $command = new Command();
+        $command = new Command;
 
         $this->assertInstanceOf(Runnable::class, $command, 'A command must implement the '.Runnable::class.' interface to be passed to the builder.');
 
@@ -54,9 +51,10 @@ class BuilderTest extends TestCase
     /**
      * Test that a query can be built with the builder.
      */
-    public function testQueryCanBeBuilt()
+    public function test_query_can_be_built()
     {
-        $query = new class extends Query {
+        $query = new class extends Query
+        {
             public function builder()
             {
                 return new QueryBuilder(new Connection);
@@ -78,9 +76,9 @@ class BuilderTest extends TestCase
     /**
      * Test that a command receives arguments.
      */
-    public function testCommandReceivesArguments()
+    public function test_command_receives_arguments()
     {
-        $original = new Command();
+        $original = new Command;
         $builder = new Builder($original);
         $command = $builder->foo('bar')->toBase();
 
@@ -92,9 +90,9 @@ class BuilderTest extends TestCase
     /**
      * Test that a query receives arguments.
      */
-    public function testQueryReceivesArguments()
+    public function test_query_receives_arguments()
     {
-        $original = new Query();
+        $original = new Query;
         $builder = new Builder($original);
         $query = $builder->foo('bar')->toBase();
 
@@ -106,9 +104,9 @@ class BuilderTest extends TestCase
     /**
      * Test that a builder gets first argument or null.
      */
-    public function testFirstArgumentOrNull()
+    public function test_first_argument_or_null()
     {
-        $original = new Command();
+        $original = new Command;
         $builder = new Builder($original);
         $command = $builder->foo()->bar('first', 'second')->toBase();
 
@@ -123,9 +121,9 @@ class BuilderTest extends TestCase
     /**
      * Test that a runnable is silenced when the builder is silenced.
      */
-    public function testRunnableIsSilenced()
+    public function test_runnable_is_silenced()
     {
-        $runnable = new RunnableFake();
+        $runnable = new RunnableFake;
         $builder = new Builder($runnable);
         $runnable = $builder->silence()->toBase();
 
@@ -136,9 +134,9 @@ class BuilderTest extends TestCase
     /**
      * Test that a method call fails to be forwarded to a runnable that is not an instance of the class.
      */
-    public function testBadMethodCallFailsToForward()
+    public function test_bad_method_call_fails_to_forward()
     {
-        $runnable = new RunnableFake();
+        $runnable = new RunnableFake;
         $builder = new Builder($runnable);
 
         $this->expectException(BadMethodCallException::class);
@@ -150,27 +148,25 @@ class BuilderTest extends TestCase
     /**
      * Test that queue method call forwards to the queueable with a generic event containing all the arguments as properties.
      */
-    public function testQueueForwardsToQueueable()
+    public function test_queue_forwards_to_queueable()
     {
-        $queueable = new QueueableFake();
+        $queueable = new QueueableFake;
         $builder = new Builder($queueable);
         $job = $builder->foo('bar')->queue();
 
         $this->assertInstanceOf(Event::class, $queueable->event, 'The queuable command should receive an event.');
-        $this->assertArraySubset($builder->arguments(), Arr::except($queueable->event->properties(), 'event'), 'The event should contain the builder arguments as properties.');
+        $this->assertArraySubset($builder->arguments(), Arr::except($queueable->event->properties(), 'event'), false, 'The event should contain the builder arguments as properties.');
         $this->assertInstanceOf(Pending::class, $job, 'The queue method should return a pending job.');
     }
 
     /**
      * Test that a macro call can be registered and forwarded to the base runnable.
      */
-    public function testMacroCanBeForwarded()
+    public function test_macro_can_be_forwarded()
     {
-        Builder::macro('test', function (...$arguments) {
-            return $this->forwardToBase('test', Runnable::class, ...$arguments);
-        });
+        Builder::macro('test', fn (...$arguments) => $this->forwardToBase('test', Runnable::class, ...$arguments));
 
-        $runnable = new RunnableFake();
+        $runnable = new RunnableFake;
         $builder = new Builder($runnable);
         $builder->foo('bar');
 

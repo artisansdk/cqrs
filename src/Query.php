@@ -1,22 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS;
 
+use ArtisanSdk\Contract\{Invokable, Query as Contract};
+use ArtisanSdk\CQRS\Concerns\{Arguments, CQRS, Silencer};
 use BadMethodCallException;
-use Illuminate\Support\Arr;
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\CQRS\Concerns\CQRS;
-use Illuminate\Support\Collection;
-use ArtisanSdk\CQRS\Concerns\Silencer;
-use Illuminate\Database\Query\Builder;
-use ArtisanSdk\CQRS\Concerns\Arguments;
-use ArtisanSdk\Contract\Query as Contract;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\{Arr, Collection};
 
 /**
  * Query Base Class.
- * 
+ *
  * If you use this class to get data from an ORM, like Laravel's Eloquent, you will need to supply a
  * 'builder' method on your query that returns '\Illuminate\Database\Query\Builder' or the
  * equivalent for your ORM. All other data can be returned from the 'run' method directly.
@@ -35,8 +33,7 @@ abstract class Query implements Contract
     /**
      * Create new instance of query.
      *
-     * @param array $arguments
-     *
+     * @param  array  $arguments
      * @return \ArtisanSdk\CQRS\Builder<TContract>
      */
     public static function make(array $arguments = [])
@@ -61,11 +58,11 @@ abstract class Query implements Contract
      */
     public function toSql()
     {
-        if($this->hasBuilder()) {
+        if ($this->hasBuilder()) {
             return $this->builder()->toSql();
         }
 
-        throw new BadMethodCallException("You must implement 'builder' on class: " . __CLASS__);
+        throw new BadMethodCallException("You must implement 'builder' on class: ".__CLASS__);
     }
 
     /**
@@ -75,11 +72,10 @@ abstract class Query implements Contract
      */
     public function run()
     {
-        if($this->hasBuilder()) {
+        if ($this->hasBuilder()) {
             return $this->builder()->get();
         }
 
-        return;
     }
 
     /**
@@ -95,16 +91,15 @@ abstract class Query implements Contract
     /**
      * Paginate the given query into a simple paginator.
      *
-     * @param int      $max     per page
-     * @param array    $columns to fetch
-     * @param string   $name    of page request param
-     * @param int|null $page    number
-     *
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @param  int  $max  per page
+     * @param  array  $columns  to fetch
+     * @param  string  $name  of page request param
+     * @param  int|null  $page  number
+     * @return LengthAwarePaginator
      */
     public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
-        if($this->hasBuilder()) {
+        if ($this->hasBuilder()) {
             return $this->builder()
                 ->paginate($max, $columns, $name, $page)
                 ->appends(Arr::except($this->arguments(), ['page']));
@@ -112,11 +107,11 @@ abstract class Query implements Contract
 
         $results = $this->run();
 
-        if(! is_array($results) && ! $results instanceof Arrayable && ! $results instanceof Collection) {
+        if (! is_array($results) && ! $results instanceof Arrayable && ! $results instanceof Collection) {
             $results = collect([$results]);
         }
 
-        /** @var \Illuminate\Support\Collection $results */
+        /** @var Collection $results */
         return (new LengthAwarePaginator($results, $results->count(), $max, $page))
             ->appends(Arr::except(func_get_args(), ['page']));
 
@@ -125,7 +120,7 @@ abstract class Query implements Contract
     /**
      * Get the base most runnable.
      *
-     * @return \ArtisanSdk\Contract\Invokable
+     * @return Invokable
      */
     public function toBase(): Invokable
     {
@@ -135,7 +130,7 @@ abstract class Query implements Contract
     /**
      * Does $this have a builder?
      *
-     * @return boolean
+     * @return bool
      */
     protected function hasBuilder(): bool
     {

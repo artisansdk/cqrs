@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit\Events;
 
 use ArtisanSdk\CQRS\Events\Invalidated;
@@ -10,9 +12,9 @@ class InvalidatedTest extends TestCase
     /**
      * Test that an event can be constructed and the tags getter/setter.
      */
-    public function testTags()
+    public function test_tags()
     {
-        $event = new Invalidated();
+        $event = new Invalidated;
         $this->assertEmpty($event->tags(), 'The tags should be empty since Invalidated was constructed without tags.');
 
         $event = new Invalidated(['foo', 'bar']);

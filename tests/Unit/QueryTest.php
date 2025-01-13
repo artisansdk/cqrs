@@ -1,10 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit;
 
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Query as QueryInterface;
-use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\{Invokable, Query as QueryInterface, Runnable};
 use ArtisanSdk\CQRS\Builder;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Base as Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
@@ -14,7 +14,7 @@ class QueryTest extends TestCase
     /**
      * Test that a query can be made.
      */
-    public function testFactoryMake()
+    public function test_factory_make()
     {
         $query = Query::make();
 
@@ -31,9 +31,9 @@ class QueryTest extends TestCase
     /**
      * Test that a query can be invoked.
      */
-    public function testIsInvokable()
+    public function test_is_invokable()
     {
-        $query = new Query();
+        $query = new Query;
 
         $this->assertInstanceOf(Invokable::class, $query, 'A query must implement the '.Invokable::class.' interface.');
         $this->assertInstanceOf(Runnable::class, $query, 'A query must implement the '.Runnable::class.' interface.');

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit\Concerns;
 
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\SaveModel;
@@ -12,9 +14,9 @@ class SaveTest extends TestCase
     /**
      * Test that save fails.
      */
-    public function testFailure()
+    public function test_failure()
     {
-        $model = new Model();
+        $model = new Model;
         $model->result = false;
         try {
             SaveModel::make()->model($model)->run();
@@ -30,9 +32,9 @@ class SaveTest extends TestCase
     /**
      * Test that save succeeds.
      */
-    public function testSuccess()
+    public function test_success()
     {
-        $model = new Model();
+        $model = new Model;
         $model->result = true;
         $result = SaveModel::make()->model($model)->run();
 

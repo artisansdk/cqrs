@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Fakes;
 
 use Illuminate\Contracts\Bus\QueueingDispatcher;
@@ -12,9 +14,7 @@ class Dispatcher implements QueueingDispatcher
      * @param  string  $batchId
      * @return \Illuminate\Bus\Batch|null
      */
-    public function findBatch(string $batchId)
-    {
-    }
+    public function findBatch(string $batchId) {}
 
     /**
      * Create a new batch of queueable jobs.
@@ -22,20 +22,15 @@ class Dispatcher implements QueueingDispatcher
      * @param  \Illuminate\Support\Collection|array  $jobs
      * @return \Illuminate\Bus\PendingBatch
      */
-    public function batch($jobs)
-    {
-    }
+    public function batch($jobs) {}
 
     /**
      * Dispatch a command to its appropriate handler.
      *
-     * @param mixed $command
-     *
+     * @param  mixed  $command
      * @return mixed
      */
-    public function dispatch($command)
-    {
-    }
+    public function dispatch($command) {}
 
     /**
      * Dispatch a command to its appropriate handler in the current process.
@@ -46,16 +41,13 @@ class Dispatcher implements QueueingDispatcher
      * @param  mixed  $handler
      * @return mixed
      */
-    public function dispatchSync($command, $handler = null)
-    {
-    }
+    public function dispatchSync($command, $handler = null) {}
 
     /**
      * Dispatch a command to its appropriate handler in the current process.
      *
-     * @param mixed $command
-     * @param mixed $handler
-     *
+     * @param  mixed  $command
+     * @param  mixed  $handler
      * @return mixed
      */
     public function dispatchNow($command, $handler = null)
@@ -66,55 +58,40 @@ class Dispatcher implements QueueingDispatcher
     /**
      * Dispatch a command to its appropriate handler behind a queue.
      *
-     * @param mixed $command
-     *
+     * @param  mixed  $command
      * @return mixed
      */
-    public function dispatchToQueue($command)
-    {
-    }
+    public function dispatchToQueue($command) {}
 
     /**
      * Determine if the given command has a handler.
      *
-     * @param mixed $command
-     *
+     * @param  mixed  $command
      * @return bool
      */
-    public function hasCommandHandler($command)
-    {
-    }
+    public function hasCommandHandler($command) {}
 
     /**
      * Retrieve the handler for a command.
      *
-     * @param mixed $command
-     *
+     * @param  mixed  $command
      * @return bool|mixed
      */
-    public function getCommandHandler($command)
-    {
-    }
+    public function getCommandHandler($command) {}
 
     /**
      * Set the pipes commands should be piped through before dispatching.
      *
-     * @param array $pipes
-     *
+     * @param  array  $pipes
      * @return $this
      */
-    public function pipeThrough(array $pipes)
-    {
-    }
+    public function pipeThrough(array $pipes) {}
 
     /**
      * Map a command to a handler.
      *
-     * @param array $map
-     *
+     * @param  array  $map
      * @return $this
      */
-    public function map(array $map)
-    {
-    }
+    public function map(array $map) {}
 }

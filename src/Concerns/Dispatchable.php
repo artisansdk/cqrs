@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Concerns;
 
-use ArtisanSdk\CQRS\Jobs\Chain;
-use ArtisanSdk\CQRS\Jobs\Pending;
+use ArtisanSdk\CQRS\Jobs\{Chain, Pending};
 use Illuminate\Contracts\Bus\Dispatcher;
 
 trait Dispatchable
@@ -11,7 +12,7 @@ trait Dispatchable
     /**
      * Dispatch the job with the given arguments.
      *
-     * @return \ArtisanSdk\CQRS\Jobs\Pending
+     * @return Pending
      */
     public static function dispatch()
     {
@@ -31,9 +32,8 @@ trait Dispatchable
     /**
      * Set the jobs that should run if this job is successful.
      *
-     * @param array $chain
-     *
-     * @return \ArtisanSdk\CQRS\Jobs\Chain
+     * @param  array  $chain
+     * @return Chain
      */
     public static function withChain($chain)
     {

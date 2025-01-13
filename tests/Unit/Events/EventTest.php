@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit\Events;
 
 use ArtisanSdk\CQRS\Events\Event;
@@ -10,9 +12,9 @@ class EventTest extends TestCase
     /**
      * Test that the event can have the event name set.
      */
-    public function testEvent()
+    public function test_event()
     {
-        $event = new Event();
+        $event = new Event;
         $returned = $event->event('foo');
         $this->assertSame($returned, $event, 'The event should have been returned by the event() setter.');
         $this->assertSame('foo', $returned->event(), 'The entity should be "foo" because that value was set by the event() setter.');
@@ -21,9 +23,9 @@ class EventTest extends TestCase
     /**
      * Test that the event can have an entity set.
      */
-    public function testEntity()
+    public function test_entity()
     {
-        $event = new Event();
+        $event = new Event;
         $returned = $event->entity('foo');
         $this->assertSame($returned, $event, 'The event should have been returned by the entity() setter.');
         $this->assertSame('foo', $returned->entity(), 'The entity should be "foo" because that value was set by the entity() setter.');
@@ -32,7 +34,7 @@ class EventTest extends TestCase
     /**
      * Test that the public and protected properties of the event can be gotten.
      */
-    public function testProperties()
+    public function test_properties()
     {
         $event = new Event(['foo' => 'bar']);
         $this->assertSame(
@@ -45,7 +47,7 @@ class EventTest extends TestCase
     /**
      * Test that the event can be converted to JSON.
      */
-    public function testToJson()
+    public function test_to_json()
     {
         $event = new Event(['foo' => 'bar']);
         $event->entity('foo');

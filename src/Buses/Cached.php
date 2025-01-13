@@ -1,11 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Buses;
 
-use ArtisanSdk\Contract\Cacheable;
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Query as Contract;
-use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\{Cacheable, Invokable, Query as Contract, Runnable};
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Events\Invalidated;
 use Closure;
@@ -22,21 +21,21 @@ class Cached implements Contract
     /**
      * The underlying runnable this class proxies to.
      *
-     * @var \ArtisanSdk\Contract\Runnable
+     * @var Runnable
      */
     protected $runnable;
 
     /**
      * The runnable dispatcher.
      *
-     * @var \ArtisanSdk\CQRS\Dispatcher
+     * @var Dispatcher
      */
     protected $dispatcher;
 
     /**
      * The cache repository driver.
      *
-     * @var \Illuminate\Contracts\Cache\Repository
+     * @var Cache
      */
     protected $driver;
 
@@ -50,11 +49,11 @@ class Cached implements Contract
     /**
      * Inject the underlying  that this class proxies to.
      *
-     * @param \ArtisanSdk\Contract\Runnable          $runnable
-     * @param \ArtisanSdk\CQRS\Dispatcher            $dispatcher
-     * @param \Illuminate\Contracts\Cache\Repository $driver
+     * @param  Runnable  $runnable
+     * @param  Dispatcher  $dispatcher
+     * @param  Cache  $driver
      */
-    public function __construct(Runnable $runnable, Dispatcher $dispatcher = null, Cache $driver = null)
+    public function __construct(Runnable $runnable, ?Dispatcher $dispatcher = null, ?Cache $driver = null)
     {
         $this->runnable = $runnable;
         $this->dispatcher = $dispatcher ?? Dispatcher::make();
@@ -64,7 +63,7 @@ class Cached implements Contract
     /**
      * Get the base most runnable.
      *
-     * @return \ArtisanSdk\Contract\Invokable
+     * @return Invokable
      */
     public function toBase(): Invokable
     {
@@ -108,11 +107,10 @@ class Cached implements Contract
     /**
      * Get or set the cache TTL.
      *
-     * @param int|null $ttl in seconds
-     *
+     * @param  int|null  $ttl  in seconds
      * @return int|self
      */
-    public function ttl(int $ttl = null)
+    public function ttl(?int $ttl = null)
     {
         $runnable = $this->toBase();
 
@@ -128,11 +126,10 @@ class Cached implements Contract
     /**
      * Get or set the cache key.
      *
-     * @param string|null $key
-     *
+     * @param  string|null  $key
      * @return string|self
      */
-    public function key(string $key = null)
+    public function key(?string $key = null)
     {
         $runnable = $this->toBase();
 
@@ -148,11 +145,10 @@ class Cached implements Contract
     /**
      * Get or set the cache sub key.
      *
-     * @param string|null $subkey
-     *
+     * @param  string|null  $subkey
      * @return string|self
      */
-    public function subkey(string $subkey = null)
+    public function subkey(?string $subkey = null)
     {
         $runnable = $this->toBase();
 
@@ -192,9 +188,7 @@ class Cached implements Contract
      */
     public function run()
     {
-        return $this->wrap(function () {
-            return $this->runnable->run();
-        });
+        return $this->wrap(fn () => $this->runnable->run());
     }
 
     /**
@@ -210,18 +204,15 @@ class Cached implements Contract
     /**
      * Paginate the given query into a simple paginator.
      *
-     * @param int      $max     per page
-     * @param array    $columns to fetch
-     * @param string   $name    of page request param
-     * @param int|null $page    number
-     *
+     * @param  int  $max  per page
+     * @param  array  $columns  to fetch
+     * @param  string  $name  of page request param
+     * @param  int|null  $page  number
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
-        return $this->wrap(function () use ($max, $columns, $name, $page) {
-            return $this->runnable->paginate($max, $columns, $name, $page);
-        });
+        return $this->wrap(fn () => $this->runnable->paginate($max, $columns, $name, $page));
     }
 
     /**
@@ -255,8 +246,7 @@ class Cached implements Contract
     /**
      * Wrap the closure in the caching layer before returning the response.
      *
-     * @param \Closure $callable
-     *
+     * @param  Closure  $callable
      * @return mixed
      */
     protected function wrap(Closure $callable)
@@ -295,7 +285,7 @@ class Cached implements Contract
     /**
      * Get the cache driver.
      *
-     * @return \Illuminate\Contracts\Cache\Repository
+     * @return Cache
      */
     protected function driver()
     {
@@ -368,9 +358,8 @@ class Cached implements Contract
     /**
      * Proxy calls to the underlying runnable instance.
      *
-     * @param string $method
-     * @param array  $arguments
-     *
+     * @param  string  $method
+     * @param  array  $arguments
      * @return mixed
      */
     public function __call($method, $arguments = [])

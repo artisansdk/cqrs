@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Fakes\Queries;
 
 use Illuminate\Support\Str;
@@ -13,7 +15,7 @@ class Query extends Base
 
     public function __call($method, $arguments = [])
     {
-        if ('test' === substr($method, 0, 4)) {
+        if (substr($method, 0, 4) === 'test') {
             $method = Str::camel(str_replace('test', '', $method));
 
             return $this->$method(...$arguments);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Concerns;
 
 use ArtisanSdk\CQRS\Dispatcher;
@@ -9,7 +11,7 @@ trait CQRS
     /**
      * Make an instance of the dispatcher.
      *
-     * @return \ArtisanSdk\CQRS\Dispatcher
+     * @return Dispatcher
      */
     protected function dispatcher()
     {
@@ -19,9 +21,8 @@ trait CQRS
     /**
      * Dispatch a runnable command or query.
      *
-     * @param string|\ArtisanSdk\Contract\Runnable $class
-     * @param array                                $arguments
-     *
+     * @param  string|\ArtisanSdk\Contract\Runnable  $class
+     * @param  array  $arguments
      * @return mixed
      */
     public function call($class, array $arguments = [])
@@ -35,8 +36,7 @@ trait CQRS
     /**
      * Instantiate a command so it can be ran.
      *
-     * @param string|\ArtisanSdk\Contract\Runnable $class
-     *
+     * @param  string|\ArtisanSdk\Contract\Runnable  $class
      * @return \ArtisanSdk\Contract\Runnable
      */
     protected function command($class)
@@ -47,8 +47,7 @@ trait CQRS
     /**
      * Instantiate a query so it can be ran.
      *
-     * @param string|\ArtisanSdk\Contract\Query $class
-     *
+     * @param  string|\ArtisanSdk\Contract\Query  $class
      * @return \ArtisanSdk\Contract\Query
      */
     protected function query($class)
@@ -59,8 +58,8 @@ trait CQRS
     /**
      * Fire an event.
      *
-     * @param string|\ArtisanSdk\Contract\Event $event
-     * @param array                             $payload
+     * @param  string|\ArtisanSdk\Contract\Event  $event
+     * @param  array  $payload
      */
     protected function event($event, $payload = [])
     {
@@ -70,8 +69,8 @@ trait CQRS
     /**
      * Fire an event until it is halted.
      *
-     * @param string|\ArtisanSdk\Contract\Event $event
-     * @param array                             $payload
+     * @param  string|\ArtisanSdk\Contract\Event  $event
+     * @param  array  $payload
      */
     protected function until($event, $payload = [])
     {

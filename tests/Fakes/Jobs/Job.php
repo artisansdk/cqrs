@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Fakes\Jobs;
 
 use Illuminate\Contracts\Queue\Job as Contract;
+use Throwable;
 
 class Job implements Contract
 {
@@ -19,6 +22,7 @@ class Job implements Contract
      * @var bool
      */
     protected $released = false;
+
     /**
      * Indicates if the job has failed.
      *
@@ -31,40 +35,31 @@ class Job implements Contract
      *
      * @return string|null
      */
-    public function uuid()
-    {
-    }
+    public function uuid() {}
 
     /**
      * Get the job identifier.
      *
      * @return string
      */
-    public function getJobId()
-    {
-    }
+    public function getJobId() {}
 
     /**
      * Get the decoded body of the job.
      *
      * @return array
      */
-    public function payload()
-    {
-    }
+    public function payload() {}
 
     /**
      * Fire the job.
      */
-    public function fire()
-    {
-    }
+    public function fire() {}
 
     /**
      * Release the job back into the queue.
      *
-     * @param int $delay
-     *
+     * @param  int  $delay
      * @return mixed
      */
     public function release($delay = 0)
@@ -131,7 +126,7 @@ class Job implements Contract
     /**
      * Delete the job, call the "failed" method, and raise the failed job event.
      *
-     * @param \Throwable|null $e
+     * @param  Throwable|null  $e
      */
     public function fail($e = null)
     {
@@ -143,72 +138,56 @@ class Job implements Contract
      *
      * @return int
      */
-    public function attempts()
-    {
-    }
+    public function attempts() {}
 
     /**
      * Process an exception that caused the job to fail.
      *
-     * @param \Throwable $e
+     * @param  Throwable  $e
      */
-    public function failed($e)
-    {
-    }
+    public function failed($e) {}
 
     /**
      * Get the number of times to attempt a job.
      *
      * @return int|null
      */
-    public function maxTries()
-    {
-    }
+    public function maxTries() {}
 
     /**
      * Get the maximum number of exceptions allowed, regardless of attempts.
      *
      * @return int|null
      */
-    public function maxExceptions()
-    {
-    }
+    public function maxExceptions() {}
 
     /**
      * Get the number of seconds the job can run.
      *
      * @return int|null
      */
-    public function timeout()
-    {
-    }
+    public function timeout() {}
 
     /**
      * Get the timestamp indicating when the job should timeout.
      *
      * @return int|null
      */
-    public function retryUntil()
-    {
-    }
+    public function retryUntil() {}
 
     /**
      * Get the timestamp indicating when the job should timeout.
      *
      * @return int|null
      */
-    public function timeoutAt()
-    {
-    }
+    public function timeoutAt() {}
 
     /**
      * Get the name of the queued job class.
      *
      * @return string
      */
-    public function getName()
-    {
-    }
+    public function getName() {}
 
     /**
      * Get the resolved name of the queued job class.
@@ -217,34 +196,26 @@ class Job implements Contract
      *
      * @return string
      */
-    public function resolveName()
-    {
-    }
+    public function resolveName() {}
 
     /**
      * Get the name of the connection the job belongs to.
      *
      * @return string
      */
-    public function getConnectionName()
-    {
-    }
+    public function getConnectionName() {}
 
     /**
      * Get the name of the queue the job belongs to.
      *
      * @return string
      */
-    public function getQueue()
-    {
-    }
+    public function getQueue() {}
 
     /**
      * Get the raw body string for the job.
      *
      * @return string
      */
-    public function getRawBody()
-    {
-    }
+    public function getRawBody() {}
 }

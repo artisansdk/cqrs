@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Concerns;
 
-use ArtisanSdk\Contract\Event;
-use ArtisanSdk\Contract\Queueable;
+use ArtisanSdk\Contract\{Event, Queueable};
 use ArtisanSdk\CQRS\Jobs\Job;
 
 trait Handle
@@ -11,8 +12,7 @@ trait Handle
     /**
      * Handle the event by running this an event handler.
      *
-     * @param \ArtisanSdk\Contract\Event $event
-     *
+     * @param  Event  $event
      * @return mixed
      */
     public function handle(Event $event)
@@ -29,8 +29,7 @@ trait Handle
     /**
      * Handle the event by queuing this as a job.
      *
-     * @param \ArtisanSdk\Contract\Event $event
-     *
+     * @param  Event  $event
      * @return \Illuminate\Foundation\Bus\PendingDispatch
      */
     public function queue(Event $event)

@@ -1,23 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit\Jobs;
 
-use ArtisanSdk\CQRS\Jobs\Chain;
-use ArtisanSdk\CQRS\Jobs\Job;
-use ArtisanSdk\CQRS\Jobs\Pending;
+use ArtisanSdk\CQRS\Events\Event;
+use ArtisanSdk\CQRS\Jobs\{Chain, Job, Pending};
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\TestCase;
-use ArtisanSdk\CQRS\Events\Event;
 
 class ChainTest extends TestCase
 {
     /**
      * Test that a job chain can be constructed.
      */
-    public function testConstructor()
+    public function test_constructor()
     {
         $jobs = [
-            new Job(new Event(), new Command()),
+            new Job(new Event, new Command),
         ];
         $chain = new Chain(Job::class, $jobs);
 
@@ -28,13 +28,13 @@ class ChainTest extends TestCase
     /**
      * Test that a job chain can be dispatched.
      */
-    public function testDispatch()
+    public function test_dispatch()
     {
         $chain = new Chain(Job::class, [
-            new Job(new Event(), new Command()),
+            new Job(new Event, new Command),
         ]);
 
-        $job = $chain->dispatch(new Event(), new Command());
+        $job = $chain->dispatch(new Event, new Command);
 
         $this->assertInstanceOf(Pending::class, $job, 'The chain should be dispatched as a pending job chain.');
     }
@@ -42,11 +42,11 @@ class ChainTest extends TestCase
     /**
      * Test that the next job in the chain can be dispatched.
      */
-    public function testDispatchNextJobInChain()
+    public function test_dispatch_next_job_in_chain()
     {
-        $chain = (new Job(new Event(), new Command()))
+        $chain = (new Job(new Event, new Command))
             ->chain([
-                new Job(new Event(), new Command()),
+                new Job(new Event, new Command),
             ]);
         $chain->dispatchNextJobInChain();
 

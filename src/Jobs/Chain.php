@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Jobs;
 
 class Chain
@@ -21,8 +23,8 @@ class Chain
     /**
      * Create a new chain instance.
      *
-     * @param string $class
-     * @param array  $chain
+     * @param  string  $class
+     * @param  array  $chain
      */
     public function __construct($class, $chain)
     {
@@ -33,7 +35,7 @@ class Chain
     /**
      * Dispatch the job with the given arguments.
      *
-     * @return \ArtisanSdk\CQRS\Jobs\Pending
+     * @return Pending
      */
     public function dispatch()
     {

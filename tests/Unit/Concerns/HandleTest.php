@@ -1,21 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit\Concerns;
 
-use ArtisanSdk\CQRS\Jobs\Pending;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable;
-use ArtisanSdk\CQRS\Tests\TestCase;
 use ArtisanSdk\CQRS\Events\Event;
+use ArtisanSdk\CQRS\Jobs\Pending;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\{Command, Queueable};
+use ArtisanSdk\CQRS\Tests\TestCase;
 
 class HandleTest extends TestCase
 {
     /**
      * Test that an event can be handled by a command.
      */
-    public function testHandle()
+    public function test_handle()
     {
-        $command = new Command();
+        $command = new Command;
         $event = new Event(['foo' => 'bar']);
         $response = $command->handle($event);
 
@@ -26,9 +27,9 @@ class HandleTest extends TestCase
     /**
      * Test that a queueable command handles an event via a queued job.
      */
-    public function testQueuable()
+    public function test_queuable()
     {
-        $command = new Queueable();
+        $command = new Queueable;
         $event = new Event(['foo' => 'bar']);
         $response = $command->handle($event);
 

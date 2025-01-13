@@ -1,12 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Fakes\Commands;
 
-use ArtisanSdk\Contract\Eventable;
-use ArtisanSdk\Contract\Taggable;
-use ArtisanSdk\Contract\Transactional;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzed;
-use ArtisanSdk\CQRS\Tests\Fakes\Events\Fizzing;
+use ArtisanSdk\Contract\{Cacheable, Eventable, Taggable, Transactional};
+use ArtisanSdk\CQRS\Tests\Fakes\Events\{Fizzed, Fizzing};
 use ArtisanSdk\CQRS\Tests\Fakes\Models\Model;
 
 /**
@@ -14,6 +13,7 @@ use ArtisanSdk\CQRS\Tests\Fakes\Models\Model;
  */
 class Omni extends Command implements Eventable, Taggable, Transactional
 {
+
     public function beforeEvent(array $arguments = [])
     {
         return new Fizzing($arguments);
@@ -21,7 +21,7 @@ class Omni extends Command implements Eventable, Taggable, Transactional
 
     public function run()
     {
-        return new Model();
+        return new Model;
     }
 
     public function afterEvent($entity)

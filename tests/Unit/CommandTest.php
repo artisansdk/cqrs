@@ -1,14 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Unit;
 
-use ArtisanSdk\Contract\Command as CommandInterface;
-use ArtisanSdk\Contract\Invokable;
-use ArtisanSdk\Contract\Runnable;
+use ArtisanSdk\Contract\{Command as CommandInterface, Invokable, Runnable};
 use ArtisanSdk\CQRS\Builder;
 use ArtisanSdk\CQRS\Jobs\Chain;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable;
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\{Command, Queueable};
 use ArtisanSdk\CQRS\Tests\TestCase;
 
 class CommandTest extends TestCase
@@ -16,7 +15,7 @@ class CommandTest extends TestCase
     /**
      * Test that a command can be made.
      */
-    public function testFactoryMake()
+    public function test_factory_make()
     {
         $command = Command::make();
 
@@ -33,9 +32,9 @@ class CommandTest extends TestCase
     /**
      * Test that a command can be invoked.
      */
-    public function testIsInvokable()
+    public function test_is_invokable()
     {
-        $command = new Command();
+        $command = new Command;
 
         $this->assertInstanceOf(Invokable::class, $command, 'A command must implement the '.Invokable::class.' interface.');
         $this->assertInstanceOf(Runnable::class, $command, 'A command must implement the '.Runnable::class.' interface.');
@@ -45,9 +44,9 @@ class CommandTest extends TestCase
     /**
      * Test that a command can be silenced.
      */
-    public function testCanBeSilenced()
+    public function test_can_be_silenced()
     {
-        $command = new Command();
+        $command = new Command;
 
         $this->assertFalse($command->silenced(), 'The command should not be silent by default.');
         $this->assertSame($command, $command->silence(), 'When a command is silenced it should return self.');
@@ -57,9 +56,9 @@ class CommandTest extends TestCase
     /**
      * Test that a command can be ran silently.
      */
-    public function testSilently()
+    public function test_silently()
     {
-        $command = new Command();
+        $command = new Command;
 
         $this->assertFalse($command->silenced(), 'The command should not be silent by default.');
         $this->assertSame($command->silently(), $command->run(), 'When a command is ran silently it should still run.');
@@ -69,9 +68,9 @@ class CommandTest extends TestCase
     /**
      * Test that a command can be aborted.
      */
-    public function testAbortable()
+    public function test_abortable()
     {
-        $command = new Command();
+        $command = new Command;
 
         $this->assertFalse($command->aborted(), 'The command should not be aborted by default.');
         $this->assertSame($command, $command->abort(), 'When a command is aborted it should return itself.');
@@ -81,10 +80,10 @@ class CommandTest extends TestCase
     /**
      * Test that a queuable command can be dispatched now.
      */
-    public function testDispatchNow()
+    public function test_dispatch_now()
     {
-        $command = new Queueable();
-        list($job, $handler) = $command->dispatchNow();
+        $command = new Queueable;
+        [$job, $handler] = $command->dispatchNow();
 
         $this->assertEquals($command, $job, 'The command queued should be the job dispatched now.');
         $this->assertSame('run', $handler, 'The handler for the queued command should be the run method.');
@@ -93,9 +92,9 @@ class CommandTest extends TestCase
     /**
      * Test that a queuable command can be dispatched now.
      */
-    public function testWithChain()
+    public function test_with_chain()
     {
-        $command = new Queueable();
+        $command = new Queueable;
         $chain = $command->withChain([
             Queueable::class,
         ]);
