@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ArtisanSdk\CQRS\Tests\Fakes\Commands;
 
-use ArtisanSdk\Contract\{Cacheable, Eventable, Taggable, Transactional};
+use ArtisanSdk\Contract\{Eventable, Taggable, Transactional};
 use ArtisanSdk\CQRS\Tests\Fakes\Events\{Fizzed, Fizzing};
 use ArtisanSdk\CQRS\Tests\Fakes\Models\Model;
 
@@ -13,7 +13,6 @@ use ArtisanSdk\CQRS\Tests\Fakes\Models\Model;
  */
 class Omni extends Command implements Eventable, Taggable, Transactional
 {
-
     public function beforeEvent(array $arguments = [])
     {
         return new Fizzing($arguments);
