@@ -265,4 +265,18 @@ class Connection implements ConnectionInterface
     public function getDatabaseName()
     {
     }
+
+    /**
+     * Run a select statement and return the first column of the first row.
+     *
+     * @param  string  $query
+     * @param  array  $bindings
+     * @param  bool  $useReadPdo
+     * @return mixed
+     *
+     * @throws \Illuminate\Database\MultipleColumnsSelectedException
+     */
+    public function scalar($query, $bindings = [], $useReadPdo = true)
+    {
+    }
 }

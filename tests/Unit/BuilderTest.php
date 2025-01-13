@@ -12,6 +12,7 @@ use ArtisanSdk\CQRS\Jobs\Pending;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Command;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Queueable as QueueableFake;
 use ArtisanSdk\CQRS\Tests\Fakes\Commands\Runnable as RunnableFake;
+use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
 use BadMethodCallException;
@@ -55,7 +56,12 @@ class BuilderTest extends TestCase
      */
     public function testQueryCanBeBuilt()
     {
-        $query = new Query();
+        $query = new class extends Query {
+            public function builder()
+            {
+                return new QueryBuilder(new Connection);
+            }
+        };
 
         $this->assertInstanceOf(Runnable::class, $query, 'A query must implement the '.Runnable::class.' interface to be passed to the builder.');
 
