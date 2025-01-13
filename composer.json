@@ -33,6 +33,7 @@
         "illuminate/cache": "^5.0 | ^6.0 | ^7.0 | ^8.0 | ^9.0 | ^10.0 | ^11.0",
         "illuminate/pagination": "^5.0 | ^6.0 | ^7.0 | ^8.0 | ^9.0 | ^10.0 | ^11.0",
         "illuminate/validation": "^5.0 | ^6.0 | ^7.0 | ^8.0 | ^9.0 | ^10.0 | ^11.0",
+        "laravel/pint": "^1.19",
         "pestphp/pest": "^2.36"
     },
     "suggest": {
@@ -56,13 +57,13 @@
     },
     "scripts": {
         "fix": [
-            "@php vendor/bin/bench fix src/ tests/ --cache=.php_cs.cache --ansi"
+           "@php vendor/bin/pint "
         ],
         "test": [
             "@php vendor/bin/pest"
         ],
         "watch": [
-            "watchman-make -p 'src/**/*.php' 'tests/**/*.php' --run=\"clear && printf '\\e[3J' && vendor/bin/bench test --no-coverage --ansi\""
+            "watchman-make -p 'src/**/*.php' 'tests/**/*.php' --run=\"clear && printf '\\e[3J' && ./vendor/bin/pest\""
         ],
         "report": [
             "[ -d reports ] || mkdir reports",
