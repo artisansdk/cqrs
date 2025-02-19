@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ArtisanSdk\CQRS\Concerns;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Arr;
+use Illuminate\Support\{Arr, Str};
 
 trait Arguments
 {
@@ -49,6 +49,17 @@ trait Arguments
         $value = $this->option($name);
 
         if (is_null($value)) {
+
+            $snaked = Str::snake($name);
+            if( $snaked !== $name && ! is_null($this->option($snaked))) {
+                $this->invalidArgument(
+                    'Argument "%s" may be mispelled in %s. Try using "%s" instead.',
+                    $name,
+                    get_class($this),
+                    $snaked,
+                );
+            }
+
             $this->invalidArgument(
                 'Argument "%s" is required by %s.',
                 $name,
