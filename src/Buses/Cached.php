@@ -123,7 +123,26 @@ class Cached implements Contract
         return $this;
     }
 
- /**
+    /**
+     * Get or set the cache forever status.
+     *
+     * @param  bool|null $forever
+     * @return int|self
+     */
+    public function forever(?bool $forever = null)
+    {
+        $runnable = $this->toBase();
+
+        if (is_null($forever)) {
+            return (bool) ($runnable->forever ?? false);
+        }
+
+        $runnable->forever = $forever;
+
+        return $this;
+    }
+
+    /**
      * Get or set the cache key.
      *
      * @param  string|null  $key
@@ -188,7 +207,7 @@ class Cached implements Contract
      */
     public function run()
     {
-        return $this->wrap(fn () => $this->runnable->run());
+        return $this->wrap(fn() => $this->runnable->run());
     }
 
     /**
@@ -212,7 +231,7 @@ class Cached implements Contract
      */
     public function paginate($max = 25, $columns = ['*'], $name = 'page', $page = null)
     {
-        return $this->wrap(fn () => $this->runnable->paginate($max, $columns, $name, $page));
+        return $this->wrap(fn() => $this->runnable->paginate($max, $columns, $name, $page));
     }
 
     /**
@@ -254,7 +273,7 @@ class Cached implements Contract
         $driver = $this->driver();
         $key = $this->key();
         $subkey = $this->subkey();
-        $index = $key.':'.$subkey;
+        $index = $key . ':' . $subkey;
 
         $runnable = $this->toBase();
 
@@ -267,7 +286,11 @@ class Cached implements Contract
         $response = $callable();
 
         if ($this->cached() && $runnable instanceof Cacheable) {
-            $driver->put($index, $response, $this->ttl());
+
+            $this->forever()
+                ? $driver->forever($index, $response)
+                : $driver->put($index, $response, $this->ttl());
+
             $keys = (array) $driver->get($key);
             $keys[] = $index;
             $driver->put($key, array_unique($keys), $this->ttl());
@@ -339,13 +362,13 @@ class Cached implements Contract
         return $this->computeKey($runnable);
     }
 
-     /**
+    /**
      * Compute the key from the runnable.
      *
      * @param Invokable $runnable
      * @return string
      */
-    protected function computeKey(Invokable $runnable) : string
+    protected function computeKey(Invokable $runnable): string
     {
         return (string) ($runnable->key ?? get_class($runnable));
     }
@@ -367,13 +390,13 @@ class Cached implements Contract
         return $this->computeSubkey($runnable);
     }
 
-     /**
+    /**
      * Compute the subkey from the runnable.
      *
      * @param Invokable $runnable
      * @return string
      */
-    protected function computeSubkey(Invokable $runnable) : string
+    protected function computeSubkey(Invokable $runnable): string
     {
         return (string) ($runnable->subkey ?? md5(json_encode($this->arguments())));
     }
