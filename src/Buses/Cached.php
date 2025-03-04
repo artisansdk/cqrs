@@ -293,7 +293,7 @@ class Cached implements Contract
 
             $keys = (array) $driver->get($key);
             $keys[] = $index;
-            $driver->put($key, array_unique($keys), $this->ttl());
+            $driver->put($key, array_unique($keys), $this->forever() ? null : $this->ttl());
 
             return $response;
         }
@@ -331,7 +331,7 @@ class Cached implements Contract
         $tags = (array) ($runnable->tags ?? []);
 
         if (empty($tags)) {
-            $comment = (new ReflectionClass($runnable))->getDocComment();
+            $comment = (string) (new ReflectionClass($runnable))->getDocComment();
             preg_match('/@tags\s*([a-zA-Z0-9, ()_].*)/', $comment, $matches);
             if (empty($matches)) {
                 throw new RuntimeException(sprintf('The %s class must provide @tags annotation or a $tags property.', is_string($runnable) ? $runnable : get_class($runnable)));

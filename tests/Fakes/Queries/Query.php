@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ArtisanSdk\CQRS\Tests\Fakes\Queries;
 
+use BadMethodCallException;
 use Illuminate\Support\Str;
 
 class Query extends Base
@@ -21,6 +22,6 @@ class Query extends Base
             return $this->$method(...$arguments);
         }
 
-        throw new BadMethodCallException('Method '.$method.'() does not exist on '.__CLASS__.'.');
+        throw new BadMethodCallException('Method ' . $method . '() does not exist on ' . __CLASS__ . '.');
     }
 }
