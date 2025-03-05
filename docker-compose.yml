@@ -1,0 +1,8 @@
+services:
+  cqrs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: "bash"
+    volumes:
+      - .:/var/www

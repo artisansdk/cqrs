@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-namespace ArtisanSdk\CQRS\Tests\Fakes\Queries;
+namespace ArtisanSdk\CQRS\Tests\Fakes\Commands;
 
+use ArtisanSdk\CQRS\Command as Base;
 use BadMethodCallException;
 use Illuminate\Support\Str;
 
-class Query extends Base
+class Argumented extends Base
 {
     public function run()
     {
+        $this->argument('isCorrect', ['string']);
+
         return true;
     }
 

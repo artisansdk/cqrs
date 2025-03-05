@@ -51,7 +51,7 @@ trait Arguments
         if (is_null($value)) {
 
             $snaked = Str::snake($name);
-            if( $snaked !== $name && ! is_null($this->option($snaked))) {
+            if ($snaked !== $name && ! is_null($this->option($snaked))) {
                 $this->invalidArgument(
                     'Argument "%s" may be mispelled in %s. Try using "%s" instead.',
                     $name,

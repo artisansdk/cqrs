@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace ArtisanSdk\CQRS\Tests;
 
+use ArtisanSdk\CQRS\Tests\Fakes\Cache\Store;
 use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
 use ArtisanSdk\CQRS\Tests\Fakes\Dispatcher as Bus;
 use ArtisanSdk\CQRS\Tests\Fakes\Events\Dispatcher as Events;
+use ArtisanSdk\CQRS\Tests\Fakes\Paginator\LengthAwarePaginator;
 use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Bus\Dispatcher as BusInterface;
+use Illuminate\Contracts\Cache\Store as StoreInterface;
 use Illuminate\Contracts\Container\Container as ContainerInterface;
 use Illuminate\Contracts\Events\Dispatcher as EventsInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator as LengthAwarePaginatorContract;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Translation\{FileLoader, Translator};
@@ -44,6 +48,8 @@ class TestCase extends PHPUnit
         $this->app->singleton(BusInterface::class, Bus::class);
         $this->app->bind(ConnectionInterface::class, Connection::class);
         $this->app->bind(EventsInterface::class, Events::class);
+        $this->app->bind(StoreInterface::class, Store::class);
+        $this->app->bind(LengthAwarePaginatorContract::class, LengthAwarePaginator::class);
 
         // Provide the validator with the translator for error messages
         $this->app->singleton('files', fn () => new Filesystem);

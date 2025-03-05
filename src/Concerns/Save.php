@@ -6,7 +6,7 @@ namespace ArtisanSdk\CQRS\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 
- // @todo switch to \ArtisanSdk\Models\Model
+// @todo switch to \ArtisanSdk\Models\Model
 
 trait Save
 {

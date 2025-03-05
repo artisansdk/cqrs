@@ -8,7 +8,7 @@ use ArtisanSdk\Contract\{Event, Invokable, Runnable};
 use ArtisanSdk\CQRS\Builder;
 use ArtisanSdk\CQRS\Concerns\{Arguments, Silencer};
 use ArtisanSdk\CQRS\Jobs\Pending;
-use ArtisanSdk\CQRS\Tests\Fakes\Commands\{Command, Queueable as QueueableFake, Runnable as RunnableFake};
+use ArtisanSdk\CQRS\Tests\Fakes\Commands\{Argumented, Command, Queueable as QueueableFake, Runnable as RunnableFake};
 use ArtisanSdk\CQRS\Tests\Fakes\Database\Connection;
 use ArtisanSdk\CQRS\Tests\Fakes\Queries\Query;
 use ArtisanSdk\CQRS\Tests\TestCase;
@@ -174,5 +174,50 @@ class BuilderTest extends TestCase
         $this->assertSame(['foo' => 'bar'], $builder->test(), 'The builder should forward builder arguments to base runnable.');
         $this->assertSame(['foo', 'bar'], $builder->test('foo', 'bar'), 'The builder should forward macro arguments to base runnable method.');
         $this->assertTrue($builder->run(), 'The builder should still be able to call the run method.');
+    }
+
+    /**
+     * Test that a mixin can be registered and forwarded to the base runnable.
+     */
+    public function test_mixin_can_be_forwarded()
+    {
+        $mixin = new class
+        {
+            public function foo(string $param, ?string $param2 = null)
+            {
+                return [$param, $param2];
+            }
+        };
+        $runnable = new RunnableFake;
+        $builder = new Builder($runnable);
+
+        $builder->foo('bar');
+
+        $this->assertEquals(['foo' => 'bar'], $builder->arguments());
+
+        Builder::mixin($mixin);
+
+        $this->assertEquals(['bar', null], $builder->foo('bar'));
+        $this->assertEquals(['bar', 'baz'], $builder->foo('bar', 'baz'));
+    }
+
+    public function test_non_closure_macro()
+    {
+        Builder::macro('foo', 'is_string');
+
+        $runnable = new RunnableFake;
+        $builder = new Builder($runnable);
+        $this->assertTrue($builder->foo('bar'));
+        $this->assertFalse($builder->foo(1));
+    }
+
+    public function test_argument_mismatch_throws_exception()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Argument \"isCorrect\" may be mispelled in ArtisanSdk\CQRS\Tests\Fakes\Commands\Argumented. Try using \"is_correct\" instead.");
+
+        Argumented::make()
+            ->isCorrect('no')
+            ->run();
     }
 }

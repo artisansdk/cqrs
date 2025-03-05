@@ -7,9 +7,9 @@ namespace ArtisanSdk\CQRS;
 use ArtisanSdk\Contract\{Invokable, Query as Contract};
 use ArtisanSdk\CQRS\Concerns\{Arguments, CQRS, Silencer};
 use BadMethodCallException;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\{Arr, Collection};
 
 /**
@@ -75,7 +75,6 @@ abstract class Query implements Contract
         if ($this->hasBuilder()) {
             return $this->builder()->get();
         }
-
     }
 
     /**
@@ -107,14 +106,13 @@ abstract class Query implements Contract
 
         $results = $this->run();
 
-        if (! is_array($results) && ! $results instanceof Arrayable && ! $results instanceof Collection) {
+        if (is_array($results) && ! $results instanceof Arrayable && ! $results instanceof Collection) {
             $results = collect([$results]);
         }
 
         /** @var Collection $results */
         return (new LengthAwarePaginator($results, $results->count(), $max, $page))
-            ->appends(Arr::except(func_get_args(), ['page']));
-
+            ->appends(Arr::except(array_merge($this->arguments(), func_get_args()), ['page']));
     }
 
     /**

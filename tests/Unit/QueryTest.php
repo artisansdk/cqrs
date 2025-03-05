@@ -6,8 +6,10 @@ namespace ArtisanSdk\CQRS\Tests\Unit;
 
 use ArtisanSdk\Contract\{Invokable, Query as QueryInterface, Runnable};
 use ArtisanSdk\CQRS\Builder;
-use ArtisanSdk\CQRS\Tests\Fakes\Queries\Base as Query;
+use ArtisanSdk\CQRS\Tests\Fakes\Queries\{Base as Query, Builderless as BuilderlessQuery};
 use ArtisanSdk\CQRS\Tests\TestCase;
+use BadMethodCallException;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class QueryTest extends TestCase
 {
@@ -38,5 +40,17 @@ class QueryTest extends TestCase
         $this->assertInstanceOf(Invokable::class, $query, 'A query must implement the '.Invokable::class.' interface.');
         $this->assertInstanceOf(Runnable::class, $query, 'A query must implement the '.Runnable::class.' interface.');
         $this->assertEquals($query->run(), $query(), 'When a query is invoked it should run.');
+    }
+
+    public function test_can_paginate_builderless_query()
+    {
+        $query = new BuilderlessQuery;
+
+        $pagination = $query->paginate();
+
+        $this->assertInstanceOf(LengthAwarePaginator::class, $pagination);
+
+        $this->expectException(BadMethodCallException::class);
+        $query->toSql();
     }
 }

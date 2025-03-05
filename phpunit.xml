@@ -3,7 +3,7 @@
   <coverage>
     <report>
       <html outputDirectory="./reports/coverage"/>
-      <text outputFile="./reports/coverage.txt"/>
+      <text outputFile="./reports/coverage.html"/>
     </report>
   </coverage>
   <testsuites>

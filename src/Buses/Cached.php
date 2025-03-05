@@ -10,6 +10,7 @@ use ArtisanSdk\CQRS\Events\Invalidated;
 use Closure;
 use Illuminate\Cache\CacheManager as Manager;
 use Illuminate\Contracts\Cache\Repository as Cache;
+use Illuminate\Support\Arr;
 use ReflectionClass;
 use RuntimeException;
 
@@ -123,7 +124,26 @@ class Cached implements Contract
         return $this;
     }
 
- /**
+    /**
+     * Get or set the cache forever status.
+     *
+     * @param  bool|null  $forever
+     * @return int|self
+     */
+    public function forever(?bool $forever = null)
+    {
+        $runnable = $this->toBase();
+
+        if (is_null($forever)) {
+            return (bool) ($runnable->forever ?? false);
+        }
+
+        $runnable->forever = $forever;
+
+        return $this;
+    }
+
+    /**
      * Get or set the cache key.
      *
      * @param  string|null  $key
@@ -235,10 +255,15 @@ class Cached implements Contract
     public function bust(): self
     {
         $driver = $this->driver();
+        $key = $this->key();
+        $subkey = $this->subKey();
+        $index = $key.':'.$subkey;
 
-        foreach ((array) $driver->pull($this->key()) as $index) {
-            $driver->forget($index);
-        }
+        $keys = (array) $driver->get($key);
+        Arr::forget($keys, $index);
+        $driver->put($key, array_unique($keys), $this->forever() ? null : $this->ttl());
+
+        $driver->forget($index);
 
         return $this;
     }
@@ -267,10 +292,14 @@ class Cached implements Contract
         $response = $callable();
 
         if ($this->cached() && $runnable instanceof Cacheable) {
-            $driver->put($index, $response, $this->ttl());
+
+            $this->forever()
+                ? $driver->forever($index, $response)
+                : $driver->put($index, $response, $this->ttl());
+
             $keys = (array) $driver->get($key);
             $keys[] = $index;
-            $driver->put($key, array_unique($keys), $this->ttl());
+            $driver->put($key, array_unique($keys), $this->forever() ? null : $this->ttl());
 
             return $response;
         }
@@ -308,7 +337,7 @@ class Cached implements Contract
         $tags = (array) ($runnable->tags ?? []);
 
         if (empty($tags)) {
-            $comment = (new ReflectionClass($runnable))->getDocComment();
+            $comment = (string) (new ReflectionClass($runnable))->getDocComment();
             preg_match('/@tags\s*([a-zA-Z0-9, ()_].*)/', $comment, $matches);
             if (empty($matches)) {
                 throw new RuntimeException(sprintf('The %s class must provide @tags annotation or a $tags property.', is_string($runnable) ? $runnable : get_class($runnable)));
@@ -324,56 +353,23 @@ class Cached implements Contract
     }
 
     /**
-     * Get the cache key.
-     *
-     * @return string
-     */
-    protected function getKey(): string
-    {
-        $runnable = $this->toBase();
-
-        if (method_exists($runnable, 'key')) {
-            return $runnable->key();
-        }
-
-        return $this->computeKey($runnable);
-    }
-
-     /**
      * Compute the key from the runnable.
      *
-     * @param Invokable $runnable
+     * @param  Invokable  $runnable
      * @return string
      */
-    protected function computeKey(Invokable $runnable) : string
+    protected function computeKey(Invokable $runnable): string
     {
         return (string) ($runnable->key ?? get_class($runnable));
     }
 
-
     /**
-     * Get the cache subkey.
-     *
-     * @return string
-     */
-    protected function getSubkey(): string
-    {
-        $runnable = $this->toBase();
-
-        if (method_exists($runnable, 'subkey')) {
-            return $runnable->subkey();
-        }
-
-        return $this->computeSubkey($runnable);
-    }
-
-     /**
      * Compute the subkey from the runnable.
      *
-     * @param Invokable $runnable
+     * @param  Invokable  $runnable
      * @return string
      */
-    protected function computeSubkey(Invokable $runnable) : string
+    protected function computeSubkey(Invokable $runnable): string
     {
         return (string) ($runnable->subkey ?? md5(json_encode($this->arguments())));
     }

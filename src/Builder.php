@@ -327,8 +327,7 @@ class Builder implements Runnable
 
         foreach ($methods as $method) {
             if ($replace || ! static::hasMacro($method->name)) {
-                $method->setAccessible(true);
-                static::macro($method->name, $method->invoke($mixin));
+                static::macro($method->name, fn (...$args) => $method->invoke($mixin, ...$args));
             }
         }
     }

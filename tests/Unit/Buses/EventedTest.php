@@ -99,6 +99,13 @@ class EventedTest extends TestCase
         $this->assertSame('executed', $evented->resolvePastTense('foo'), 'The default "executed" event should be resolved for past tense names.');
     }
 
+    public function test_resolving_progressive_tense_returns_expected_string()
+    {
+        $evented = new Evented(new Eventable, new Dispatcher($this->app), new Connection);
+
+        $this->assertEquals('fooBarBazzeding', $evented->resolveProgressiveTense('foo bar bazzed'));
+    }
+
     /**
      * Test that custom events can be fired.
      */
