@@ -353,22 +353,6 @@ class Cached implements Contract
     }
 
     /**
-     * Get the cache key.
-     *
-     * @return string
-     */
-    protected function getKey(): string
-    {
-        $runnable = $this->toBase();
-
-        if (method_exists($runnable, 'key')) {
-            return $runnable->key();
-        }
-
-        return $this->computeKey($runnable);
-    }
-
-    /**
      * Compute the key from the runnable.
      *
      * @param  Invokable  $runnable
@@ -377,22 +361,6 @@ class Cached implements Contract
     protected function computeKey(Invokable $runnable): string
     {
         return (string) ($runnable->key ?? get_class($runnable));
-    }
-
-    /**
-     * Get the cache subkey.
-     *
-     * @return string
-     */
-    protected function getSubkey(): string
-    {
-        $runnable = $this->toBase();
-
-        if (method_exists($runnable, 'subkey')) {
-            return $runnable->subkey();
-        }
-
-        return $this->computeSubkey($runnable);
     }
 
     /**

@@ -6,12 +6,14 @@ namespace ArtisanSdk\CQRS\Tests\Unit\Buses;
 
 use ArtisanSdk\Contract\{Cacheable as Contract, Invokable, Runnable};
 use ArtisanSdk\CQRS\Buses\Cached;
-use ArtisanSdk\CQRS\Tests\Fakes\Queries\Cacheable;
+use ArtisanSdk\CQRS\Tests\Fakes\Queries\{Cacheable, Query as BaseQuery};
 use ArtisanSdk\CQRS\Tests\TestCase;
 use ArtisanSdk\CQRS\{Builder, Dispatcher};
+use BadMethodCallException;
 use Illuminate\Cache\Repository;
 use Mockery;
 use Mockery\MockInterface;
+use RuntimeException;
 
 class CachedTest extends TestCase
 {
@@ -20,16 +22,16 @@ class CachedTest extends TestCase
         $query = new Cacheable;
         $cached = new Cached($query, new Dispatcher($this->app));
 
-        $this->assertInstanceOf(Contract::class, $query, 'A cacheable query must implement the ' . Contract::class . ' interface.');
-        $this->assertInstanceOf(Invokable::class, $cached, 'An evented query must implement the ' . Invokable::class . ' interface.');
-        $this->assertInstanceOf(Runnable::class, $cached, 'An evented query must implement the ' . Runnable::class . ' interface.');
+        $this->assertInstanceOf(Contract::class, $query, 'A cacheable query must implement the '.Contract::class.' interface.');
+        $this->assertInstanceOf(Invokable::class, $cached, 'An evented query must implement the '.Invokable::class.' interface.');
+        $this->assertInstanceOf(Runnable::class, $cached, 'An evented query must implement the '.Runnable::class.' interface.');
         $this->assertSame($cached->run(), $cached(), 'When an evented query is invoked it should run the query.');
         $this->assertSame($cached->run(), $query(), 'When an evented query is invoked it should run the query.');
     }
 
     public function test_cache_has_ttl()
     {
-        $driver = Mockery::mock($this->app->make(Repository::class), function (MockInterface $mock) {});
+        $driver = $this->app->make(Repository::class);
 
         $query = new Cacheable;
 
@@ -53,6 +55,19 @@ class CachedTest extends TestCase
         $cached->refresh();
         $cached->invalidate();
         $cached->bust();
+    }
+
+    public function test_invalidate_throws_exception_when_no_tags_are_present()
+    {
+        $driver = $this->app->make(Repository::class);
+
+        $query = new Cacheable;
+
+        $this->expectException(RuntimeException::class);
+
+        $cached = new Cached($query, new Dispatcher($this->app), $driver);
+
+        $cached->invalidate();
     }
 
     public function test_cache_calls_put_when_misses()
@@ -124,5 +139,22 @@ class CachedTest extends TestCase
         $cached->forever(true);
 
         $this->assertEquals('foo', $cached->get());
+    }
+
+    public function test_attempt_to_call_bust_throws_exception_when_not_instance_of_cachable()
+    {
+        $cached = (new Dispatcher($this->app))->query(new BaseQuery);
+
+        $this->expectException(BadMethodCallException::class);
+
+        $cached->bust();
+    }
+
+    public function test_dispatcher_makes_cachable_query_when_base_implements_cacheable()
+    {
+        $query = new Cacheable;
+        $cached = (new Dispatcher($this->app))->query($query);
+
+        $this->assertSame($cached->run(), $query->get());
     }
 }
