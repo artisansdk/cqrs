@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace ArtisanSdk\CQRS;
 
-use BadMethodCallException;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Support\{Arr, Collection};
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Pagination\LengthAwarePaginator;
 use ArtisanSdk\Contract\{Invokable, Query as Contract};
 use ArtisanSdk\CQRS\Concerns\{Arguments, CQRS, Silencer};
+use BadMethodCallException;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\{Arr, Collection};
 
 /**
  * Query Base Class.
@@ -62,7 +62,7 @@ abstract class Query implements Contract
             return $this->builder()->toSql();
         }
 
-        throw new BadMethodCallException("You must implement 'builder' on class: " . __CLASS__);
+        throw new BadMethodCallException("You must implement 'builder' on class: ".__CLASS__);
     }
 
     /**

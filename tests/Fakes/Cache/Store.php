@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanSdk\CQRS\Tests\Fakes\Cache;
 
 use Illuminate\Contracts\Cache\Store as CacheStore;

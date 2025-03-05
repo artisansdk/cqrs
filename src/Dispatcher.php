@@ -70,11 +70,11 @@ class Dispatcher
         $class = head($attributes);
         $classname = (string) (is_object($class) ? get_class($class) : $class);
         $position = $this->findOccurence($classname, ['Commands\\', 'Queries\\', 'Models\\']);
-        $default = substr_replace( $classname, 'Events\\'.Str::studly($method), $position);
+        $default = substr_replace($classname, 'Events\\'.Str::studly($method), $position);
         $name = $this->resolveEventClass($classname, $default);
         $fire = Str::endsWith($method, 'ing') ? 'until' : 'event';
 
-        $event = (new $name(...$attributes))->event($this->normalizeEventClass( $classname, $default));
+        $event = (new $name(...$attributes))->event($this->normalizeEventClass($classname, $default));
 
         return $this->{$fire}($event);
     }

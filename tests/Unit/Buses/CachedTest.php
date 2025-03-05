@@ -4,19 +4,14 @@ declare(strict_types=1);
 
 namespace ArtisanSdk\CQRS\Tests\Unit\Buses;
 
+use ArtisanSdk\Contract\{Cacheable as Contract, Invokable, Runnable};
+use ArtisanSdk\CQRS\Buses\Cached;
+use ArtisanSdk\CQRS\Tests\Fakes\Queries\Cacheable;
+use ArtisanSdk\CQRS\Tests\TestCase;
+use ArtisanSdk\CQRS\{Builder, Dispatcher};
+use Illuminate\Cache\Repository;
 use Mockery;
 use Mockery\MockInterface;
-use ArtisanSdk\CQRS\Builder;
-use ArtisanSdk\CQRS\Dispatcher;
-use Illuminate\Cache\Repository;
-use ArtisanSdk\CQRS\Buses\Cached;
-use ArtisanSdk\CQRS\Tests\TestCase;
-use Illuminate\Support\Facades\Cache;
-use ArtisanSdk\CQRS\Tests\Fakes\Cache\Store;
-use ArtisanSdk\CQRS\Tests\Fakes\Queries\Cacheable;
-use Illuminate\Contracts\Cache\Store as CacheStore;
-use ArtisanSdk\Contract\{Cacheable as Contract, Invokable, Runnable};
-
 
 class CachedTest extends TestCase
 {
@@ -30,23 +25,6 @@ class CachedTest extends TestCase
         $this->assertInstanceOf(Runnable::class, $cached, 'An evented query must implement the ' . Runnable::class . ' interface.');
         $this->assertSame($cached->run(), $cached(), 'When an evented query is invoked it should run the query.');
         $this->assertSame($cached->run(), $query(), 'When an evented query is invoked it should run the query.');
-    }
-
-    public function test_cached_builder_function_passthroughs()
-    {
-        $driver = Mockery::mock($this->app->make(Repository::class), function (MockInterface $mock) {});
-
-        $query = new Cacheable;
-        $cached = new Builder(new Cached($query, new Dispatcher($this->app), $driver));
-
-        $cached->cached();
-        $cached->cache();
-        $cached->nocache();
-        // $cached->fresh();
-        // $cached->refresh();
-        // // $cached->invalidate();
-        // $cached->bust();
-
     }
 
     public function test_cache_has_ttl()

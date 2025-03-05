@@ -22,6 +22,6 @@ class Query extends Base
             return $this->$method(...$arguments);
         }
 
-        throw new BadMethodCallException('Method ' . $method . '() does not exist on ' . __CLASS__ . '.');
+        throw new BadMethodCallException('Method '.$method.'() does not exist on '.__CLASS__.'.');
     }
 }
