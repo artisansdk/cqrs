@@ -8,6 +8,7 @@ use ArtisanSdk\Contract\{Cacheable, Invokable, Query as Contract, Runnable};
 use ArtisanSdk\CQRS\Dispatcher;
 use ArtisanSdk\CQRS\Events\Invalidated;
 use Closure;
+use Exception;
 use Illuminate\Cache\CacheManager as Manager;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Support\Arr;
@@ -371,7 +372,12 @@ class Cached implements Contract
      */
     protected function computeSubkey(Invokable $runnable): string
     {
-        return (string) ($runnable->subkey ?? md5(json_encode($this->arguments())));
+        // Catch json issues like Infinite Recursion.
+        if (! $arguments = json_encode($this->arguments())) {
+            throw new Exception(json_last_error_msg());
+        }
+
+        return (string) ($runnable->subkey ?? md5(json_encode($arguments)));
     }
 
     /**
