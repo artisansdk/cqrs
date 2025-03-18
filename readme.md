@@ -23,6 +23,7 @@ A foundational package for Command Query Responsibility Segregation (CQRS) compa
         - [How to Create an Evented Query](#how-to-create-an-evented-query)
         - [How to Create a Cached Query](#how-to-create-a-cached-query)
         - [How to Bust a Cached Query](#how-to-bust-a-cached-query)
+        - [How to Invalidate Queries](#invalidating-a-cached-query)
     - [Events](#events)
         - [How Auto-resolution of Events Work](#how-auto-resolution-of-events-work)
         - [How to Customize the Before and After Events](#how-to-customize-the-before-and-after-events)
@@ -601,7 +602,7 @@ like `onConnection`, `onQueue`, `delay`, and `chain`.
 
 ### How to Invalidate Queries from Commands
 
-<span style="color:red">Documentation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
+See [Invalidating a Cached Query](#invalidating-a-cached-query) below
 
 ## Queries
 
@@ -990,7 +991,7 @@ optionally `->subKey($subKey)` to set a custom key for the query but by default 
 generated based on a hash of the query itself. This makes unique queries cacheable under separate
 auto-generated keys.
 
-### How to Bust a Cached Query
+### How to Bypass Cache Using a Query
 
 While caching is great, sometimes you need to bypass the cache or clear the cache.
 
@@ -1015,6 +1016,53 @@ driver. The cache bus is probably the most compelling reason to use the query
 bus when using an Eloquent model because while Eloquent models are Active Record
 implementations with lots of query builder capabilities, they don't handle
 domain argument validation nor caching out of the box and with ease.
+
+### Invalidating a Cached Query
+
+To bust a query you need to use the `ArtisanSdk\CQRS\Contracts\Bustable` interface, and satisfy its
+requirements by using the `ArtisanSdk\CQRS\Concerns\Bust` trait and/or implementing the required
+methods yourself.
+
+```php
+use ArtisanSdk\CQRS\Command;
+use ArtisanSdk\CQRS\Contracts\Bustable;
+use ArtisanSdk\CQRS\Concerns\Bust;
+
+class Find extends Query implements Bustable, Cachable
+{
+    use Bust;
+
+    public function run()
+    {
+        $queries = $this->argument('queries', ['array']);
+
+        collect($queries)
+            ->each(function (string $query) {
+                $query::bust();
+            });
+    }
+}
+```
+
+If you want to invalidate a query as a response to an event being fired by the application you can register the handler to call `bust()`.
+
+In Laravel you could register the query to be busted like so:
+
+```php
+//App/Providers/EventsServiceProvider.php
+
+protected $listen = [
+    UserAdded::class => [
+        [Find::class, 'bust']
+    ],
+    ...
+    
+    // If you need access to the event, such as wanting to bust a query with specific arguments
+    UserAdded::class => [
+        [fn($event) => Find::make(['type' => $event->type])->bust()],
+    ]
+]
+```
 
 ## Events
 
