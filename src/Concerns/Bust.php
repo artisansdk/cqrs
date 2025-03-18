@@ -4,31 +4,10 @@ declare(strict_types=1);
 
 namespace ArtisanSdk\CQRS\Concerns;
 
-use Illuminate\Contracts\Cache\Repository as Driver;
 use Illuminate\Support\Facades\Cache;
 
 trait Bust
 {
-    /**
-     * Get the cache driver for the query.
-     *
-     * @return Driver
-     */
-    public static function driver(): Driver
-    {
-        return Cache::driver();
-    }
-
-    /**
-     * Get the primary key of the query.
-     *
-     * @return string
-     */
-    public static function key(): string
-    {
-        return self::class;
-    }
-
     /**
      * Bust a query.
      *
@@ -36,12 +15,12 @@ trait Bust
      */
     public static function bust(): bool
     {
-        $driver = self::driver();
-        $key = self::key();
+        $query = new static;
+        $key = (string) ($query->key ?? static::class);
+        $cache = Cache::driver($query->driver ?? 'default');
+        collect($cache->get($key))->each(fn (string $subkey) => $cache->forget($subkey));
 
-        collect($driver->get($key))->each(fn (string $subkey) => $driver->forget($subkey));
-
-        $driver->forget($key);
+        $cache->forget($key);
 
         return true;
     }
