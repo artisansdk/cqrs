@@ -5,37 +5,49 @@ A foundational package for Command Query Responsibility Segregation (CQRS) compa
 ## Table of Contents
 
 - [Installation](#installation)
-    - [Peer Dependencies](#peer-dependencies)
-    - [Framework Helpers Functions](#framework-helpers-functions)
+  - [Peer Dependencies](#peer-dependencies)
+  - [Framework Helper Functions](#framework-helper-functions)
 - [Usage Guide](#usage-guide)
-    - [Commands](#commands)
-        - [How to Create a Command](#how-to-create-a-command)
-        - [How to Run a Command](#how-to-run-a-command)
-        - [How to Create an Evented Command](#how-to-create-an-evented-command)
-        - [How to Run a Command in a Transaction](#how-to-run-a-command-in-a-transaction)
-        - [How to Use a Command as an Event Handler](#how-to-use-a-command-as-an-event-handler)
-        - [How to Queue a Command as a Job](#how-to-queue-a-command-as-a-job)
-        - [How to Run a Command on a Queue as a Job](#how-to-run-a-command-on-a-queue-as-a-job)
-        - [How to Invalidate Queries from Commands](#how-to-invalidate-queries-from-commands)
-    - [Queries](#queries)
-        - [How to Create a Query](#how-to-create-a-query)
-        - [How to Get Query Results](#how-to-get-query-results)
-        - [How to Create an Evented Query](#how-to-create-an-evented-query)
-        - [How to Create a Cached Query](#how-to-create-a-cached-query)
-        - [How to Bust a Cached Query](#how-to-bust-a-cached-query)
-    - [Events](#events)
-        - [How Auto-resolution of Events Work](#how-auto-resolution-of-events-work)
-        - [How to Customize the Before and After Events](#how-to-customize-the-before-and-after-events)
-        - [Recommended Conventions for Command and Event Naming](#recommended-conventions-for-command-and-event-naming)
-    - [Concerns](#concerns)
-        - [Using CQRS in Your Classes](#using-cqrs-in-your-classes)
-        - [Using Argument Validators](#using-argument-validators)
-        - [Using Option Defaults](#using-option-defaults)
-        - [Saving Models Within Commands](#saving-models-within-commands)
-        - [Using the Silencer](#using-the-silencer)
-    - [Extending](#extending)
-        - [Using Macros on the Builder](#using-macros-on-the-builder)
-        - [Using Mixins on the Builder](#using-mixins-on-the-builder)
+  - [Commands](#commands)
+    - [How to Create a Command](#how-to-create-a-command)
+    - [How to Run a Command](#how-to-run-a-command)
+      - [Run a Command Using the Dispatcher](#run-a-command-using-the-dispatcher)
+      - [Run a Command Statically](#run-a-command-statically)
+      - [Run a Command From Anywhere](#run-a-command-from-anywhere)
+      - [Run a Command Manually (Without the Command Bus)](#run-a-command-manually-without-the-command-bus)
+    - [How to Create an Evented Command](#how-to-create-an-evented-command)
+      - [Silencing an Evented Command](#silencing-an-evented-command)
+    - [How to Run a Command in a Transaction](#how-to-run-a-command-in-a-transaction)
+      - [Aborting a Transactional Command](#aborting-a-transactional-command)
+      - [Silencing After Events With Abort](#silencing-after-events-with-abort)
+      - [Checking If a Command Was Aborted](#checking-if-a-command-was-aborted)
+    - [How to Use a Command as an Event Handler](#how-to-use-a-command-as-an-event-handler)
+    - [How to Queue a Command as a Job](#how-to-queue-a-command-as-a-job)
+    - [How to Run a Command on a Queue as a Job](#how-to-run-a-command-on-a-queue-as-a-job)
+    - [How to Invalidate Queries from Commands](#how-to-invalidate-queries-from-commands)
+      - [Invalidating Only a Subkey Cache](#invalidating-only-a-subkey-cache)
+  - [Queries](#queries)
+    - [How to Create a Query](#how-to-create-a-query)
+      - [Flat File Implementation](#flat-file-implementation)
+      - [HTTP API Implementation](#http-api-implementation)
+      - [Database Implementation](#database-implementation)
+    - [How to Get Query Results](#how-to-get-query-results)
+    - [How to Create an Evented Query](#how-to-create-an-evented-query)
+    - [How to Create a Cached Query](#how-to-create-a-cached-query)
+    - [How to Bust a Cached Query](#how-to-bust-a-cached-query)
+  - [Events](#events)
+    - [How Auto-resolution of Events Work](#how-auto-resolution-of-events-work)
+    - [How to Customize the Before and After Events](#how-to-customize-the-before-and-after-events)
+    - [Recommended Conventions for Command and Event Naming](#recommended-conventions-for-command-and-event-naming)
+  - [Concerns](#concerns)
+    - [Using CQRS in Your Classes](#using-cqrs-in-your-classes)
+    - [Using Argument Validators](#using-argument-validators)
+    - [Using Option Defaults](#using-option-defaults)
+    - [Saving Models Within Commands](#saving-models-within-commands)
+    - [Using the Silencer](#using-the-silencer)
+  - [Extending](#extending)
+    - [Using Macros on the Builder](#using-macros-on-the-builder)
+    - [Using Mixins on the Builder](#using-mixins-on-the-builder)
 - [Running the Tests](#running-the-tests)
 - [Licensing](#licensing)
 
@@ -137,11 +149,8 @@ use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command
 {
-    protected $model;
-
-    public function __construct(User $model)
+    public function __construct(protected User $model)
     {
-        $this->model = $model;
     }
 
     public function run()
@@ -252,11 +261,8 @@ use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Eventable
 {
-    protected $model;
-
-    public function __construct(User $model)
+    public function __construct(protected User $model)
     {
-        $this->model = $model;
     }
 
     public function run()
@@ -308,11 +314,8 @@ use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Transactional
 {
-    protected $model;
-
-    public function __construct(User $model)
+    public function __construct(protected User $model)
     {
-        $this->model = $model;
     }
 
     public function run()
@@ -348,11 +351,8 @@ use ArtisanSdk\CQRS\Command;
 
 class ChangePassword extends Command implements Transactional
 {
-    protected $model;
-
-    public function __construct(User $model)
+    public function __construct(protected User $model)
     {
-        $this->model = $model;
     }
 
     public function run()
@@ -430,11 +430,8 @@ use ArtisanSdk\CQRS\Events\Event;
 
 class UserSaved extends Event
 {
-    protected $user;
-
-    public function __construct(User $user)
+    public function __construct(protected User $user)
     {
-        $this->user = $user;
     }
 }
 ```
@@ -454,11 +451,8 @@ use ArtisanSdk\CQRS\Command;
 
 class SaveUser extends Command implements Eventable
 {
-    protected $model;
-
-    public function __construct(User $model)
+    public function __construct(protected User $model)
     {
-        $this->model = $model;
     }
 
     public function run()
@@ -601,48 +595,32 @@ like `onConnection`, `onQueue`, `delay`, and `chain`.
 
 ### How to Invalidate Queries from Commands
 
-To bust a query you can use the `ArtisanSdk\CQRS\Concerns\Bust` trait on the query
+> **Note:** You might want to read up on [Queries](#queries) and [Events](#events)
+> before reading this section as it will make more sense when you understand
+> how query caching works and how to make commands event driven.
 
-In order to bust a query you need to remove the subkey and primary key from cache. The subkeys are
-stored in an array under the primary key.
+Often a command will write to the database, and eventually you'll want the queries
+reading from the same data to reflect those changes. If the queries are uncached, then
+they are always up to date, but for high traffic applications, you'd want to cache the
+query results until they grow scale. This can be tricky because of the way the `$key`
+and computed `$subkey` logic works within the `Cached` bus. Fortunately, we've added
+a helper method for use on `Cacheable` classes to help with that.
 
-When using the bust trait you can call `bust()` statically.
+On any `Cacheable` class you can add `use ArtisanSdk\CQRS\Concerns\Bust` trait to expose
+a public static method `bust()` that invalidates the entire cache map for that query.
+You can call it from anywhere like this:
 
 ```php
-$busted = MyQuery::bust();
+$busted = MostPopularPosts::bust();
 ```
 
-If you want to invalidate a query as a response to an event being fired by the application you can register the handler to call `bust()`.
-
-In Laravel you could register the query to be busted like so:
-
-```php
-//App/Providers/EventsServiceProvider.php
-
-protected $listen = [
-    UserAdded::class => [
-        [Find::class, 'bust']
-    ],
-    ...
-];
-    
-public function boot()
-{
-    // If you need the event you can register an anonymous listener in the boot method, or make a proper handler
-    Event::listen(UserAdded::class, function ($event) {
-        Find::make(['type' => $event->type])->bust();
-    });
-}
-```
-
-A full example would look something like this:
-
+If you want to invalidate the query as a response to an event being fired by the
+application you can register the event handler to call `bust()`. For example, take
+the following query that gets the most popular posts from a blog:
 
 ```php
-//App/Queries/MostPopularPostso.php
 namespace App\Queries;
 
-use App\Post;
 use ArtisanSdk\Contract\Cacheable;
 use ArtisanSdk\CQRS\Query;
 
@@ -654,25 +632,31 @@ class MostPopularPosts extends Query implements Cacheable
 }
 ```
 
-Since we cache the above query for 1 week, we want to invalidate whenever a user publishes a post.
-In order to invalidate the query we fire an event to the application knows what happened.
+Since we cache the above query for 1 week, we would want to invalidate the most
+popular posts results every time we publish a new post. All we have to do is fire
+the `PostPublished` event and listen for it in the `App\Providers\EventServiceProvider`
+to map it back to the `MostPopularPosts` query that needs to be invalidated. The
+following is an example of a command that publishes the `Post` and fires the `PostPublished`
+event when it's done.
 
 ```php
-//App/Commands/PublishPost.php
 namespace App\Commands;
 
-use App\Events\UserSaved;
+use App\Post;
+use App\Events\PostPublished;
 use ArtisanSdk\Contract\Eventable;
 use ArtisanSdk\CQRS\Command;
+use Carbon\Carbon;
 
 class PublishPost extends Command implements Eventable
 {
     public function run()
     {
-        $user->post= $this->argument('post');
-        $user->save();
+        $post = $this->argument('post', Post::class);
+        $post->published_at = Carbon::now();
+        $post->save();
 
-        return $user;
+        return $post;
     }
 
     public function afterEvent()
@@ -682,17 +666,37 @@ class PublishPost extends Command implements Eventable
 }
 ```
 
-This registers the `PostPublished` event to be handled by calling the `bust` method on the query class.
+You can register the cache busting listener logic in the `EventServiceProvider` class like so:
 
 ```php
-//App/Providers/EventsServiceProvider.php
 protected $listen = [
     PostPublished::class => [
         [MostPopularPosts::class, 'bust']
     ],
+    ...
 ];
 ```
 
+In the above example anytime a `Post` is published, the `MostPopularPosts` query results will
+be cache busted. The next time the query is executed, it will miss the cache and hit the
+database. The results will then be cached again for subsequent calls until the next time the
+query cache is invalidated or expired.
+
+#### Invalidating Only a Subkey Cache
+
+If you needed to invalidate only a particular `$subkey` cache, then the best way to do that
+is within the `EventServiceProvider::boot()` method. Instead of calling the
+`bust()` method on the query, you would instead instantiate the query bus and pass the
+`$arguments` like normal to make the query bus and then call `bust()`. This will clear
+only the `$subkey` cache. You can call `refresh()` instead if you want to invalidate the
+cache and prime it with the latest results at the same time.
+
+```php
+public function boot()
+{
+    Event::listen(PostPublished::class, fn ($event) => MostPopularPosts::make(['type' => $event->type])->bust());
+}
+```
 
 ## Queries
 
@@ -734,7 +738,7 @@ the query backend.
 
 Assuming you had a `resources/lang/en/states.php` file containing a PHP array
 of state abbreviations and names then the following query would be the minimal
-implementation required. Note that we do not need to use a database as the 
+implementation required. Note that we do not need to use a database as the
 results can be loaded from a flat file on the system disk.
 
 ```php
@@ -770,11 +774,8 @@ use GuzzleHttp\Client as Guzzle;
 
 class GeocodeIP extends Query
 {
-    protected $http;
-
-    public function __construct(Guzzle $http)
+    public function __construct(protected Guzzle $http)
     {
-        $this->http = $http;
     }
 
     public function run()
@@ -809,8 +810,8 @@ echo $result->zip_code; // 07014
 
 #### Database Implementation
 
-This package assumes you will be using Eloquent ORM or at minimum a database 
-abstraction and so the `builder()` method is intended to be used to return a 
+This package assumes you will be using Eloquent ORM or at minimum a database
+abstraction and so the `builder()` method is intended to be used to return a
 query builder. Therefore an implementation of a model backed query would look like this:
 
 ```php
@@ -821,11 +822,8 @@ use ArtisanSdk\CQRS\Query;
 
 class ListUsers extends Query
 {
-    protected $model;
-
-    public function __construct(User $model)
+    public function __construct(protected User $model)
     {
-        $this->model = $model;
     }
 
     public function builder()
@@ -885,8 +883,8 @@ The base query implements `get()` but also implements the convenient method of `
 $paginator = App\Queries\ListUsers::make()->paginate(10, ['name', 'email']);
 ```
 
-Furthermore if your query uses an ORM and you need to inspect the query, you can call 
-`toSql()` instead of `get()` or `builder()` directly to customize the query further 
+Furthermore if your query uses an ORM and you need to inspect the query, you can call
+`toSql()` instead of `get()` or `builder()` directly to customize the query further
 for one-off query executions:
 
 ```php
@@ -922,11 +920,8 @@ use ArtisanSdk\CQRS\Query;
 
 class FindUserByEmail extends Query
 {
-    protected $model;
-
-    public function __construct(User $model)
+    public function __construct(protected User $model)
     {
-        $this->model = $model;
     }
 
     public function builder()
@@ -1021,11 +1016,8 @@ use ArtisanSdk\CQRS\Query;
 
 class MostPopularPosts extends Query implements Eventable
 {
-    protected $model;
-
-    public function __construct(Post $model)
+    public function __construct(protected Post $model)
     {
-        $this->model = $model;
     }
 
     public function builder()
@@ -1100,6 +1092,8 @@ $busted = MostPopularPosts::make()->refresh();
 
 // Skip the cache and get the results: fresh results are not peristed to cache
 $uncached = MostPopularPosts::make()->nocache()->get();
+
+// This is shorthand for bypassing the cached results
 $uncached = MostPopularPosts::make()->fresh();
 ```
 
@@ -1111,9 +1105,9 @@ bus when using an Eloquent model because while Eloquent models are Active Record
 implementations with lots of query builder capabilities, they don't handle
 domain argument validation nor caching out of the box and with ease.
 
-See [How to Invalidate Queries from Commands](#how-to-invalidate-queries-from-commands) for more techniques on query busting related queries when commands make changes to data that those queries need to fetch.
-
-### How To Bust Cache for Related Queries
+> **Note:** See [How to Invalidate Queries from Commands](#how-to-invalidate-queries-from-commands)
+>  for more techniques on query busting related queries when commands make changes to data that
+>  those queries need to fetch.
 
 
 ## Events
@@ -1610,11 +1604,8 @@ use ArtisanSdk\Contract\Eventable;
 
 class RegisterUser extends Command implements Eventable
 {
-    protected $user;
-
-    public function __construct(User $user)
+    public function __construct(protected User $user)
     {
-        $this->user = $user;
     }
 
     public function run()
@@ -1692,7 +1683,79 @@ $user = App\Commands\SaveUser::make()
 
 ### Using Mixins on the Builder
 
-<span style="color:red">Documentation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
+Expanding upon [Using Macros on the Builder](#using-macros-on-the-builder), the ability
+to add mixed in behaviors from other classes is quite handy. Whereas a `macro($name, $closure)`
+are for one off functions, the `mixin($class)` takes all the public methods of the `$class`
+and makes them macros of the builder.
+
+For example, say you wanted to add some debug macros to your builder but didn't want
+to register them one at a time. You could instead write a class with public methods like so:
+
+```php
+namespace App\Mixins;
+
+use ArtisanSdk\CQRS\Builder;
+use Psr\Log\LoggerInterface;
+
+class Debug
+{
+    public function __construct(protected LoggerInterface $logger)
+    {
+    }
+
+    public function info(string $message) : Builder
+    {
+        $this->logger->info($message);
+
+        return $this;
+    }
+
+    public function error(Throwable $error) : Builder
+    {
+        $this->logger->error($error->getMessage());
+
+        return $this;
+    }
+
+    public function dd() : void
+    {
+        dd($this);
+    }
+}
+```
+
+Then you would register the mixin within the `App\Providers\AppServiceProvider@boot` method.
+
+```php
+use App\Mixins\Debug;
+use ArtisanSdk\CQRS\Builder;
+use Illuminate\Support\Facades\Log;
+
+Builder::mixin(new Debug(Log::getFacadeRoot()));
+```
+
+As you can see, you can construct the mixin class with all its dependencies (or use Laravel's
+container to do the same), and then all the public methods of `info()`, `error()`, and `dd()`
+are made available as macros on the `Builder`. Now you can do something like:
+
+```php
+$user = SaveUser::make()
+    ->email('johndoe@example.com')
+    ->info('Saving the User')
+    ->dd()
+    ->run();
+```
+
+If you were to attempt to run that code, "Saving the User" would be printed to the
+error logs even before the command is actually `run()`. The `info()` macro from the
+`Debug` mixin returns its own object `$this` so the builder is chained and so you
+can repeat calls to the builder by continuing the chain.
+
+The use of `dd()` on the other hand does die and dump the object `$this` which is
+the builder. Therefore the `run()` never gets called as the program dies earlier.
+This is similar to the behavior of Laravel's Collection class's `dd()` macro and
+you'll be able to inspect the builder, it's command, and all the arguments like
+the email "johndoe@example.com".
 
 # Running the Tests
 
@@ -1716,7 +1779,7 @@ coverage requirements.
 
 # Licensing
 
-Copyright (c) 2018-2023 [Artisan Made, Co](http://artisanmade.io)
+Copyright (c) 2018-2025 [Artisan Made, Co](http://artisanmade.io)
 
 This package is released under the MIT license. Please see the LICENSE file
 distributed with every copy of the code for commercial licensing terms.
