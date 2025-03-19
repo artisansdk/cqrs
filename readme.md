@@ -601,7 +601,98 @@ like `onConnection`, `onQueue`, `delay`, and `chain`.
 
 ### How to Invalidate Queries from Commands
 
-<span style="color:red">Documentation in progress. Please excuse the mess and consider contributing a pull request to improve the documentation.</span>
+To bust a query you can use the `ArtisanSdk\CQRS\Concerns\Bust` trait on the query
+
+In order to bust a query you need to remove the subkey and primary key from cache. The subkeys are
+stored in an array under the primary key.
+
+When using the bust trait you can call `bust()` statically.
+
+```php
+$busted = MyQuery::bust();
+```
+
+If you want to invalidate a query as a response to an event being fired by the application you can register the handler to call `bust()`.
+
+In Laravel you could register the query to be busted like so:
+
+```php
+//App/Providers/EventsServiceProvider.php
+
+protected $listen = [
+    UserAdded::class => [
+        [Find::class, 'bust']
+    ],
+    ...
+];
+    
+public function boot()
+{
+    // If you need the event you can register an anonymous listener in the boot method, or make a proper handler
+    Event::listen(UserAdded::class, function ($event) {
+        Find::make(['type' => $event->type])->bust();
+    });
+}
+```
+
+A full example would look something like this:
+
+
+```php
+//App/Queries/MostPopularPostso.php
+namespace App\Queries;
+
+use App\Post;
+use ArtisanSdk\Contract\Cacheable;
+use ArtisanSdk\CQRS\Query;
+
+class MostPopularPosts extends Query implements Cacheable
+{
+    public $ttl = 60 * 60 * 24 * 7; // 1 week cache
+
+    // ... logic to get the most popular posts
+}
+```
+
+Since we cache the above query for 1 week, we want to invalidate whenever a user publishes a post.
+In order to invalidate the query we fire an event to the application knows what happened.
+
+```php
+//App/Commands/PublishPost.php
+namespace App\Commands;
+
+use App\Events\UserSaved;
+use ArtisanSdk\Contract\Eventable;
+use ArtisanSdk\CQRS\Command;
+
+class PublishPost extends Command implements Eventable
+{
+    public function run()
+    {
+        $user->post= $this->argument('post');
+        $user->save();
+
+        return $user;
+    }
+
+    public function afterEvent()
+    {
+        return PostPublished::class;
+    }
+}
+```
+
+This registers the `PostPublished` event to be handled by calling the `bust` method on the query class.
+
+```php
+//App/Providers/EventsServiceProvider.php
+protected $listen = [
+    PostPublished::class => [
+        [MostPopularPosts::class, 'bust']
+    ],
+];
+```
+
 
 ## Queries
 
@@ -1002,10 +1093,14 @@ $posts = MostPopularPosts::make()->get();
 $cached = MostPopularPosts::make()->get();
 
 // Bust the cache then get the results
-$busted = MostPopularPosts::make()->busted()->get();
+$busted = MostPopularPosts::make()->bust()->get();
 
 // This is shorthand for cache busted results
-$busted = MostPopularPosts::make()->fresh();
+$busted = MostPopularPosts::make()->refresh();
+
+// Skip the cache and get the results: fresh results are not peristed to cache
+$uncached = MostPopularPosts::make()->nocache()->get();
+$uncached = MostPopularPosts::make()->fresh();
 ```
 
 See the `ArtisanSdk\CQRS\Buses\Cached` class for more public methods that can be
@@ -1015,6 +1110,11 @@ driver. The cache bus is probably the most compelling reason to use the query
 bus when using an Eloquent model because while Eloquent models are Active Record
 implementations with lots of query builder capabilities, they don't handle
 domain argument validation nor caching out of the box and with ease.
+
+See [How to Invalidate Queries from Commands](#how-to-invalidate-queries-from-commands) for more techniques on query busting related queries when commands make changes to data that those queries need to fetch.
+
+### How To Bust Cache for Related Queries
+
 
 ## Events
 
