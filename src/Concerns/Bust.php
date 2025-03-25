@@ -17,7 +17,7 @@ trait Bust
     {
         $query = new static;
         $key = (string) ($query->key ?? static::class);
-        $cache = Cache::driver($query->driver ?? 'default');
+        $cache = Cache::driver($query->driver ?? null);
         collect($cache->get($key))->each(fn (string $subkey) => $cache->forget($subkey));
 
         $cache->forget($key);
